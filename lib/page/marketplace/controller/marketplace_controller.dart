@@ -1,6 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:finway/themes/constant_colors.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
+import 'package:finway/service/api.dart';
 
 class MarketplaceController extends GetxController {
   var isLoading = false.obs;
@@ -84,11 +87,8 @@ class MarketplaceController extends GetxController {
 
   Future<void> fetchMarketplaceData() async {
     isLoading.value = true;
-    
-    // Simulate API Delay
-    await Future.delayed(const Duration(seconds: 1));
 
-    // Dummy JSON Data (Simulated API Response)
+    // Local Dummy Fallbacks
     final dummyBanners = [
       {
         'title': '#FASHION DAY',
@@ -344,20 +344,67 @@ class MarketplaceController extends GetxController {
       },
     ];
 
-    /* 
-    // REAL API CODE (Commented as requested)
     try {
-      final response = await http.get(Uri.parse('https://api.finway.com/marketplace'));
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        products.value = data['products'];
-        categories.value = data['categories'];
+      // 1. Fetch Categories
+      final catResponse = await http.get(Uri.parse(API.getMarketplaceCategories), headers: API.header);
+      // 2. Fetch Products
+      final prodResponse = await http.get(Uri.parse(API.getMarketplaceProducts), headers: API.header);
+
+      if (catResponse.statusCode == 200 && prodResponse.statusCode == 200) {
+        final catJson = json.decode(catResponse.body);
+        final prodJson = json.decode(prodResponse.body);
+
+        if (catJson['success'] == 'Success' && prodJson['success'] == 'Success') {
+          // Map Categories
+          final List<dynamic> catList = catJson['data'] ?? [];
+          final mappedCategories = catList.map((cat) {
+            final List<dynamic> subList = cat['subcategories'] ?? [];
+            final List<String> subNames = ['All'] + subList.map((s) => (s['name'] ?? '').toString()).toList();
+            return {
+              'name': cat['name'] ?? '',
+              'icon': cat['icon_name'] ?? 'category',
+              'image': cat['image_path'] ?? '',
+              'subCategories': subNames,
+            };
+          }).toList();
+
+          // Map Products
+          final List<dynamic> prodList = prodJson['data'] ?? [];
+          final mappedProducts = prodList.map((prod) {
+            final List<dynamic> imgList = prod['images'] ?? [];
+            final List<String> imageUrls = imgList.map((img) => (img['image_path'] ?? '').toString()).toList();
+            final String primaryImage = imageUrls.isNotEmpty ? imageUrls.first : '';
+
+            return {
+              'id': prod['id'].toString(),
+              'title': prod['title'] ?? '',
+              'description': prod['description'] ?? '',
+              'price': '₹${prod['price']}',
+              'condition': prod['condition'] ?? 'New',
+              'mainCategory': prod['category']?['name'] ?? '',
+              'subCategory': prod['subcategory']?['name'] ?? '',
+              'image': primaryImage,
+              'images': imageUrls,
+              'rating': '4.8',
+              'reviews': '12',
+              'sold': '5+ Sold',
+              'brand': 'Generic',
+              'color': 'N/A',
+            };
+          }).toList();
+
+          banners.value = dummyBanners; // Banners are visual/promotional, fallback is best
+          categories.value = mappedCategories;
+          products.value = mappedProducts;
+          isLoading.value = false;
+          return;
+        }
       }
     } catch (e) {
-      print("Error fetching data: $e");
+      debugPrint("Error fetching API data: $e");
     }
-    */
 
+    // Fallback to local dummy data if API fails
     banners.value = dummyBanners;
     categories.value = dummyCategories;
     products.value = dummyProducts;

@@ -109,10 +109,13 @@ class API {
   static const userSetMPin = "${baseUrl}user_changepasswordset/smart-value";
   static const withdrawWallet = "${baseUrl}withdrawWallet/smart-value";
 
-  ///
-
-
-
-  // static const getNameByAcNo = "${baseUrl}GetNameByAcNo/smart-value";
-
+  // Marketplace API Endpoints
+  static const getMarketplaceProducts = "${baseUrl}marketplace/products";
+  static const getMarketplaceProductDetails = "${baseUrl}marketplace/products/"; // + id
+  static const getMarketplaceCategories = "${baseUrl}marketplace/categories";
+  static const getMyMarketplaceProducts = "${baseUrl}marketplace/my-products";
+  static const getMarketplaceProductProgress = "${baseUrl}marketplace/products/"; // + id + /progress
+  static const createMarketplaceProduct = "${baseUrl}marketplace/products";
+  static const updateMarketplaceProduct = "${baseUrl}marketplace/products/"; // + id + /update
+  static const deleteMarketplaceProduct = "${baseUrl}marketplace/products/"; // + id + /delete
 }
