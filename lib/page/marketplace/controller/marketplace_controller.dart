@@ -343,6 +343,7 @@ class MarketplaceController extends GetxController {
           'https://images.unsplash.com/photo-1544716278-ca5e3f4abd87?auto=format&fit=crop&q=80&w=1974',
         ],
         'image': 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd87?auto=format&fit=crop&q=80&w=1974'
+      }
     ];
 
     try {
