@@ -1,0 +1,389 @@
+import 'package:flutter/material.dart';
+import 'package:finway/themes/constant_colors.dart';
+import 'package:get/get.dart';
+
+class MarketplaceController extends GetxController {
+  var isLoading = false.obs;
+  var products = <Map<String, dynamic>>[].obs;
+  var categories = <Map<String, dynamic>>[].obs;
+  var selectedTab = 0.obs;
+  final List<String> tabs = ["All", "New", "Used"];
+  
+  // Cart Logic
+  var cartItems = <Map<String, dynamic>>[].obs;
+
+  void addToCart(Map<String, dynamic> product, {int quantity = 1}) {
+    // Check if the product already exists in the cart
+    final existingItemIndex = cartItems.indexWhere((item) => item['id'] == product['id']);
+
+    if (existingItemIndex != -1) {
+      // If it exists, update its quantity
+      cartItems[existingItemIndex]['quantity'] = (cartItems[existingItemIndex]['quantity'] ?? 1) + quantity;
+      cartItems.refresh(); // Notify listeners that the item has changed
+      Get.snackbar(
+        "Updated Cart",
+        "${product['title']} quantity updated to ${cartItems[existingItemIndex]['quantity']}.",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppThemeData.primary200,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 1),
+      );
+    } else {
+      // If it doesn't exist, add it with the specified quantity
+      final productWithQuantity = Map<String, dynamic>.from(product);
+      productWithQuantity['quantity'] = quantity;
+      cartItems.add(productWithQuantity);
+      Get.snackbar(
+        "Added to Cart",
+        "${product['title']} has been added.",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppThemeData.primary200,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 1),
+      );
+    } 
+  }
+
+  void removeFromCart(String productId) {
+    cartItems.removeWhere((item) => item['id'] == productId);
+  }
+
+  void updateQuantity(String productId, int delta) {
+    final index = cartItems.indexWhere((item) => item['id'] == productId);
+    if (index != -1) {
+      int newQty = (cartItems[index]['quantity'] ?? 1) + delta;
+      if (newQty <= 0) {
+        cartItems.removeAt(index);
+      } else {
+        cartItems[index]['quantity'] = newQty;
+        cartItems.refresh();
+      }
+    }
+  }
+
+  double get cartSubtotal {
+    double total = 0;
+    for (var item in cartItems) {
+      final price = item['price'].toString();
+      final priceStr = price.replaceAll('₹', '').replaceAll('\$', '').replaceAll(',', '');
+      final quantity = item['quantity'] ?? 1;
+      total += (double.tryParse(priceStr) ?? 0) * quantity;
+    }
+    return total;
+  }
+
+  var banners = <Map<String, dynamic>>[].obs;
+  var selectedCategory = "".obs;
+  var selectedSubCategory = "".obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    fetchMarketplaceData();
+  }
+
+  Future<void> fetchMarketplaceData() async {
+    isLoading.value = true;
+    
+    // Simulate API Delay
+    await Future.delayed(const Duration(seconds: 1));
+
+    // Dummy JSON Data (Simulated API Response)
+    final dummyBanners = [
+      {
+        'title': '#FASHION DAY',
+        'discount': '80% OFF',
+        'subtitle': 'Discover fashion that suits to your style',
+        'image': 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e12?auto=format&fit=crop&q=80&w=2070'
+      },
+      {
+        'title': '#SUMMER VIBES',
+        'discount': '50% OFF',
+        'subtitle': 'Hot deals on cool clothes',
+        'image': 'https://images.unsplash.com/photo-1523381210434-271b8be1f52b?auto=format&fit=crop&q=80&w=2070'
+      },
+      {
+        'title': '#GADGET WEEK',
+        'discount': '40% OFF',
+        'subtitle': 'Latest electronics at best prices',
+        'image': 'https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&q=80&w=2070'
+      },
+      {
+        'title': '#HOME COMFORT',
+        'discount': '30% OFF',
+        'subtitle': 'Premium furniture and decor',
+        'image': 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=2070',
+      }
+    ];
+
+    final dummyCategories = [
+      {'name': 'Electronics', 'icon': 'devices', 'image': 'https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&q=80&w=2070', 'subCategories': ['All', 'Mobiles', 'Laptops', 'Audio']},
+      {'name': 'Clothing', 'icon': 'checkroom', 'image': 'https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&q=80&w=2071', 'subCategories': ['All', 'Men', 'Women', 'Kids']},
+      {'name': 'Beauty', 'icon': 'face', 'image': 'https://images.unsplash.com/photo-1596462502278-27bfdc4033c8?auto=format&fit=crop&q=80&w=2070', 'subCategories': ['All', 'Skincare', 'Makeup']},
+      {'name': 'Furniture', 'icon': 'chair', 'image': 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=2070', 'subCategories': ['All', 'Living Room', 'Bedroom']},
+      {'name': 'Books', 'icon': 'menu_book', 'image': 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&q=80&w=2070', 'subCategories': ['All', 'Fiction', 'Academic']},
+    ];
+
+    final dummyProducts = [
+      {
+        'id': '1',
+        'title': "Essentials Men's Short-Sleeve Crewneck T-Shirt",
+        'subtitle': "Shirt",
+        'price': '₹12.00',
+        'rating': '4.9',
+        'reviews': '2356',
+        'sold': '2.9k + Sold',
+        'brand': 'ChArmkpR',
+        'color': 'Aprikot',
+        'condition': 'New',
+        'mainCategory': 'Clothing',
+        'subCategory': 'Men',
+        'images': [
+          'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=80&w=2080',
+          'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&q=80&w=2080',
+        ],
+        'image': 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=80&w=2080'
+      },
+      {
+        'id': '2',
+        'title': "iPhone 13 Pro Max - Space Grey",
+        'subtitle': "Smartphone",
+        'price': '₹699.00',
+        'rating': '4.8',
+        'reviews': '152',
+        'sold': '45 Sold',
+        'brand': 'Apple',
+        'color': 'Space Grey',
+        'condition': 'Used',
+        'mainCategory': 'Electronics',
+        'subCategory': 'Mobiles',
+        'images': [
+          'https://images.unsplash.com/photo-1632661674596-df8be070a5c5?auto=format&fit=crop&q=80&w=2080',
+        ],
+        'image': 'https://images.unsplash.com/photo-1632661674596-df8be070a5c5?auto=format&fit=crop&q=80&w=2080'
+      },
+      {
+        'id': '3',
+        'title': "MacBook M2 Air (2022) - Silver",
+        'subtitle': "Laptop",
+        'price': '₹999.00',
+        'rating': '5.0',
+        'reviews': '85',
+        'sold': '12 Sold',
+        'brand': 'Apple',
+        'color': 'Silver',
+        'condition': 'New',
+        'mainCategory': 'Electronics',
+        'subCategory': 'Laptops',
+        'images': [
+          'https://images.unsplash.com/photo-1611186871348-b1ec696e52c9?auto=format&fit=crop&q=80&w=2070',
+        ],
+        'image': 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=2070',
+      },
+      {
+        'id': '4',
+        'title': "Nike Air Jordan 1 Retro",
+        'subtitle': "Shoes",
+        'price': '₹180.00',
+        'rating': '4.9',
+        'reviews': '3400',
+        'sold': '1.5k + Sold',
+        'brand': 'Nike',
+        'color': 'Red/White',
+        'condition': 'New',
+        'mainCategory': 'Clothing',
+        'subCategory': 'Men',
+        'images': [
+          'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?auto=format&fit=crop&q=80&w=2080',
+        ],
+        'image': 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?auto=format&fit=crop&q=80&w=2080'
+      },
+      {
+        'id': '5',
+        'title': "Used Gaming Console - PS4 Slim",
+        'subtitle': "Console",
+        'price': '₹150.00',
+        'rating': '4.5',
+        'reviews': '890',
+        'sold': '200+ Sold',
+        'brand': 'Sony',
+        'color': 'Black',
+        'condition': 'Used',
+        'mainCategory': 'Electronics',
+        'subCategory': 'Audio',
+        'images': [
+          'https://images.unsplash.com/photo-1486401899868-0e435ed85128?auto=format&fit=crop&q=80&w=2070',
+        ],
+        'image': 'https://images.unsplash.com/photo-1486401899868-0e435ed85128?auto=format&fit=crop&q=80&w=2070'
+      },
+      {
+        'id': '6',
+        'title': "Essentials Regular-Fit Long-Sleeve Oxford...",
+        'subtitle': "Shirt",
+        'price': '₹22.00',
+        'rating': '4.9',
+        'reviews': '1520',
+        'sold': '1.2k + Sold',
+        'brand': 'Oxford',
+        'color': 'Blue',
+        'condition': 'Used',
+        'mainCategory': 'Clothing',
+        'subCategory': 'Men',
+        'images': [
+          'https://images.unsplash.com/photo-1598033129183-c4f50c717658?auto=format&fit=crop&q=80&w=2071',
+        ],
+        'image': 'https://images.unsplash.com/photo-1632661674596-df8be070a5c5?auto=format&fit=crop&q=80&w=2071',
+      },
+      {
+        'id': '7',
+        'title': "Modern Hoodie with Contrast Pocket",
+        'subtitle': "Hoodie",
+        'price': '₹18.00',
+        'rating': '4.8',
+        'reviews': '850',
+        'sold': '500+ Sold',
+        'brand': 'UrbanFit',
+        'color': 'Beige/Black',
+        'condition': 'New',
+        'mainCategory': 'Clothing',
+        'subCategory': 'Women',
+        'images': [
+          'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=2070',
+        ],
+        'image': 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=2070'
+      },
+      {
+        'id': '8',
+        'title': "Vintage Denim Jacket - Limited Edition",
+        'subtitle': "Jacket",
+        'price': '₹45.00',
+        'rating': '4.7',
+        'reviews': '420',
+        'sold': '100+ Sold',
+        'brand': 'LeviVibe',
+        'color': 'Indigo',
+        'condition': 'Used',
+        'mainCategory': 'Clothing',
+        'subCategory': 'Women',
+        'images': [
+          'https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&q=80&w=2070',
+        ],
+        'image': 'https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&q=80&w=2070'
+      },
+      {
+        'id': '9',
+        'title': "Eco-Friendly Cotton Summer Dress",
+        'subtitle': "Dress",
+        'price': '₹35.00',
+        'rating': '4.9',
+        'reviews': '120',
+        'sold': '300+ Sold',
+        'brand': 'GreenWear',
+        'color': 'Sage Green',
+        'condition': 'New',
+        'mainCategory': 'Clothing',
+        'subCategory': 'Kids',
+        'images': [
+          'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&q=80&w=2070',
+        ],
+        'image': 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&q=80&w=2070'
+      },
+      {
+        'id': '10',
+        'title': "Luxury Sofa Set - 3 Seater",
+        'subtitle': "Sofa",
+        'price': '₹1200.00',
+        'rating': '4.9',
+        'reviews': '50',
+        'sold': '10+ Sold',
+        'brand': 'ComfortHome',
+        'color': 'Grey',
+        'condition': 'New',
+        'mainCategory': 'Furniture',
+        'subCategory': 'Living Room',
+        'images': [
+          'https://images.unsplash.com/photo-1550581190-9c1c48d21d6c?auto=format&fit=crop&q=80&w=2070',
+        ],
+        'image': 'https://images.unsplash.com/photo-1550581190-9c1c48d21d6c?auto=format&fit=crop&q=80&w=2070'
+      },
+      {
+        'id': '11',
+        'title': "Classic Wooden Dining Table",
+        'subtitle': "Table",
+        'price': '₹450.00',
+        'rating': '4.7',
+        'reviews': '80',
+        'sold': '25+ Sold',
+        'brand': 'WoodCraft',
+        'color': 'Brown',
+        'condition': 'Used',
+        'mainCategory': 'Furniture',
+        'subCategory': 'Living Room',
+        'images': [
+          'https://images.unsplash.com/photo-1519947292023-2675b77907c8?auto=format&fit=crop&q=80&w=2070',
+        ],
+        'image': 'https://images.unsplash.com/photo-1519947292023-2675b77907c8?auto=format&fit=crop&q=80&w=2070'
+      },
+      {
+        'id': '12',
+        'title': "Bestseller Novel - 'The Midnight Library'",
+        'subtitle': "Book",
+        'price': '₹15.00',
+        'rating': '4.9',
+        'reviews': '5000',
+        'sold': '10k+ Sold',
+        'brand': 'Penguin Books',
+        'color': 'N/A',
+        'condition': 'New',
+        'mainCategory': 'Books',
+        'subCategory': 'Fiction',
+        'images': [
+          'https://images.unsplash.com/photo-1544716278-ca5e3f4abd87?auto=format&fit=crop&q=80&w=1974',
+        ],
+        'image': 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd87?auto=format&fit=crop&q=80&w=1974'
+      },
+    ];
+
+    /* 
+    // REAL API CODE (Commented as requested)
+    try {
+      final response = await http.get(Uri.parse('https://api.finway.com/marketplace'));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        products.value = data['products'];
+        categories.value = data['categories'];
+      }
+    } catch (e) {
+      print("Error fetching data: $e");
+    }
+    */
+
+    banners.value = dummyBanners;
+    categories.value = dummyCategories;
+    products.value = dummyProducts;
+    isLoading.value = false;
+  }
+
+  List<Map<String, dynamic>> get filteredProducts {
+    List<Map<String, dynamic>> list = products.toList();
+
+    // Filter by Category
+    if (selectedCategory.value.isNotEmpty) {
+      list = list.where((p) => p['mainCategory']?.toString() == selectedCategory.value).toList();
+    }
+
+    // Filter by SubCategory
+    if (selectedSubCategory.value.isNotEmpty && selectedSubCategory.value != "All") {
+      list = list.where((p) => p['subCategory']?.toString() == selectedSubCategory.value).toList();
+    }
+
+    // Filter by Tab (New/Used)
+    if (selectedTab.value == 1) {
+      list = list.where((p) => (p['condition']?.toString() ?? "") == "New").toList();
+    } else if (selectedTab.value == 2) {
+      list = list.where((p) => (p['condition']?.toString() ?? "") == "Used").toList();
+    }
+
+    return list;
+  }
+}
