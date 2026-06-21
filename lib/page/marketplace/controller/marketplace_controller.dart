@@ -78,11 +78,13 @@ class MarketplaceController extends GetxController {
   var banners = <Map<String, dynamic>>[].obs;
   var selectedCategory = "".obs;
   var selectedSubCategory = "".obs;
+  var rawCategories = <Map<String, dynamic>>[].obs;
 
   @override
   void onInit() {
     super.onInit();
     fetchMarketplaceData();
+    fetchMyMarketplaceProducts();
   }
 
   Future<void> fetchMarketplaceData() async {
@@ -341,7 +343,6 @@ class MarketplaceController extends GetxController {
           'https://images.unsplash.com/photo-1544716278-ca5e3f4abd87?auto=format&fit=crop&q=80&w=1974',
         ],
         'image': 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd87?auto=format&fit=crop&q=80&w=1974'
-      },
     ];
 
     try {
@@ -355,8 +356,11 @@ class MarketplaceController extends GetxController {
         final prodJson = json.decode(prodResponse.body);
 
         if (catJson['success'] == 'Success' && prodJson['success'] == 'Success') {
-          // Map Categories
+          // Store Raw Categories for ID lookup
           final List<dynamic> catList = catJson['data'] ?? [];
+          rawCategories.value = List<Map<String, dynamic>>.from(catList);
+
+          // Map Categories
           final mappedCategories = catList.map((cat) {
             final List<dynamic> subList = cat['subcategories'] ?? [];
             final List<String> subNames = ['All'] + subList.map((s) => (s['name'] ?? '').toString()).toList();
@@ -411,6 +415,133 @@ class MarketplaceController extends GetxController {
     isLoading.value = false;
   }
 
+  // ID Lookups
+  int? getCategoryId(String name) {
+    final cat = rawCategories.firstWhereOrNull((c) => c['name'] == name);
+    return cat?['id'];
+  }
+
+  int? getSubCategoryId(String catName, String subName) {
+    final cat = rawCategories.firstWhereOrNull((c) => c['name'] == catName);
+    if (cat == null) return null;
+    final List<dynamic> subs = cat['subcategories'] ?? [];
+    final sub = subs.firstWhereOrNull((s) => s['name'] == subName);
+    return sub?['id'];
+  }
+
+  // User Products Fetching
+  var myProducts = <Map<String, dynamic>>[].obs;
+  var isMyProductsLoading = false.obs;
+
+  Future<void> fetchMyMarketplaceProducts() async {
+    isMyProductsLoading.value = true;
+    try {
+      final response = await http.get(Uri.parse(API.getMyMarketplaceProducts), headers: API.header);
+      if (response.statusCode == 200) {
+        final jsonDec = json.decode(response.body);
+        if (jsonDec['success'] == 'Success') {
+          final List<dynamic> prodList = jsonDec['data'] ?? [];
+          final mappedProducts = prodList.map((prod) {
+            final List<dynamic> imgList = prod['images'] ?? [];
+            final List<String> imageUrls = imgList.map((img) => (img['image_path'] ?? '').toString()).toList();
+            final String primaryImage = imageUrls.isNotEmpty ? imageUrls.first : '';
+
+            return {
+              'id': prod['id'].toString(),
+              'title': prod['title'] ?? '',
+              'description': prod['description'] ?? '',
+              'price': '₹${prod['price']}',
+              'condition': prod['condition'] ?? 'New',
+              'status': prod['status'] ?? 'pending_verification',
+              'mainCategory': prod['category']?['name'] ?? '',
+              'subCategory': prod['subcategory']?['name'] ?? '',
+              'image': primaryImage,
+              'images': imageUrls,
+              'progress': prod['progress'] ?? 0,
+            };
+          }).toList();
+          myProducts.value = mappedProducts;
+          isMyProductsLoading.value = false;
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching my products: $e");
+    }
+    isMyProductsLoading.value = false;
+  }
+
+  // Upload/Post Product Listing
+  Future<bool> postProduct({
+    required String title,
+    required String description,
+    required double price,
+    required int stockQuantity,
+    required String condition,
+    required String deliveryType,
+    required String categoryName,
+    required String subCategoryName,
+    required List<String> imagePaths,
+  }) async {
+    try {
+      final uri = Uri.parse(API.createMarketplaceProduct);
+      final request = http.MultipartRequest('POST', uri);
+      
+      // Add authentication headers
+      API.header.forEach((key, val) {
+        request.headers[key] = val;
+      });
+
+      // Find Category ID & SubCategory ID
+      final catId = getCategoryId(categoryName);
+      final subCatId = getSubCategoryId(categoryName, subCategoryName);
+
+      if (catId == null) {
+        Get.snackbar("Error", "Selected category is invalid.", backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+        return false;
+      }
+
+      request.fields['title'] = title;
+      request.fields['description'] = description;
+      request.fields['price'] = price.toString();
+      request.fields['stock_quantity'] = stockQuantity.toString();
+      request.fields['category_id'] = catId.toString();
+      if (subCatId != null) {
+        request.fields['subcategory_id'] = subCatId.toString();
+      }
+      request.fields['condition'] = condition;
+      request.fields['delivery_type'] = deliveryType;
+
+      // Add images
+      for (int i = 0; i < imagePaths.length; i++) {
+        final file = await http.MultipartFile.fromPath('images[]', imagePaths[i]);
+        request.files.add(file);
+      }
+
+      final response = await request.send();
+      if (response.statusCode == 200) {
+        final respBody = await response.stream.bytesToString();
+        final jsonDec = json.decode(respBody);
+        if (jsonDec['success'] == 'Success') {
+          // Refresh products lists
+          fetchMarketplaceData();
+          fetchMyMarketplaceProducts();
+          return true;
+        } else {
+          Get.snackbar("Error", jsonDec['error'] ?? "Failed to create product listing.", backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+        }
+      } else {
+        final respBody = await response.stream.bytesToString();
+        final jsonDec = json.decode(respBody);
+        Get.snackbar("Error", jsonDec['error'] ?? "Server error (${response.statusCode})", backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+      }
+    } catch (e) {
+      debugPrint("Error posting product: $e");
+      Get.snackbar("Error", "An unexpected error occurred.", backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+    }
+    return false;
+  }
+
   List<Map<String, dynamic>> get filteredProducts {
     List<Map<String, dynamic>> list = products.toList();
 
@@ -434,3 +565,4 @@ class MarketplaceController extends GetxController {
     return list;
   }
 }
+

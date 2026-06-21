@@ -196,6 +196,16 @@ class _MarketplaceHomeScreenState extends State<MarketplaceHomeScreen> with Sing
                   const Text("Marketplace", style: TextStyle(fontSize: 20, fontFamily: AppThemeData.bold)),
                   const Spacer(),
                   GestureDetector(
+                    onTap: () => Get.to(() => const AddProductScreen()),
+                    child: Icon(Icons.add_box_outlined, color: isDark ? Colors.white : Colors.black, size: 26),
+                  ),
+                  const SizedBox(width: 15),
+                  GestureDetector(
+                    onTap: () => Get.to(() => const MarketplaceProfileScreen()),
+                    child: Icon(Icons.storefront_outlined, color: isDark ? Colors.white : Colors.black, size: 26),
+                  ),
+                  const SizedBox(width: 15),
+                  GestureDetector(
                     onTap: () => Get.to(() => const MarketplaceCartScreen()),
                     child: _badgeIcon(Icons.shopping_bag_outlined, _controller.cartItems.length, isDark)
                   ),
@@ -252,6 +262,16 @@ class _MarketplaceHomeScreenState extends State<MarketplaceHomeScreen> with Sing
                   ],
                 ),
               ),
+            ),
+            const SizedBox(width: 15),
+            GestureDetector(
+              onTap: () => Get.to(() => const AddProductScreen()),
+              child: Icon(Icons.add_box_outlined, color: isDark ? Colors.white : Colors.black, size: 26),
+            ),
+            const SizedBox(width: 15),
+            GestureDetector(
+              onTap: () => Get.to(() => const MarketplaceProfileScreen()),
+              child: Icon(Icons.storefront_outlined, color: isDark ? Colors.white : Colors.black, size: 26),
             ),
             const SizedBox(width: 15),
             GestureDetector(

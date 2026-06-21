@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
+import '../controller/marketplace_controller.dart';
+
 class MarketplaceProfileScreen extends StatelessWidget {
   const MarketplaceProfileScreen({Key? key}) : super(key: key);
 
@@ -11,6 +13,10 @@ class MarketplaceProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeChange = Provider.of<DarkThemeProvider>(context);
     final isDark = themeChange.getThem();
+    final MarketplaceController controller = Get.find<MarketplaceController>();
+
+    // Fetch user products when viewing profile
+    controller.fetchMyMarketplaceProducts();
 
     return Scaffold(
       backgroundColor: isDark ? AppThemeData.surface50Dark : AppThemeData.surface50,
@@ -26,16 +32,25 @@ class MarketplaceProfileScreen extends StatelessWidget {
           style: TextStyle(color: isDark ? Colors.white : Colors.black, fontFamily: AppThemeData.bold, fontSize: 18),
         ),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            _buildProfileCard(isDark),
-            _buildStatsRow(isDark),
-            _buildListingsSection(isDark),
-            _buildSavedSection(isDark),
-          ],
-        ),
-      ),
+      body: Obx(() {
+        if (controller.isMyProductsLoading.value) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        return RefreshIndicator(
+          onRefresh: () => controller.fetchMyMarketplaceProducts(),
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              children: [
+                _buildProfileCard(isDark),
+                _buildStatsRow(isDark, controller),
+                _buildListingsSection(isDark, controller),
+                _buildSavedSection(isDark),
+              ],
+            ),
+          ),
+        );
+      }),
     );
   }
 
@@ -81,15 +96,19 @@ class MarketplaceProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatsRow(bool isDark) {
+  Widget _buildStatsRow(bool isDark, MarketplaceController controller) {
+    final activeCount = controller.myProducts.where((p) => p['status'] == 'active').length;
+    final pendingCount = controller.myProducts.where((p) => p['status'] == 'pending_verification').length;
+    final soldCount = controller.myProducts.where((p) => p['status'] == 'sold').length;
+
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _statItem("12", "Active", isDark),
-          _statItem("45", "Sold", isDark),
-          _statItem("128", "Saved", isDark),
+          _statItem(activeCount.toString(), "Active", isDark),
+          _statItem(pendingCount.toString(), "Pending", isDark),
+          _statItem(soldCount.toString(), "Sold", isDark),
         ],
       ),
     );
@@ -104,7 +123,7 @@ class MarketplaceProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildListingsSection(bool isDark) {
+  Widget _buildListingsSection(bool isDark, MarketplaceController controller) {
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -112,14 +131,49 @@ class MarketplaceProfileScreen extends StatelessWidget {
         children: [
           Text("My Listings", style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 18, fontFamily: AppThemeData.bold)),
           const SizedBox(height: 16),
-          _listingItem("Tesla Model S", "\$68,000", "Active", isDark),
-          _listingItem("Gaming Laptop", "\$1,200", "Sold", isDark),
+          if (controller.myProducts.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Center(
+                child: Text(
+                  "No product listings yet",
+                  style: TextStyle(color: Colors.grey[400], fontSize: 14),
+                ),
+              ),
+            )
+          else
+            ...controller.myProducts.map((prod) {
+              return _listingItem(
+                prod['title'] ?? '',
+                prod['price'] ?? '',
+                prod['status'] ?? 'pending_verification',
+                prod['image'] ?? '',
+                prod['progress'] ?? 0,
+                isDark,
+              );
+            }).toList(),
         ],
       ),
     );
   }
 
-  Widget _listingItem(String title, String price, String status, bool isDark) {
+  Widget _listingItem(String title, String price, String status, String imagePath, int progress, bool isDark) {
+    String displayStatus = status;
+    Color statusColor = Colors.grey;
+    if (status == 'active') {
+      displayStatus = "Active";
+      statusColor = AppThemeData.success300;
+    } else if (status == 'pending_verification') {
+      displayStatus = "Verifying ($progress%)";
+      statusColor = Colors.orange;
+    } else if (status == 'rejected') {
+      displayStatus = "Rejected";
+      statusColor = Colors.red;
+    } else if (status == 'sold') {
+      displayStatus = "Sold";
+      statusColor = Colors.grey;
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
@@ -134,7 +188,12 @@ class MarketplaceProfileScreen extends StatelessWidget {
             height: 50,
             width: 50,
             decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(10)),
-            child: Icon(Icons.image, color: Colors.grey[400]),
+            child: imagePath.isNotEmpty
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.network(imagePath, fit: BoxFit.cover),
+                  )
+                : Icon(Icons.image, color: Colors.grey[400]),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -149,10 +208,13 @@ class MarketplaceProfileScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: status == "Active" ? AppThemeData.success300.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+              color: statusColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Text(status, style: TextStyle(color: status == "Active" ? AppThemeData.success300 : Colors.grey, fontSize: 10, fontFamily: AppThemeData.bold)),
+            child: Text(
+              displayStatus,
+              style: TextStyle(color: statusColor, fontSize: 10, fontFamily: AppThemeData.bold),
+            ),
           ),
         ],
       ),

@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:finway/themes/constant_colors.dart';
 import 'package:finway/utils/dark_theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../controller/marketplace_controller.dart';
@@ -24,6 +26,88 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final MarketplaceController _controller = Get.find<MarketplaceController>();
 
   final List<String> _stepTitles = ["Category", "Sub-Cat", "Details", "Photos"];
+
+  // Form Fields
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _priceController = TextEditingController();
+  final TextEditingController _stockController = TextEditingController(text: "1");
+  final TextEditingController _descController = TextEditingController();
+
+  final List<String> _localImagePaths = [];
+  final ImagePicker _picker = ImagePicker();
+  bool _isPosting = false;
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _priceController.dispose();
+    _stockController.dispose();
+    _descController.dispose();
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+      if (image != null) {
+        setState(() {
+          _localImagePaths.add(image.path);
+        });
+      }
+    } catch (e) {
+      debugPrint("Error picking image: $e");
+      Get.snackbar("Error", "Failed to pick image", backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+    }
+  }
+
+  Future<void> _submitProduct(bool isDark) async {
+    final title = _titleController.text.trim();
+    final desc = _descController.text.trim();
+    final priceStr = _priceController.text.trim();
+    final stockStr = _stockController.text.trim();
+
+    if (title.isEmpty) {
+      Get.snackbar("Required", "Please enter a product title", backgroundColor: Colors.orange, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+    if (priceStr.isEmpty || double.tryParse(priceStr) == null || double.parse(priceStr) < 0) {
+      Get.snackbar("Required", "Please enter a valid price", backgroundColor: Colors.orange, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+    if (stockStr.isEmpty || int.tryParse(stockStr) == null || int.parse(stockStr) < 1) {
+      Get.snackbar("Required", "Please enter a valid stock quantity (min 1)", backgroundColor: Colors.orange, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+    if (desc.isEmpty) {
+      Get.snackbar("Required", "Please enter a description for your item", backgroundColor: Colors.orange, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+    if (_localImagePaths.isEmpty) {
+      Get.snackbar("Required", "Please upload at least 1 photo of your item", backgroundColor: Colors.orange, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+
+    setState(() => _isPosting = true);
+
+    final success = await _controller.postProduct(
+      title: title,
+      description: desc,
+      price: double.parse(priceStr),
+      stockQuantity: int.parse(stockStr),
+      condition: _selectedCondition,
+      deliveryType: _deliveryType,
+      categoryName: _selectedCategory!,
+      subCategoryName: _selectedSubCategory ?? 'All',
+      imagePaths: _localImagePaths,
+    );
+
+    setState(() => _isPosting = false);
+
+    if (success) {
+      _showSuccessDialog(isDark);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -132,7 +216,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
           Expanded(
             flex: 2,
             child: ElevatedButton(
-              onPressed: () {
+              onPressed: _isPosting ? null : () {
                 if (_currentPage == 0 && _selectedCategory == null) {
                   Get.snackbar("Required", "Please select a category", backgroundColor: Colors.orange, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
                   return;
@@ -144,7 +228,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 if (_currentPage < 3) {
                   _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
                 } else {
-                  _showSuccessDialog(isDark);
+                  _submitProduct(isDark);
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -153,10 +237,12 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                 elevation: 0,
               ),
-              child: Text(
-                _currentPage == 3 ? "POST MY AD" : "CONTINUE", 
-                style: const TextStyle(color: Colors.white, fontFamily: AppThemeData.bold, letterSpacing: 1)
-              ),
+              child: _isPosting
+                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : Text(
+                      _currentPage == 3 ? "POST MY AD" : "CONTINUE", 
+                      style: const TextStyle(color: Colors.white, fontFamily: AppThemeData.bold, letterSpacing: 1)
+                    ),
             ),
           ),
         ],
@@ -263,9 +349,11 @@ class _AddProductScreenState extends State<AddProductScreen> {
       children: [
         const Text("Item Details", style: TextStyle(fontSize: 20, fontFamily: AppThemeData.bold)),
         const SizedBox(height: 25),
-        _inputField("What are you selling?", Icons.edit_note_rounded, isDark),
+        _inputField("What are you selling?", Icons.edit_note_rounded, isDark, controller: _titleController),
         const SizedBox(height: 15),
-        _inputField("Price (₹)", Icons.currency_rupee_rounded, isDark, keyboardType: TextInputType.number),
+        _inputField("Price (₹)", Icons.currency_rupee_rounded, isDark, controller: _priceController, keyboardType: TextInputType.number),
+        const SizedBox(height: 15),
+        _inputField("Stock Quantity", Icons.numbers_rounded, isDark, controller: _stockController, keyboardType: TextInputType.number),
         const SizedBox(height: 25),
         
         const Text("Condition", style: TextStyle(fontSize: 15, fontFamily: AppThemeData.bold)),
@@ -285,7 +373,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
         }, isDark),
 
         const SizedBox(height: 25),
-        _inputField("A few lines about your item...", Icons.description_outlined, isDark, maxLines: 4),
+        _inputField("A few lines about your item...", Icons.description_outlined, isDark, controller: _descController, maxLines: 4),
       ],
     );
   }
@@ -298,30 +386,80 @@ class _AddProductScreenState extends State<AddProductScreen> {
         const SizedBox(height: 5),
         Text("Ads with photos get up to 5x more responses", style: TextStyle(color: Colors.grey[500], fontSize: 13)),
         const SizedBox(height: 30),
-        Container(
-          height: 220,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: isDark ? AppThemeData.grey800 : Colors.white,
-            borderRadius: BorderRadius.circular(30),
-            border: Border.all(color: isDark ? Colors.white10 : Colors.grey[200]!, style: BorderStyle.solid),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 15, offset: const Offset(0, 8))]
+        if (_localImagePaths.isNotEmpty) ...[
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, mainAxisSpacing: 10, crossAxisSpacing: 10),
+            itemCount: _localImagePaths.length + 1,
+            itemBuilder: (context, idx) {
+              if (idx == _localImagePaths.length) {
+                if (_localImagePaths.length >= 5) return const SizedBox.shrink();
+                return GestureDetector(
+                  onTap: _pickImage,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isDark ? AppThemeData.grey800 : Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(color: isDark ? Colors.white10 : Colors.grey[300]!),
+                    ),
+                    child: Icon(Icons.add_a_photo_outlined, color: AppThemeData.primary200),
+                  ),
+                );
+              }
+              return Stack(
+                children: [
+                  Positioned.fill(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(15),
+                      child: Image.file(File(_localImagePaths[idx]), fit: BoxFit.cover),
+                    ),
+                  ),
+                  Positioned(
+                    top: 5,
+                    right: 5,
+                    child: GestureDetector(
+                      onTap: () => setState(() => _localImagePaths.removeAt(idx)),
+                      child: CircleAvatar(
+                        radius: 12,
+                        backgroundColor: Colors.black.withOpacity(0.6),
+                        child: const Icon(Icons.close, color: Colors.white, size: 14),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(25),
-                decoration: BoxDecoration(color: AppThemeData.primary200.withOpacity(0.1), shape: BoxShape.circle),
-                child: Icon(Icons.add_a_photo_outlined, color: AppThemeData.primary200, size: 45),
+        ] else ...[
+          GestureDetector(
+            onTap: _pickImage,
+            child: Container(
+              height: 220,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: isDark ? AppThemeData.grey800 : Colors.white,
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(color: isDark ? Colors.white10 : Colors.grey[200]!, style: BorderStyle.solid),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 15, offset: const Offset(0, 8))]
               ),
-              const SizedBox(height: 20),
-              Text("Add up to 5 photos", style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontFamily: AppThemeData.bold, fontSize: 16)),
-              const SizedBox(height: 5),
-              Text("Clear photos help buyers decide faster", style: TextStyle(color: Colors.grey[400], fontSize: 12)),
-            ],
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(25),
+                    decoration: BoxDecoration(color: AppThemeData.primary200.withOpacity(0.1), shape: BoxShape.circle),
+                    child: Icon(Icons.add_a_photo_outlined, color: AppThemeData.primary200, size: 45),
+                  ),
+                  const SizedBox(height: 20),
+                  Text("Add up to 5 photos", style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontFamily: AppThemeData.bold, fontSize: 16)),
+                  const SizedBox(height: 5),
+                  Text("Clear photos help buyers decide faster", style: TextStyle(color: Colors.grey[400], fontSize: 12)),
+                ],
+              ),
+            ),
           ),
-        ),
+        ],
       ],
     );
   }
@@ -338,8 +476,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
     }
   }
 
-  Widget _inputField(String hint, IconData icon, bool isDark, {TextInputType? keyboardType, int maxLines = 1}) {
+  Widget _inputField(String hint, IconData icon, bool isDark, {required TextEditingController controller, TextInputType? keyboardType, int maxLines = 1}) {
     return TextField(
+      controller: controller,
       maxLines: maxLines,
       keyboardType: keyboardType,
       style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 15),
