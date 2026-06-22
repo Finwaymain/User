@@ -19,7 +19,6 @@ import 'package:finway/themes/constant_colors.dart';
 import 'package:finway/utils/Preferences.dart';
 import 'package:finway/utils/dark_theme_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_google_places_hoc081098/flutter_google_places_hoc081098.dart';
 import 'package:geocoding/geocoding.dart';
@@ -221,41 +220,94 @@ class Constant {
     }
   }
 
+  static const String imagekitPrivateKey = "private_PLACEHOLDER_KEY";
+  static const String imagekitUrlEndpoint = "https://ik.imagekit.io/77z5w3wmv";
+
+  static Future<String?> uploadFileToImageKit(File file, {required String folder}) async {
+    try {
+      final uri = Uri.parse("https://upload.imagekit.io/api/v1/files/upload");
+      final request = http.MultipartRequest('POST', uri);
+      
+      final String basicAuth = 'Basic ${base64Encode(utf8.encode('$imagekitPrivateKey:'))}';
+      request.headers['Authorization'] = basicAuth;
+      
+      request.fields['fileName'] = "${DateTime.now().millisecondsSinceEpoch}_${file.path.split('/').last}";
+      request.fields['folder'] = folder;
+      request.fields['useUniqueFileName'] = "true";
+      
+      request.files.add(await http.MultipartFile.fromPath('file', file.path));
+      
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        return responseData['url'];
+      } else {
+        log("ImageKit upload error: ${response.statusCode} - ${response.body}");
+        return null;
+      }
+    } catch (e) {
+      log("ImageKit upload exception: $e");
+      return null;
+    }
+  }
+
+  static Future<String?> uploadBytesToImageKit(Uint8List bytes, String fileName, {required String folder}) async {
+    try {
+      final uri = Uri.parse("https://upload.imagekit.io/api/v1/files/upload");
+      final request = http.MultipartRequest('POST', uri);
+      
+      final String basicAuth = 'Basic ${base64Encode(utf8.encode('$imagekitPrivateKey:'))}';
+      request.headers['Authorization'] = basicAuth;
+      
+      request.fields['fileName'] = fileName;
+      request.fields['folder'] = folder;
+      request.fields['useUniqueFileName'] = "true";
+      
+      request.files.add(http.MultipartFile.fromBytes('file', bytes, filename: fileName));
+      
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        return responseData['url'];
+      } else {
+        log("ImageKit upload bytes error: ${response.statusCode} - ${response.body}");
+        return null;
+      }
+    } catch (e) {
+      log("ImageKit upload bytes exception: $e");
+      return null;
+    }
+  }
+
   static Future<Url> uploadChatImageToFireStorage(File image) async {
-    await ensureFirebaseAuthenticated();
     ShowToastDialog.showLoader('Uploading image...');
-    var uniqueID = const Uuid().v4();
-    Reference upload = FirebaseStorage.instance.ref().child('images/$uniqueID.png');
-
-    UploadTask uploadTask = upload.putFile(image);
-
-    uploadTask.snapshotEvents.listen((event) {
-      ShowToastDialog.showLoader(
-          '${'Uploading image'.tr} ${(event.bytesTransferred.toDouble() / 1000).toStringAsFixed(2)} /${(event.totalBytes.toDouble() / 1000).toStringAsFixed(2)} KB');
-    });
-    uploadTask.whenComplete(() {}).catchError((onError) {
+    try {
+      final String? imageUrl = await uploadFileToImageKit(image, folder: "/chats/images");
       ShowToastDialog.closeLoader();
-      log(onError.message);
-    });
-    var storageRef = (await uploadTask.whenComplete(() {})).ref;
-    var downloadUrl = await storageRef.getDownloadURL();
-    var metaData = await storageRef.getMetadata();
-    ShowToastDialog.closeLoader();
-    return Url(mime: metaData.contentType ?? 'image', url: downloadUrl.toString());
+      if (imageUrl == null) {
+        throw Exception("Upload failed");
+      }
+      return Url(mime: 'image', url: imageUrl);
+    } catch (e) {
+      ShowToastDialog.closeLoader();
+      log("ImageKit upload error: $e");
+      ShowToastDialog.showToast("Error: ${e.toString()}");
+      rethrow;
+    }
   }
 
   static Future<ChatVideoContainer?> uploadChatVideoToFireStorage(File video) async {
     try {
-      await ensureFirebaseAuthenticated();
       ShowToastDialog.showLoader("Uploading video...");
-      final String uniqueID = const Uuid().v4();
-      final Reference videoRef = FirebaseStorage.instance.ref('videos/$uniqueID.mp4');
-      final UploadTask uploadTask = videoRef.putFile(
-        video,
-        SettableMetadata(contentType: 'video/mp4'),
-      );
-      await uploadTask;
-      final String videoUrl = await videoRef.getDownloadURL();
+      final String? videoUrl = await uploadFileToImageKit(video, folder: "/chats/videos");
+      if (videoUrl == null) {
+        throw Exception("Failed to upload video to ImageKit");
+      }
+
       ShowToastDialog.showLoader("Generating thumbnail...");
       final Uint8List thumbnailBytes = await VideoThumbnail.thumbnailData(
         video: video.path,
@@ -269,18 +321,18 @@ class Constant {
         throw Exception("Failed to generate thumbnail.");
       }
 
-      final String thumbnailID = const Uuid().v4();
-      final Reference thumbnailRef = FirebaseStorage.instance.ref('thumbnails/$thumbnailID.jpg');
-      final UploadTask thumbnailUploadTask = thumbnailRef.putData(
-        thumbnailBytes,
-        SettableMetadata(contentType: 'image/jpeg'),
-      );
-      await thumbnailUploadTask;
-      final String thumbnailUrl = await thumbnailRef.getDownloadURL();
-      var metaData = await thumbnailRef.getMetadata();
+      ShowToastDialog.showLoader("Uploading thumbnail...");
+      final String? thumbnailUrl = await uploadBytesToImageKit(thumbnailBytes, "thumbnail_${const Uuid().v4()}.jpg", folder: "/chats/thumbnails");
       ShowToastDialog.closeLoader();
 
-      return ChatVideoContainer(videoUrl: Url(url: videoUrl.toString(), mime: metaData.contentType ?? 'video', videoThumbnail: thumbnailUrl), thumbnailUrl: thumbnailUrl);
+      if (thumbnailUrl == null) {
+        throw Exception("Failed to upload thumbnail to ImageKit");
+      }
+
+      return ChatVideoContainer(
+        videoUrl: Url(url: videoUrl, mime: 'video', videoThumbnail: thumbnailUrl),
+        thumbnailUrl: thumbnailUrl,
+      );
     } catch (e) {
       ShowToastDialog.closeLoader();
       ShowToastDialog.showToast("Error: ${e.toString()}");
@@ -288,22 +340,9 @@ class Constant {
     }
   }
 
-  static Future<File> _compressVideo(File file) async {
-    MediaInfo? info = await VideoCompress.compressVideo(file.path, quality: VideoQuality.DefaultQuality, deleteOrigin: false, includeAudio: true, frameRate: 24);
-    if (info != null) {
-      File compressedVideo = File(info.path!);
-      return compressedVideo;
-    } else {
-      return file;
-    }
-  }
-
   static Future<String> uploadVideoThumbnailToFireStorage(File file) async {
-    var uniqueID = const Uuid().v4();
-    Reference upload = FirebaseStorage.instance.ref().child('thumbnails/$uniqueID.png');
-    UploadTask uploadTask = upload.putFile(file);
-    var downloadUrl = await (await uploadTask.whenComplete(() {})).ref.getDownloadURL();
-    return downloadUrl.toString();
+    final String? downloadUrl = await uploadFileToImageKit(file, folder: "/chats/thumbnails");
+    return downloadUrl ?? "";
   }
 
   static redirectMap({required String name, required double latitude, required double longLatitude}) async {

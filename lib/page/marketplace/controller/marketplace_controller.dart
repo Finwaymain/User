@@ -5,7 +5,6 @@ import 'package:finway/themes/constant_colors.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:finway/service/api.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:finway/constant/constant.dart';
 
@@ -492,27 +491,26 @@ class MarketplaceController extends GetxController {
       // Ensure the user is signed in to Firebase Auth before performing storage operations
       await Constant.ensureFirebaseAuthenticated();
 
-      // 1. Upload images to Firebase Storage
-      final List<String> firebaseUrls = [];
+      // 1. Upload images to ImageKit
+      final List<String> imagekitUrls = [];
       for (String path in imagePaths) {
         final file = File(path);
         if (!await file.exists()) {
           throw Exception("File does not exist: $path");
         }
-        final fileName = "${DateTime.now().millisecondsSinceEpoch}_${path.split('/').last}";
         
         String? downloadUrl;
         try {
-          final imageRef = FirebaseStorage.instance.ref().child("marketplace/products/$fileName");
-          final uploadTask = await imageRef.putFile(file);
-          downloadUrl = await uploadTask.ref.getDownloadURL();
+          downloadUrl = await Constant.uploadFileToImageKit(file, folder: "/marketplace/products");
         } catch (e) {
-          debugPrint("Firebase Storage upload failed: $e");
+          debugPrint("ImageKit upload failed: $e");
           rethrow;
         }
         
         if (downloadUrl != null) {
-          firebaseUrls.add(downloadUrl);
+          imagekitUrls.add(downloadUrl);
+        } else {
+          throw Exception("Failed to upload image to ImageKit.");
         }
       }
 
@@ -544,9 +542,9 @@ class MarketplaceController extends GetxController {
       request.fields['condition'] = condition;
       request.fields['delivery_type'] = deliveryType;
 
-      // Add firebase image URLs
-      for (int i = 0; i < firebaseUrls.length; i++) {
-        request.fields['image_urls[$i]'] = firebaseUrls[i];
+      // Add ImageKit image URLs
+      for (int i = 0; i < imagekitUrls.length; i++) {
+        request.fields['image_urls[$i]'] = imagekitUrls[i];
       }
 
       final response = await request.send();
