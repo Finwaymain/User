@@ -488,8 +488,6 @@ class MarketplaceController extends GetxController {
     required List<String> imagePaths,
   }) async {
     try {
-      // Ensure the user is signed in to Firebase Auth before performing storage operations
-      await Constant.ensureFirebaseAuthenticated();
 
       // 1. Upload images to ImageKit
       final List<String> imagekitUrls = [];
@@ -566,7 +564,7 @@ class MarketplaceController extends GetxController {
       }
     } catch (e) {
       debugPrint("Error posting product: $e");
-      Get.snackbar("Error", "An unexpected error occurred.", backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar("Error", e.toString().replaceAll("Exception: ", ""), backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
     }
     return false;
   }
