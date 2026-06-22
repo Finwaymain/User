@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:finway/service/api.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:finway/constant/constant.dart';
 
 class MarketplaceController extends GetxController {
   var isLoading = false.obs;
@@ -489,15 +490,7 @@ class MarketplaceController extends GetxController {
   }) async {
     try {
       // Ensure the user is signed in to Firebase Auth before performing storage operations
-      if (FirebaseAuth.instance.currentUser == null) {
-        try {
-          debugPrint("No signed-in Firebase user. Attempting anonymous sign-in...");
-          await FirebaseAuth.instance.signInAnonymously();
-          debugPrint("Anonymous sign-in successful: ${FirebaseAuth.instance.currentUser?.uid}");
-        } catch (e) {
-          debugPrint("Failed to sign in anonymously to Firebase: $e");
-        }
-      }
+      await Constant.ensureFirebaseAuthenticated();
 
       // 1. Upload images to Firebase Storage
       final List<String> firebaseUrls = [];

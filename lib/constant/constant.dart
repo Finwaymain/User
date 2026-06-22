@@ -196,12 +196,27 @@ class Constant {
   }
 
   static Future<void> ensureFirebaseAuthenticated() async {
-    if (FirebaseAuth.instance.currentUser == null) {
-      try {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        log("No current user, signing in anonymously...");
         await FirebaseAuth.instance.signInAnonymously();
-        log("Anonymous Firebase sign-in successful: ${FirebaseAuth.instance.currentUser?.uid}");
-      } catch (e) {
-        log("Failed to sign in anonymously to Firebase: $e");
+      } else {
+        // Force refresh the token to verify if the session is still active/valid
+        log("User exists, verifying/refreshing token...");
+        await user.getIdToken(true);
+      }
+      log("Firebase Authentication active: ${FirebaseAuth.instance.currentUser?.uid}");
+    } catch (e) {
+      log("Firebase authentication check/refresh failed. Attempting clean anonymous sign-in: $e");
+      try {
+        // Sign out first to clear any corrupted/invalid state
+        await FirebaseAuth.instance.signOut();
+        await FirebaseAuth.instance.signInAnonymously();
+        log("Clean anonymous sign-in successful: ${FirebaseAuth.instance.currentUser?.uid}");
+      } catch (innerError) {
+        log("Failed to sign in anonymously after reset: $innerError");
+        throw Exception("Firebase Authentication failed: $innerError");
       }
     }
   }
