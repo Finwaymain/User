@@ -36,8 +36,9 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 import 'package:video_compress/video_compress.dart';
 // ignore: depend_on_referenced_packages
-import 'package:google_api_headers/google_api_headers.dart';
 import 'package:http/http.dart' as http;
+import 'package:google_api_headers/google_api_headers.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class Constant {
   static String? appName = "Fiinway";
@@ -194,7 +195,19 @@ class Constant {
     }
   }
 
+  static Future<void> ensureFirebaseAuthenticated() async {
+    if (FirebaseAuth.instance.currentUser == null) {
+      try {
+        await FirebaseAuth.instance.signInAnonymously();
+        log("Anonymous Firebase sign-in successful: ${FirebaseAuth.instance.currentUser?.uid}");
+      } catch (e) {
+        log("Failed to sign in anonymously to Firebase: $e");
+      }
+    }
+  }
+
   static Future<Url> uploadChatImageToFireStorage(File image) async {
+    await ensureFirebaseAuthenticated();
     ShowToastDialog.showLoader('Uploading image...');
     var uniqueID = const Uuid().v4();
     Reference upload = FirebaseStorage.instance.ref().child('images/$uniqueID.png');
@@ -218,6 +231,7 @@ class Constant {
 
   static Future<ChatVideoContainer?> uploadChatVideoToFireStorage(File video) async {
     try {
+      await ensureFirebaseAuthenticated();
       ShowToastDialog.showLoader("Uploading video...");
       final String uniqueID = const Uuid().v4();
       final Reference videoRef = FirebaseStorage.instance.ref('videos/$uniqueID.mp4');

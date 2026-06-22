@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:finway/service/api.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class MarketplaceController extends GetxController {
   var isLoading = false.obs;
@@ -487,19 +488,39 @@ class MarketplaceController extends GetxController {
     required List<String> imagePaths,
   }) async {
     try {
+      // Ensure the user is signed in to Firebase Auth before performing storage operations
+      if (FirebaseAuth.instance.currentUser == null) {
+        try {
+          debugPrint("No signed-in Firebase user. Attempting anonymous sign-in...");
+          await FirebaseAuth.instance.signInAnonymously();
+          debugPrint("Anonymous sign-in successful: ${FirebaseAuth.instance.currentUser?.uid}");
+        } catch (e) {
+          debugPrint("Failed to sign in anonymously to Firebase: $e");
+        }
+      }
+
       // 1. Upload images to Firebase Storage
       final List<String> firebaseUrls = [];
-      final storageRef = FirebaseStorage.instance.ref();
       for (String path in imagePaths) {
         final file = File(path);
         if (!await file.exists()) {
           throw Exception("File does not exist: $path");
         }
         final fileName = "${DateTime.now().millisecondsSinceEpoch}_${path.split('/').last}";
-        final imageRef = storageRef.child("marketplace/products/$fileName");
-        final uploadTask = await imageRef.putFile(file);
-        final downloadUrl = await uploadTask.ref.getDownloadURL();
-        firebaseUrls.add(downloadUrl);
+        
+        String? downloadUrl;
+        try {
+          final imageRef = FirebaseStorage.instance.ref().child("marketplace/products/$fileName");
+          final uploadTask = await imageRef.putFile(file);
+          downloadUrl = await uploadTask.ref.getDownloadURL();
+        } catch (e) {
+          debugPrint("Firebase Storage upload failed: $e");
+          rethrow;
+        }
+        
+        if (downloadUrl != null) {
+          firebaseUrls.add(downloadUrl);
+        }
       }
 
       final uri = Uri.parse(API.createMarketplaceProduct);
