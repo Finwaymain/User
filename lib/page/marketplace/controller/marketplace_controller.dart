@@ -1,9 +1,11 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:finway/themes/constant_colors.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:finway/service/api.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class MarketplaceController extends GetxController {
   var isLoading = false.obs;
@@ -485,6 +487,21 @@ class MarketplaceController extends GetxController {
     required List<String> imagePaths,
   }) async {
     try {
+      // 1. Upload images to Firebase Storage
+      final List<String> firebaseUrls = [];
+      final storageRef = FirebaseStorage.instance.ref();
+      for (String path in imagePaths) {
+        final file = File(path);
+        if (!await file.exists()) {
+          throw Exception("File does not exist: $path");
+        }
+        final fileName = "${DateTime.now().millisecondsSinceEpoch}_${path.split('/').last}";
+        final imageRef = storageRef.child("marketplace/products/$fileName");
+        final uploadTask = await imageRef.putFile(file);
+        final downloadUrl = await uploadTask.ref.getDownloadURL();
+        firebaseUrls.add(downloadUrl);
+      }
+
       final uri = Uri.parse(API.createMarketplaceProduct);
       final request = http.MultipartRequest('POST', uri);
       
@@ -513,10 +530,9 @@ class MarketplaceController extends GetxController {
       request.fields['condition'] = condition;
       request.fields['delivery_type'] = deliveryType;
 
-      // Add images
-      for (int i = 0; i < imagePaths.length; i++) {
-        final file = await http.MultipartFile.fromPath('images[]', imagePaths[i]);
-        request.files.add(file);
+      // Add firebase image URLs
+      for (int i = 0; i < firebaseUrls.length; i++) {
+        request.fields['image_urls[$i]'] = firebaseUrls[i];
       }
 
       final response = await request.send();
