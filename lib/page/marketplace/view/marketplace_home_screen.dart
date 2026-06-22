@@ -179,9 +179,11 @@ class _MarketplaceHomeScreenState extends State<MarketplaceHomeScreen> with Sing
       top: 0,
       left: 0,
       right: 0,
-      child: Opacity(
-        opacity: _appBarOpacity.value,
-        child: ClipRRect(
+      child: IgnorePointer(
+        ignoring: _appBarOpacity.value == 0.0,
+        child: Opacity(
+          opacity: _appBarOpacity.value,
+          child: ClipRRect(
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: Container(
@@ -215,6 +217,7 @@ class _MarketplaceHomeScreenState extends State<MarketplaceHomeScreen> with Sing
           ),
         ),
       ),
+    ),
     );
   }
 

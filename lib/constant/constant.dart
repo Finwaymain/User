@@ -220,73 +220,58 @@ class Constant {
     }
   }
 
-  static const String imagekitPrivateKey = "private_PLACEHOLDER_KEY";
   static const String imagekitUrlEndpoint = "https://ik.imagekit.io/77z5w3wmv";
 
-  static Future<String?> uploadFileToImageKit(File file, {required String folder}) async {
-    try {
-      final uri = Uri.parse("https://upload.imagekit.io/api/v1/files/upload");
-      final request = http.MultipartRequest('POST', uri);
-      
-      final String basicAuth = 'Basic ${base64Encode(utf8.encode('$imagekitPrivateKey:'))}';
-      request.headers['Authorization'] = basicAuth;
-      
-      request.fields['fileName'] = "${DateTime.now().millisecondsSinceEpoch}_${file.path.split('/').last}";
-      request.fields['folder'] = folder;
-      request.fields['useUniqueFileName'] = "true";
-      
-      request.files.add(await http.MultipartFile.fromPath('file', file.path));
-      
-      final streamedResponse = await request.send();
-      final response = await http.Response.fromStream(streamedResponse);
-      
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> responseData = jsonDecode(response.body);
+  /// Upload a file to ImageKit via the server middleware.
+  /// The server holds the private key — the app never touches it.
+  static Future<String?> uploadFileViaServer(File file, {required String folder}) async {
+    final uri = Uri.parse(API.uploadMarketplaceImage);
+    final request = http.MultipartRequest('POST', uri);
+    
+    // Add auth headers (apikey + accesstoken)
+    API.header.forEach((key, val) {
+      request.headers[key] = val;
+    });
+    // Remove content-type so http package sets multipart boundary automatically
+    request.headers.remove('content-type');
+    
+    request.fields['folder'] = folder;
+    request.files.add(await http.MultipartFile.fromPath('image', file.path));
+    
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+    
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+      if (responseData['success'] == 'Success') {
         return responseData['url'];
-      } else {
-        log("ImageKit upload error: ${response.statusCode} - ${response.body}");
-        return null;
       }
-    } catch (e) {
-      log("ImageKit upload exception: $e");
-      return null;
     }
+    throw Exception("Upload error (${response.statusCode}): ${response.body}");
   }
 
-  static Future<String?> uploadBytesToImageKit(Uint8List bytes, String fileName, {required String folder}) async {
+  /// Upload raw bytes via server middleware (used for thumbnails etc.).
+  /// Writes bytes to a temp file first, then uploads via server.
+  static Future<String?> uploadBytesViaServer(Uint8List bytes, String fileName, {required String folder}) async {
+    // Write bytes to a temporary file
+    final tempDir = await getTemporaryDirectory();
+    final tempFile = File('${tempDir.path}/$fileName');
+    await tempFile.writeAsBytes(bytes);
+    
     try {
-      final uri = Uri.parse("https://upload.imagekit.io/api/v1/files/upload");
-      final request = http.MultipartRequest('POST', uri);
-      
-      final String basicAuth = 'Basic ${base64Encode(utf8.encode('$imagekitPrivateKey:'))}';
-      request.headers['Authorization'] = basicAuth;
-      
-      request.fields['fileName'] = fileName;
-      request.fields['folder'] = folder;
-      request.fields['useUniqueFileName'] = "true";
-      
-      request.files.add(http.MultipartFile.fromBytes('file', bytes, filename: fileName));
-      
-      final streamedResponse = await request.send();
-      final response = await http.Response.fromStream(streamedResponse);
-      
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> responseData = jsonDecode(response.body);
-        return responseData['url'];
-      } else {
-        log("ImageKit upload bytes error: ${response.statusCode} - ${response.body}");
-        return null;
+      return await uploadFileViaServer(tempFile, folder: folder);
+    } finally {
+      // Clean up temp file
+      if (await tempFile.exists()) {
+        await tempFile.delete();
       }
-    } catch (e) {
-      log("ImageKit upload bytes exception: $e");
-      return null;
     }
   }
 
   static Future<Url> uploadChatImageToFireStorage(File image) async {
     ShowToastDialog.showLoader('Uploading image...');
     try {
-      final String? imageUrl = await uploadFileToImageKit(image, folder: "/chats/images");
+      final String? imageUrl = await uploadFileViaServer(image, folder: "/chats/images");
       ShowToastDialog.closeLoader();
       if (imageUrl == null) {
         throw Exception("Upload failed");
@@ -294,7 +279,7 @@ class Constant {
       return Url(mime: 'image', url: imageUrl);
     } catch (e) {
       ShowToastDialog.closeLoader();
-      log("ImageKit upload error: $e");
+      log("Image upload error: $e");
       ShowToastDialog.showToast("Error: ${e.toString()}");
       rethrow;
     }
@@ -303,9 +288,9 @@ class Constant {
   static Future<ChatVideoContainer?> uploadChatVideoToFireStorage(File video) async {
     try {
       ShowToastDialog.showLoader("Uploading video...");
-      final String? videoUrl = await uploadFileToImageKit(video, folder: "/chats/videos");
+      final String? videoUrl = await uploadFileViaServer(video, folder: "/chats/videos");
       if (videoUrl == null) {
-        throw Exception("Failed to upload video to ImageKit");
+        throw Exception("Failed to upload video");
       }
 
       ShowToastDialog.showLoader("Generating thumbnail...");
@@ -322,11 +307,11 @@ class Constant {
       }
 
       ShowToastDialog.showLoader("Uploading thumbnail...");
-      final String? thumbnailUrl = await uploadBytesToImageKit(thumbnailBytes, "thumbnail_${const Uuid().v4()}.jpg", folder: "/chats/thumbnails");
+      final String? thumbnailUrl = await uploadBytesViaServer(thumbnailBytes, "thumbnail_${const Uuid().v4()}.jpg", folder: "/chats/thumbnails");
       ShowToastDialog.closeLoader();
 
       if (thumbnailUrl == null) {
-        throw Exception("Failed to upload thumbnail to ImageKit");
+        throw Exception("Failed to upload thumbnail");
       }
 
       return ChatVideoContainer(
@@ -341,7 +326,7 @@ class Constant {
   }
 
   static Future<String> uploadVideoThumbnailToFireStorage(File file) async {
-    final String? downloadUrl = await uploadFileToImageKit(file, folder: "/chats/thumbnails");
+    final String? downloadUrl = await uploadFileViaServer(file, folder: "/chats/thumbnails");
     return downloadUrl ?? "";
   }
 

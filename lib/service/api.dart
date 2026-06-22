@@ -116,6 +116,7 @@ class API {
   static const getMyMarketplaceProducts = "${baseUrl}marketplace/my-products";
   static const getMarketplaceProductProgress = "${baseUrl}marketplace/products/"; // + id + /progress
   static const createMarketplaceProduct = "${baseUrl}marketplace/products";
+  static const uploadMarketplaceImage = "${baseUrl}marketplace/upload-image";
   static const updateMarketplaceProduct = "${baseUrl}marketplace/products/"; // + id + /update
   static const deleteMarketplaceProduct = "${baseUrl}marketplace/products/"; // + id + /delete
 }

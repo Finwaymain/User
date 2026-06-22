@@ -489,26 +489,40 @@ class MarketplaceController extends GetxController {
   }) async {
     try {
 
-      // 1. Upload images to ImageKit
-      final List<String> imagekitUrls = [];
+      // 1. Upload images via server middleware (server proxies to ImageKit)
+      final List<String> uploadedUrls = [];
       for (String path in imagePaths) {
         final file = File(path);
         if (!await file.exists()) {
           throw Exception("File does not exist: $path");
         }
         
-        String? downloadUrl;
         try {
-          downloadUrl = await Constant.uploadFileToImageKit(file, folder: "/marketplace/products");
+          final uploadUri = Uri.parse(API.uploadMarketplaceImage);
+          final uploadRequest = http.MultipartRequest('POST', uploadUri);
+          
+          // Add authentication headers
+          API.header.forEach((key, val) {
+            uploadRequest.headers[key] = val;
+          });
+          // Remove content-type for multipart (http package sets it automatically)
+          uploadRequest.headers.remove('content-type');
+          
+          uploadRequest.fields['folder'] = '/marketplace/products';
+          uploadRequest.files.add(await http.MultipartFile.fromPath('image', file.path));
+          
+          final uploadResponse = await uploadRequest.send();
+          final uploadBody = await uploadResponse.stream.bytesToString();
+          final uploadJson = json.decode(uploadBody);
+          
+          if (uploadResponse.statusCode == 200 && uploadJson['success'] == 'Success') {
+            uploadedUrls.add(uploadJson['url']);
+          } else {
+            throw Exception(uploadJson['error'] ?? "Server upload failed (${uploadResponse.statusCode})");
+          }
         } catch (e) {
-          debugPrint("ImageKit upload failed: $e");
+          debugPrint("Server image upload failed: $e");
           rethrow;
-        }
-        
-        if (downloadUrl != null) {
-          imagekitUrls.add(downloadUrl);
-        } else {
-          throw Exception("Failed to upload image to ImageKit.");
         }
       }
 
@@ -540,9 +554,9 @@ class MarketplaceController extends GetxController {
       request.fields['condition'] = condition;
       request.fields['delivery_type'] = deliveryType;
 
-      // Add ImageKit image URLs
-      for (int i = 0; i < imagekitUrls.length; i++) {
-        request.fields['image_urls[$i]'] = imagekitUrls[i];
+      // Add server-uploaded image URLs
+      for (int i = 0; i < uploadedUrls.length; i++) {
+        request.fields['image_urls[$i]'] = uploadedUrls[i];
       }
 
       final response = await request.send();
