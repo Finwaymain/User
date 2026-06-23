@@ -21,6 +21,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:intl_phone_field/countries.dart';
 import 'package:provider/provider.dart';
 
 import '../../constant/image_constant.dart';
@@ -290,6 +291,8 @@ class MyProfileScreen extends StatelessWidget {
                                                   width: 0.8,
                                                 )),
                                                 child: IntlPhoneField(
+                                                  countries: countries.where((country) => country.code == 'IN').toList(),
+                                                  initialCountryCode: 'IN',
                                                   textAlign: TextAlign.start,
                                                   flagsButtonPadding: EdgeInsets.only(left: 10, right: 10),
                                                   readOnly: true,

@@ -16,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:intl_phone_field/countries.dart';
 import 'package:provider/provider.dart';
 
 // ignore: must_be_immutable
@@ -161,6 +162,8 @@ class SignupScreen extends StatelessWidget {
                                               borderRadius: const BorderRadius.all(Radius.circular(0))),
                                           padding: const EdgeInsets.only(left: 10),
                                           child: IntlPhoneField(
+                                            countries: countries.where((country) => country.code == 'IN').toList(),
+                                            initialCountryCode: 'IN',
                                             flagsButtonPadding: const EdgeInsets.symmetric(horizontal: 8),
                                             textAlign: TextAlign.start,
                                             onChanged: (number) {

@@ -583,6 +583,126 @@ class MarketplaceController extends GetxController {
     return false;
   }
 
+  // Order variables
+  var buyerOrders = <Map<String, dynamic>>[].obs;
+  var isBuyerOrdersLoading = false.obs;
+  var sellerOrders = <Map<String, dynamic>>[].obs;
+  var isSellerOrdersLoading = false.obs;
+
+  Future<void> fetchBuyerOrders() async {
+    isBuyerOrdersLoading.value = true;
+    try {
+      final response = await http.get(Uri.parse(API.getMarketplaceBuyerOrders), headers: API.header);
+      if (response.statusCode == 200) {
+        final jsonDec = json.decode(response.body);
+        if (jsonDec['success'] == 'Success') {
+          final List<dynamic> list = jsonDec['data'] ?? [];
+          buyerOrders.value = List<Map<String, dynamic>>.from(list);
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching buyer orders: $e");
+    }
+    isBuyerOrdersLoading.value = false;
+  }
+
+  Future<void> fetchSellerOrders() async {
+    isSellerOrdersLoading.value = true;
+    try {
+      final response = await http.get(Uri.parse(API.getMarketplaceSellerOrders), headers: API.header);
+      if (response.statusCode == 200) {
+        final jsonDec = json.decode(response.body);
+        if (jsonDec['success'] == 'Success') {
+          final List<dynamic> list = jsonDec['data'] ?? [];
+          sellerOrders.value = List<Map<String, dynamic>>.from(list);
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching seller orders: $e");
+    }
+    isSellerOrdersLoading.value = false;
+  }
+
+  Future<bool> placeOrder({required String address, required String phone}) async {
+    isLoading.value = true;
+    try {
+      final url = Uri.parse(API.createMarketplaceOrder);
+      final body = json.encode({
+        "delivery_address": address,
+        "phone": phone,
+        "items": cartItems.map((item) => {
+          "product_id": int.parse(item['id']),
+          "quantity": item['quantity']
+        }).toList()
+      });
+      final response = await http.post(
+        url,
+        headers: API.header,
+        body: body,
+      );
+      if (response.statusCode == 200) {
+        final jsonDec = json.decode(response.body);
+        if (jsonDec['success'] == 'Success') {
+          cartItems.clear();
+          fetchMarketplaceData();
+          fetchBuyerOrders();
+          isLoading.value = false;
+          return true;
+        } else {
+          Get.snackbar("Error", jsonDec['error'] ?? "Failed to place order.", backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+        }
+      } else {
+        final jsonDec = json.decode(response.body);
+        Get.snackbar("Error", jsonDec['error'] ?? "Failed to place order.", backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+      }
+    } catch (e) {
+      debugPrint("Error placing order: $e");
+      Get.snackbar("Error", "An unexpected error occurred while placing order.", backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+    }
+    isLoading.value = false;
+    return false;
+  }
+
+  Future<bool> updateOrderStatus(String orderId, String status, {int? deliveryDays, String? notes}) async {
+    isLoading.value = true;
+    try {
+      final url = Uri.parse("${API.updateMarketplaceOrderStatus}$orderId/status");
+      final bodyMap = <String, dynamic>{
+        "status": status,
+      };
+      if (deliveryDays != null) {
+        bodyMap["delivery_days"] = deliveryDays;
+      }
+      if (notes != null) {
+        bodyMap["status_notes"] = notes;
+      }
+      final response = await http.post(
+        url,
+        headers: API.header,
+        body: json.encode(bodyMap),
+      );
+      if (response.statusCode == 200) {
+        final jsonDec = json.decode(response.body);
+        if (jsonDec['success'] == 'Success') {
+          fetchSellerOrders();
+          fetchBuyerOrders();
+          isLoading.value = false;
+          return true;
+        } else {
+          Get.snackbar("Error", jsonDec['error'] ?? "Failed to update order status.", backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+        }
+      } else {
+        final jsonDec = json.decode(response.body);
+        Get.snackbar("Error", jsonDec['error'] ?? "Failed to update order status.", backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+      }
+    } catch (e) {
+      debugPrint("Error updating status: $e");
+      Get.snackbar("Error", "An unexpected error occurred while updating status.", backgroundColor: Colors.red, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+    }
+    isLoading.value = false;
+    return false;
+  }
+
   List<Map<String, dynamic>> get filteredProducts {
     List<Map<String, dynamic>> list = products.toList();
 

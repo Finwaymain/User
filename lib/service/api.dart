@@ -119,4 +119,11 @@ class API {
   static const uploadMarketplaceImage = "${baseUrl}marketplace/upload-image";
   static const updateMarketplaceProduct = "${baseUrl}marketplace/products/"; // + id + /update
   static const deleteMarketplaceProduct = "${baseUrl}marketplace/products/"; // + id + /delete
+
+  // Marketplace Order APIs
+  static const createMarketplaceOrder = "${baseUrl}marketplace/orders";
+  static const getMarketplaceBuyerOrders = "${baseUrl}marketplace/orders/buyer";
+  static const getMarketplaceSellerOrders = "${baseUrl}marketplace/orders/seller";
+  static const getMarketplaceOrderDetails = "${baseUrl}marketplace/orders/"; // + id
+  static const updateMarketplaceOrderStatus = "${baseUrl}marketplace/orders/"; // + id + /status
 }

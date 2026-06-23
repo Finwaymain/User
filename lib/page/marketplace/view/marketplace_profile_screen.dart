@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
 import '../controller/marketplace_controller.dart';
+import 'marketplace_orders_screen.dart';
 
 class MarketplaceProfileScreen extends StatelessWidget {
   const MarketplaceProfileScreen({Key? key}) : super(key: key);
@@ -44,6 +45,8 @@ class MarketplaceProfileScreen extends StatelessWidget {
               children: [
                 _buildProfileCard(isDark),
                 _buildStatsRow(isDark, controller),
+                _buildOrdersButton(context, isDark),
+                const SizedBox(height: 10),
                 _buildListingsSection(isDark, controller),
                 _buildSavedSection(isDark),
               ],
@@ -231,6 +234,50 @@ class MarketplaceProfileScreen extends StatelessWidget {
           const SizedBox(height: 16),
           const Text("You have 5 saved items.", style: TextStyle(color: Colors.grey, fontSize: 13)),
         ],
+      ),
+    );
+  }
+
+  Widget _buildOrdersButton(BuildContext context, bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: GestureDetector(
+        onTap: () => Get.to(() => const MarketplaceOrdersScreen()),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          decoration: BoxDecoration(
+            color: isDark ? AppThemeData.grey800 : Colors.white,
+            borderRadius: BorderRadius.circular(15),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.receipt_long, color: AppThemeData.primary200),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Marketplace Orders",
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                        fontSize: 15,
+                        fontFamily: AppThemeData.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    const Text(
+                      "Track your purchases & incoming orders",
+                      style: TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+            ],
+          ),
+        ),
       ),
     );
   }

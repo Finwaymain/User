@@ -86,7 +86,7 @@ class MarketplaceCartScreen extends StatelessWidget {
           bottom: 0,
           left: 0,
           right: 0,
-          child: _buildCheckoutSummary(isDark, controller),
+          child: _buildCheckoutSummary(context, isDark, controller),
         ),
       ],
     );
@@ -182,7 +182,7 @@ class MarketplaceCartScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCheckoutSummary(bool isDark, MarketplaceController controller) {
+  Widget _buildCheckoutSummary(BuildContext context, bool isDark, MarketplaceController controller) {
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
       child: BackdropFilter(
@@ -227,49 +227,7 @@ class MarketplaceCartScreen extends StatelessWidget {
                       boxShadow: [BoxShadow(color: AppThemeData.primary200.withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8))],
                     ),
                     child: ElevatedButton(
-                      onPressed: () {
-                        Get.dialog(
-                          barrierDismissible: false,
-                          Center(
-                            child: Container(
-                              margin: const EdgeInsets.all(30),
-                              padding: const EdgeInsets.all(30),
-                              decoration: BoxDecoration(
-                                color: isDark ? AppThemeData.grey900 : Colors.white,
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.check_circle_rounded, color: AppThemeData.primary200, size: 100),
-                                  const SizedBox(height: 30),
-                                  const Text("Payment Success!", style: TextStyle(fontSize: 22, fontFamily: AppThemeData.bold)),
-                                  const SizedBox(height: 15),
-                                  const Text("Your order has been placed successfully. You can track your order in the profile section.", textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
-                                  const SizedBox(height: 40),
-                                  SizedBox(
-                                    width: double.infinity,
-                                    child: ElevatedButton(
-                                      onPressed: () {
-                                        controller.cartItems.clear();
-                                        Get.offAllNamed('/marketplace_home'); // Assuming this route exists, or go back
-                                        Get.back(); // Close dialog
-                                        Get.back(); // Go back to home
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: AppThemeData.primary200,
-                                        padding: const EdgeInsets.symmetric(vertical: 18),
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                                      ),
-                                      child: const Text("BACK TO HOME", style: TextStyle(color: Colors.white, fontFamily: AppThemeData.bold)),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      },
+                      onPressed: () => _showDeliveryDetailsBottomSheet(context, isDark, controller),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
                         shadowColor: Colors.transparent,
@@ -282,6 +240,173 @@ class MarketplaceCartScreen extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showDeliveryDetailsBottomSheet(BuildContext context, bool isDark, MarketplaceController controller) {
+    final addressController = TextEditingController();
+    final phoneController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: isDark ? AppThemeData.grey900 : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+        ),
+        child: SingleChildScrollView(
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Delivery Details",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontFamily: AppThemeData.bold,
+                        color: isDark ? Colors.white : Colors.black,
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.close, color: isDark ? Colors.white : Colors.black),
+                      onPressed: () => Get.back(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  "Delivery Address",
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontFamily: AppThemeData.bold,
+                    color: isDark ? Colors.white70 : Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: addressController,
+                  maxLines: 3,
+                  style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                  decoration: InputDecoration(
+                    hintText: "Enter full delivery address...",
+                    hintStyle: const TextStyle(color: Colors.grey),
+                    filled: true,
+                    fillColor: isDark ? Colors.black12 : Colors.grey[100],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(15),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  validator: (value) => value == null || value.isEmpty ? "Please enter address" : null,
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  "Phone Number",
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontFamily: AppThemeData.bold,
+                    color: isDark ? Colors.white70 : Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: phoneController,
+                  keyboardType: TextInputType.phone,
+                  style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                  decoration: InputDecoration(
+                    hintText: "Enter contact number...",
+                    hintStyle: const TextStyle(color: Colors.grey),
+                    filled: true,
+                    fillColor: isDark ? Colors.black12 : Colors.grey[100],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(15),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  validator: (value) => value == null || value.isEmpty ? "Please enter phone number" : null,
+                ),
+                const SizedBox(height: 30),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      if (formKey.currentState!.validate()) {
+                        Get.back(); // close bottom sheet
+                        bool success = await controller.placeOrder(
+                          address: addressController.text,
+                          phone: phoneController.text,
+                        );
+                        if (success) {
+                          _showSuccessDialog(context, isDark);
+                        }
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppThemeData.primary200,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                    ),
+                    child: const Text(
+                      "CONFIRM & PLACE ORDER",
+                      style: TextStyle(color: Colors.white, fontFamily: AppThemeData.bold),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
+            ),
+          ),
+        ),
+      ),
+      isScrollControlled: true,
+    );
+  }
+
+  void _showSuccessDialog(BuildContext context, bool isDark) {
+    Get.dialog(
+      barrierDismissible: false,
+      Center(
+        child: Container(
+          margin: const EdgeInsets.all(30),
+          padding: const EdgeInsets.all(30),
+          decoration: BoxDecoration(
+            color: isDark ? AppThemeData.grey900 : Colors.white,
+            borderRadius: BorderRadius.circular(30),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.check_circle_rounded, color: AppThemeData.primary200, size: 100),
+              const SizedBox(height: 30),
+              const Text("Payment Success!", style: TextStyle(fontSize: 22, fontFamily: AppThemeData.bold)),
+              const SizedBox(height: 15),
+              const Text("Your order has been placed successfully. You can track your order in the marketplace section.", textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
+              const SizedBox(height: 40),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Get.back(); // Close dialog
+                    Get.back(); // Go back to home
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppThemeData.primary200,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                  ),
+                  child: const Text("BACK TO HOME", style: TextStyle(color: Colors.white, fontFamily: AppThemeData.bold)),
+                ),
+              ),
+            ],
           ),
         ),
       ),
