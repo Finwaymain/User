@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'package:location/location.dart';
+import 'package:flutter_osm_plugin/flutter_osm_plugin.dart' show SearchInfo;
 
 import 'package:finway/constant/constant.dart';
 import 'package:finway/constant/show_toast_dialog.dart';
@@ -155,18 +156,22 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
 
   Future<void> selectSearchLocation(bool isDrop) async {
     final result = await Get.to(() => AddressSearchScreen());
-    if (result != null) {
+    if (result != null && result is SearchInfo) {
       final homeCtrl = Get.find<HomeController>();
+      final double lat = result.point!.latitude;
+      final double lng = result.point!.longitude;
+      final String addr = result.address.toString();
+
       if (isDrop) {
-        homeCtrl.destinationLatLong.value = LatLng(result.latitude, result.longitude);
-        homeCtrl.destinationController.text = result.address;
-        
+        homeCtrl.destinationLatLong.value = LatLng(lat, lng);
+        homeCtrl.destinationController.text = addr;
+
         // Save to SQLite search history
-        await DBHelper.insertSearch(result.address, result.latitude, result.longitude);
+        await DBHelper.insertSearch(addr, lat, lng);
         loadHistory();
       } else {
-        homeCtrl.departureLatLong.value = LatLng(result.latitude, result.longitude);
-        homeCtrl.departureController.text = result.address;
+        homeCtrl.departureLatLong.value = LatLng(lat, lng);
+        homeCtrl.departureController.text = addr;
       }
 
       if (homeCtrl.departureController.text.isNotEmpty && homeCtrl.destinationController.text.isNotEmpty) {
