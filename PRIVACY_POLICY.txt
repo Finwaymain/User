@@ -1,0 +1,133 @@
+# PRIVACY POLICY FOR FIINWAY USER APPLICATION
+
+**Last Updated:** June 24, 2026
+
+---
+
+## 1. INTRODUCTION AND SCOPE
+
+This Privacy Policy (hereinafter referred to as the "Policy") governs the collection, processing, storage, disclosure, and protection of personal data by Fiinway (hereinafter referred to as "the Company," "we," "us," or "our") from individuals who register as riders, passengers, or customers (hereinafter referred to as "Users," "you," or "your") on the Fiinway User mobile application (hereinafter referred to as the "User App" or "Application").
+
+By downloading, installing, registering with, or using the Application, you acknowledge and agree that your personal data will be processed in accordance with this Policy. If you do not agree with any terms herein, you must immediately cease all access, installation, and usage of the Application and any associated services.
+
+This Policy is formulated in strict compliance with applicable global and regional data protection regulations, including but not limited to the General Data Protection Regulation (GDPR) and the California Consumer Privacy Act (CCPA), as well as local jurisdictional laws governing data privacy.
+
+---
+
+## 2. DEFINITIONS
+
+* **"Application" / "User App"** refers to the Fiinway User mobile software application provided by the Company for use by registered customers.
+* **"Personal Data"** refers to any information relating to an identified or identifiable natural person.
+* **"Processing"** refers to any operation or set of operations performed on Personal Data, whether or not by automated means.
+* **"Driver"** refers to any registered independent contractor or driver partner who provides transportation or logistics services via the Fiinway platform.
+* **"Services"** refers to the ride-hailing coordination, routing, location tracking, and payment collection facilitation services provided by the Company via its platform.
+
+---
+
+## 3. TYPES OF DATA COLLECTED
+
+To facilitate the delivery of our services, process payments, and ensure passenger safety, the Company collects several categories of information, which include both information provided voluntarily by you and information collected automatically through the Application.
+
+### A. Data Provided Directly by the User
+
+* **Identity and Registration Data:** Includes full legal name, date of birth, gender, profile photograph, username, and password.
+* **Contact Information:** Includes physical billing address, email address, and mobile phone number.
+* **Emergency Contact Details:** Contact information of third parties designated by you for emergency notifications.
+* **Financial and Payment Data:** Credit card/debit card details, billing addresses, and payment gateway tokens. We do not store raw card numbers on our servers; payments are processed securely via third-party processors.
+
+### B. Data Collected Automatically Through App Usage
+
+* **Precise Location Data:** We collect your device's precise geographic location (coordinates) using GPS, Wi-Fi, and cellular network triangulation. 
+  * *Usage of Location Data:* The Application collects precise location data to auto-fill pickup points, display nearby available Drivers, calculate estimated time of arrival (ETA), track your trip progress, and verify the route taken. 
+  * *Foreground and Background Location:* Location tracking primarily occurs while the Application is open and running in the foreground. If you permit background location access, the Application may continue to track location coordinates when the app is minimized to ensure safety and consistent trip monitoring during an active ride.
+* **Transaction and Usage Data:** Includes details of trips requested, completed, or cancelled, pickup and dropoff coordinates, travel duration, distance travelled, payment receipts, promotional codes used, and service preferences.
+* **Device and Technical Information:** Includes device manufacturer, model, operating system version, unique device identifiers, IP address, mobile network carrier, language settings, and crash logs.
+* **Communications Data:** Text messages and call logs generated when you communicate with Drivers or our customer support team through the Application's integrated communication features.
+
+### C. Data From Third-Party Sources
+
+* **Feedback and Ratings:** Rating and feedback scores submitted by Drivers upon completion of trips.
+* **Authentication Integrations:** Identity markers provided by external single sign-on providers (such as Google Sign-In or Sign in with Apple) if you choose to authenticate using their services.
+
+---
+
+## 4. PURPOSE AND LEGAL BASIS OF PROCESSING
+
+We process your Personal Data under the following legal bases and for the specified purposes:
+
+| Purpose of Processing | Legal Basis of Processing |
+| :--- | :--- |
+| **Account Creation and Authentication:** To establish your profile and secure your access using Firebase Auth, Google Sign-In, or Apple ID. | Performance of Contract |
+| **Service Provisioning and Dispatch:** To locate your pickup position, allocate requests to nearby Drivers, and track route progress. | Performance of Contract |
+| **Payment Verification and Invoicing:** To authorize payment cards, execute transactions via Stripe, PayPal, or Razorpay, and issue trip receipts. | Performance of Contract |
+| **Customer Support:** To investigate and resolve issues reported during trips and manage customer requests. | Performance of Contract / Legitimate Interest |
+| **Safety and Security Monitoring:** To monitor active trips, share real-time locations with emergency contacts, and protect platform security. | Legitimate Interest / Public Interest |
+| **Push Notifications and Updates:** To send operational alerts, booking status updates, receipt details, and customer surveys. | Performance of Contract / Consent |
+| **Legal Compliance:** To comply with tax obligations, accounting rules, respond to court orders, or cooperate with law enforcement. | Legal Obligation |
+
+---
+
+## 5. RECIPIENTS OF DATA AND SHARE AGREEMENTS
+
+The Company does not sell your Personal Data. However, to execute the service agreement, we may disclose your information to the following parties:
+
+* **Drivers:** Once a trip is booked, the allocated Driver is provided with your name, profile photograph, pickup and dropoff coordinates, phone number (masked or direct as configured), and rating.
+* **Payment Processors:** Financial information is shared with Stripe, PayPal, and Razorpay to verify transactions and execute payment charges.
+* **Map and Geocoding Providers:** Location data is shared with Google Maps API and OpenStreetMap (OSM) to render map overlays, calculate routes, and perform address searches.
+* **Cloud Infrastructure and Database Hosts:** Data is stored in secure cloud systems provided by Google Cloud, Firebase, and Cloud Firestore.
+* **Emergency Contacts:** Real-time coordinates may be shared with your designated contacts if you initiate the emergency sharing option.
+* **Law Enforcement and Regulatory Authorities:** We will disclose your Personal Data when legally required to do so by subpoena, court order, or to cooperate with public authorities during active investigations.
+
+---
+
+## 6. DATA RETENTION POLICY
+
+The Company retains your Personal Data only for as long as your account remains active or as necessary to fulfill the purposes outlined in this Policy. 
+
+* **Active Accounts:** Registration, identity, and profile documentation are retained for the duration of your active association with the platform.
+* **Regulatory Compliance:** Tax, financial transactions, and trip history logs are retained for a minimum period of seven (7) years to satisfy national auditing, tax, and transport regulatory laws.
+* **Account Deletion:** Upon receiving a formal account deletion request, the Company will delete or anonymize all non-statutory data within thirty (30) days, subject to the resolution of any outstanding disputes, payments, or active legal claims.
+
+---
+
+## 7. DATA SECURITY MEASURES
+
+We implement industry-standard administrative, technical, and physical security measures to safeguard your Personal Data against unauthorized access, loss, alteration, or disclosure. These measures include:
+
+* Secure Socket Layer (SSL) and Transport Layer Security (TLS) encryption protocols for all data transit.
+* Cryptographic hashing of user credentials and passwords.
+* Restricted access permissions to database instances based on the principle of least privilege.
+* Periodic vulnerability assessments and code reviews.
+
+Despite these efforts, no transmission of data over the internet or cellular networks can be guaranteed to be completely secure. Consequently, you acknowledge that the Company cannot warrant absolute security.
+
+---
+
+## 8. YOUR DATA RIGHTS AND CORRECTIONS
+
+Depending on your jurisdiction, you possess specific statutory rights regarding your Personal Data:
+
+* **Right to Access:** You may request a detailed report of the Personal Data we hold about you.
+* **Right to Rectification:** You may correct inaccurate or incomplete profile information through the Application settings or by contacting support.
+* **Right to Erasure ("Right to be Forgotten"):** You may request the deletion of your account and related Personal Data, subject to statutory retention requirements.
+* **Right to Restrict Processing:** You have the right to request that we limit the processing of your data under specific conditions.
+* **Right to Data Portability:** You may request a copy of your Personal Data in a structured, machine-readable format.
+* **Right to Object:** You may object to the processing of your data based on our legitimate interest.
+
+To exercise these rights, please submit a formal request via email to our Data Protection Officer at: `dpo@fiinway.com`.
+
+---
+
+## 9. CHANGES TO THIS PRIVACY POLICY
+
+The Company reserves the right to amend this Policy at any time. In the event of material modifications, we will notify you through the Application interface, via email, or by updating the revision date at the top of this document. Continued usage of the Application after such modifications constitutes your acceptance of the updated terms.
+
+---
+
+## 10. CONTACT INFORMATION
+
+For legal inquiries, data rights execution, or clarifications regarding this Privacy Policy, please contact us at:
+
+**Fiinway Legal Department**  
+Email: `legal@fiinway.com`  
+Address: Fiinway Corporate Office, Compliance Division.

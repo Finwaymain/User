@@ -73,6 +73,14 @@ class _LocationPickerState extends State<LocationPicker> {
 
   Future<void> _setUserLocation() async {
     try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+        print("Location permission denied in LocationPicker");
+        return;
+      }
       Position position = await Geolocator.getCurrentPosition(desiredAccuracy: locationData.LocationAccuracy.high);
       setState(() async {
         selectedLocation = GeoPoint(

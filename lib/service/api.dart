@@ -126,4 +126,13 @@ class API {
   static const getMarketplaceSellerOrders = "${baseUrl}marketplace/orders/seller";
   static const getMarketplaceOrderDetails = "${baseUrl}marketplace/orders/"; // + id
   static const updateMarketplaceOrderStatus = "${baseUrl}marketplace/orders/"; // + id + /status
+
+  // ── OTP Auth Flow (new phone+email login system) ───────────────────────────
+  static const authSendPhoneOtp         = "${baseUrl}auth/send-phone-otp";
+  static const authVerifyPhoneOtp       = "${baseUrl}auth/verify-phone-otp";
+  static const authSendEmailOtp         = "${baseUrl}auth/send-email-otp";
+  static const authVerifyEmailRegister  = "${baseUrl}auth/verify-email-otp-register";
+  static const authLoginByPhone         = "${baseUrl}auth/login-by-phone";
+  static const authVerifyLoginEmailOtp  = "${baseUrl}auth/verify-login-email-otp";
+  // ───────────────────────────────────────────────────────────────────────────
 }

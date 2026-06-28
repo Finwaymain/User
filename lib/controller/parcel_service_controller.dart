@@ -91,6 +91,14 @@ class ParcelServiceController extends GetxController {
   }
 
   getCurrentLocation() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+    if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+      print("Geolocator location permission denied for parcel service");
+      return;
+    }
     Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
 
     if (Constant.selectedMapType == 'osm') {

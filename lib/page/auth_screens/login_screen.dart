@@ -19,10 +19,21 @@ import 'package:location/location.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import 'package:finway/page/auth_screens/phone_entry_screen.dart';
+
 import '../MainDashBoard/screen/main_dashboard.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const PhoneEntryScreen(mode: 'login');
+  }
+}
+
+class LegacyLoginScreen extends StatelessWidget {
+  const LegacyLoginScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -32,14 +43,6 @@ class LoginScreen extends StatelessWidget {
     return GetBuilder(
         init: LoginController(),
         initState: (state) async {
-          try {
-            PermissionStatus location = await Location().hasPermission();
-            if (PermissionStatus.granted != location) {
-              showDialogPermission(context);
-            }
-          } on PlatformException catch (e) {
-            ShowToastDialog.showToast("${e.message}");
-          }
         },
         builder: (controller) {
           return Scaffold(

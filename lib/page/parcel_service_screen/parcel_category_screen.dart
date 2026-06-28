@@ -2,6 +2,7 @@ import 'package:finway/constant/constant.dart';
 import 'package:finway/model/parcel_category_model.dart';
 import 'package:finway/page/parcel_service_screen/book_parcel_screen.dart';
 import 'package:finway/themes/constant_colors.dart';
+import 'package:finway/themes/appbar_cust.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -18,6 +19,10 @@ class ParcelCategoryScreen extends StatelessWidget {
         builder: (controller) {
           return Scaffold(
             backgroundColor: ConstantColors.background,
+            appBar: CustomAppbar(
+              title: "Select Parcel Category".tr,
+              bgColor: AppThemeData.primary200,
+            ),
             body: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10),
               child: Column(

@@ -58,14 +58,6 @@ class _MainDashboardState extends State<MainDashboard> {
     return GetBuilder(
         init: LoginController(),
         initState: (state) async {
-          try {
-            PermissionStatus location = await Location().hasPermission();
-            if (PermissionStatus.granted != location) {
-              showDialogPermission(context);
-            }
-          } on PlatformException catch (e) {
-            ShowToastDialog.showToast("${e.message}");
-          }
         },
         builder: (controller) {
           return Scaffold(

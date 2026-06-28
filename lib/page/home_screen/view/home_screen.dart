@@ -79,6 +79,7 @@ import 'package:flutter_stripe/flutter_stripe.dart' hide Address;
 import '../../new_ride_screens/new_ride_screen.dart';
 import '../../rented_vehicle.dart';
 import '../../parcel_service_screen/book_parcel_screen.dart';
+import '../../parcel_service_screen/parcel_category_screen.dart';
 import '../../marketplace/view/marketplace_home_screen.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
@@ -123,35 +124,38 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
 
   Future<void> _initUserLocation() async {
     try {
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
-      final userGeoPoint = GeoPoint(
-        latitude: position.latitude,
-        longitude: position.longitude,
-      );
-      if (mainMapController != null) {
-        await mainMapController!.goToLocation(userGeoPoint);
-      }
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
+        Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+        );
+        final userGeoPoint = GeoPoint(
+          latitude: position.latitude,
+          longitude: position.longitude,
+        );
+        if (mainMapController != null) {
+          await mainMapController!.goToLocation(userGeoPoint);
+        }
 
-      // Nominatim reverse geocoding API
-      String url = 'https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.latitude}&lon=${position.longitude}&zoom=18&addressdetails=1';
-      var package = Platform.isAndroid ? 'com.cabme' : 'com.cabme.ios';
-      http.Response response = await http.get(
-        Uri.parse(url),
-        headers: {'User-Agent': package},
-      );
-      if (response.statusCode == 200) {
-        Map<String, dynamic> data = json.decode(response.body);
-        if (mounted) {
-          setState(() {
-            currentAddress = data['display_name'] ?? 'Current Location';
-            if (data['address'] != null) {
-              var addr = data['address'];
-              currentAddress = addr['suburb'] ?? addr['city'] ?? addr['county'] ?? addr['state'] ?? data['display_name'];
-            }
-            isMapReady = true;
-          });
+        // Nominatim reverse geocoding API
+        String url = 'https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.latitude}&lon=${position.longitude}&zoom=18&addressdetails=1';
+        var package = Platform.isAndroid ? 'com.cabme' : 'com.cabme.ios';
+        http.Response response = await http.get(
+          Uri.parse(url),
+          headers: {'User-Agent': package},
+        );
+        if (response.statusCode == 200) {
+          Map<String, dynamic> data = json.decode(response.body);
+          if (mounted) {
+            setState(() {
+              currentAddress = data['display_name'] ?? 'Current Location';
+              if (data['address'] != null) {
+                var addr = data['address'];
+                currentAddress = addr['suburb'] ?? addr['city'] ?? addr['county'] ?? addr['state'] ?? data['display_name'];
+              }
+              isMapReady = true;
+            });
+          }
         }
       }
     } catch (e) {
@@ -162,6 +166,15 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
   void _startBookingFlow({SearchInfo? destinationResult}) async {
     if (!Preferences.getBoolean(Preferences.isLogin)) {
       Get.to(() => const LoginScreen(), transition: Transition.rightToLeftWithFade);
+      return;
+    }
+
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+    if (permission == LocationPermission.deniedForever || permission == LocationPermission.denied) {
+      ShowToastDialog.showToast("Location permission is required to book a ride.");
       return;
     }
 
@@ -495,7 +508,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                                   Get.to(() => const LoginScreen(), transition: Transition.rightToLeftWithFade);
                                   return;
                                 }
-                                Get.to(() => BookParcelScreen(), transition: Transition.rightToLeftWithFade);
+                                Get.to(() => const ParcelCategoryScreen(), transition: Transition.rightToLeftWithFade);
                               },
                             ),
                             VerticalIconWithText(

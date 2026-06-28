@@ -112,23 +112,17 @@ class HomeController extends GetxController with GetSingleTickerProviderStateMix
       }
 
       LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
-          print("Geolocator location permission denied");
-          return;
+      if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
+        Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: locationData.LocationAccuracy.low,
+          timeLimit: const Duration(seconds: 10),
+        );
+        if (Constant.selectedMapType != 'osm') {
+          final address = await Constant().getAddressFromLatLong(position);
+          currentLocationController.text = address;
+          departureController.text = address;
+          departureLatLong.value = LatLng(position.latitude, position.longitude);
         }
-      }
-
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: locationData.LocationAccuracy.low,
-        timeLimit: const Duration(seconds: 10),
-      );
-      if (Constant.selectedMapType != 'osm') {
-        final address = await Constant().getAddressFromLatLong(position);
-        currentLocationController.text = address;
-        departureController.text = address;
-        departureLatLong.value = LatLng(position.latitude, position.longitude);
       }
     } catch (e) {
       print("Error in getCurrentAddress: $e");
@@ -139,50 +133,44 @@ class HomeController extends GetxController with GetSingleTickerProviderStateMix
   getCurrentLocation(bool isDepartureSet) async {
     try {
       if (isDepartureSet) {
-        bool serviceEnabled = await currentLocation.value.serviceEnabled();
-        if (!serviceEnabled) {
-          serviceEnabled = await currentLocation.value.requestService();
-          if (!serviceEnabled) {
-            print("Location service disabled");
-            return;
-          }
-        }
-
         PermissionStatus permissionGranted = await currentLocation.value.hasPermission();
-        if (permissionGranted == PermissionStatus.denied) {
-          permissionGranted = await currentLocation.value.requestPermission();
-          if (permissionGranted != PermissionStatus.granted) {
-            print("Location permission denied");
-            return;
-          }
-        }
-
-        LocationData location = await currentLocation.value.getLocation().timeout(const Duration(seconds: 10));
-        List<get_cord_address.Placemark> placeMarks = await get_cord_address.placemarkFromCoordinates(location.latitude ?? 0.0, location.longitude ?? 0.0);
-
-        if (placeMarks.isNotEmpty && placeMarks.first.country != null) {
-          for (var i = 0; i < Constant.allTaxList.length; i++) {
-            if (Constant.allTaxList[i].country != null &&
-                placeMarks.first.country!.toUpperCase() == Constant.allTaxList[i].country!.toUpperCase()) {
-              Constant.taxList.add(Constant.allTaxList[i]);
+        if (permissionGranted == PermissionStatus.granted) {
+          bool serviceEnabled = await currentLocation.value.serviceEnabled();
+          if (!serviceEnabled) {
+            serviceEnabled = await currentLocation.value.requestService();
+            if (!serviceEnabled) {
+              print("Location service disabled");
+              return;
             }
           }
-        }
 
-        String address = "";
-        if (placeMarks.isNotEmpty) {
-          var first = placeMarks.first;
-          address = (first.subLocality == null || first.subLocality!.isEmpty ? '' : "${first.subLocality}, ") +
-              (first.street == null || first.street!.isEmpty ? '' : "${first.street}, ") +
-              (first.name == null || first.name!.isEmpty ? '' : "${first.name}, ") +
-              (first.subAdministrativeArea == null || first.subAdministrativeArea!.isEmpty ? '' : "${first.subAdministrativeArea}, ") +
-              (first.administrativeArea == null || first.administrativeArea!.isEmpty ? '' : "${first.administrativeArea}, ") +
-              (first.country == null || first.country!.isEmpty ? '' : "${first.country}, ") +
-              (first.postalCode == null || first.postalCode!.isEmpty ? '' : "${first.postalCode}, ");
+          LocationData location = await currentLocation.value.getLocation().timeout(const Duration(seconds: 10));
+          List<get_cord_address.Placemark> placeMarks = await get_cord_address.placemarkFromCoordinates(location.latitude ?? 0.0, location.longitude ?? 0.0);
+
+          if (placeMarks.isNotEmpty && placeMarks.first.country != null) {
+            for (var i = 0; i < Constant.allTaxList.length; i++) {
+              if (Constant.allTaxList[i].country != null &&
+                  placeMarks.first.country!.toUpperCase() == Constant.allTaxList[i].country!.toUpperCase()) {
+                Constant.taxList.add(Constant.allTaxList[i]);
+              }
+            }
+          }
+
+          String address = "";
+          if (placeMarks.isNotEmpty) {
+            var first = placeMarks.first;
+            address = (first.subLocality == null || first.subLocality!.isEmpty ? '' : "${first.subLocality}, ") +
+                (first.street == null || first.street!.isEmpty ? '' : "${first.street}, ") +
+                (first.name == null || first.name!.isEmpty ? '' : "${first.name}, ") +
+                (first.subAdministrativeArea == null || first.subAdministrativeArea!.isEmpty ? '' : "${first.subAdministrativeArea}, ") +
+                (first.administrativeArea == null || first.administrativeArea!.isEmpty ? '' : "${first.administrativeArea}, ") +
+                (first.country == null || first.country!.isEmpty ? '' : "${first.country}, ") +
+                (first.postalCode == null || first.postalCode!.isEmpty ? '' : "${first.postalCode}, ");
+          }
+          currentLocationController.text = address;
+          departureController.text = address;
+          setDepartureMarker(LatLng(location.latitude ?? 0.0, location.longitude ?? 0.0));
         }
-        currentLocationController.text = address;
-        departureController.text = address;
-        setDepartureMarker(LatLng(location.latitude ?? 0.0, location.longitude ?? 0.0));
       }
     } catch (e) {
       print("Error in getCurrentLocation: $e");

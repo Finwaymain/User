@@ -19,9 +19,20 @@ import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:intl_phone_field/countries.dart';
 import 'package:provider/provider.dart';
 
+import 'package:finway/page/auth_screens/phone_entry_screen.dart';
+
 // ignore: must_be_immutable
 class SignupScreen extends StatelessWidget {
   const SignupScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const PhoneEntryScreen(mode: 'signup');
+  }
+}
+
+class LegacySignupScreen extends StatelessWidget {
+  const LegacySignupScreen({super.key});
 
   static final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 

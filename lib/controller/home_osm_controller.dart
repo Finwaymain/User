@@ -102,17 +102,19 @@ class HomeOsmController extends GetxController with GetSingleTickerProviderState
   }
 
   getCurrentAddress({bool setMarker = false}) async {
-    Position position = await Geolocator.getCurrentPosition(desiredAccuracy: locationData.LocationAccuracy.high);
-    if (Constant.selectedMapType == 'osm') {
-      String url = 'https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.latitude}&lon=${position.longitude}&zoom=18&addressdetails=1';
-      var addressData = <String, dynamic>{};
-      var package = Platform.isAndroid ? 'com.cabme' : 'com.cabme.ios';
-      http.Response response = await http.get(
-        Uri.parse(url),
-        headers: {
-          'User-Agent': package,
-        },
-      );
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
+      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: locationData.LocationAccuracy.high);
+      if (Constant.selectedMapType == 'osm') {
+        String url = 'https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.latitude}&lon=${position.longitude}&zoom=18&addressdetails=1';
+        var addressData = <String, dynamic>{};
+        var package = Platform.isAndroid ? 'com.cabme' : 'com.cabme.ios';
+        http.Response response = await http.get(
+          Uri.parse(url),
+          headers: {
+            'User-Agent': package,
+          },
+        );
 
       showLog("API :: URL :: $url");
       showLog("API :: Request Body :: ${jsonEncode({
@@ -139,6 +141,7 @@ class HomeOsmController extends GetxController with GetSingleTickerProviderState
       }
     }
   }
+}
 
   Rx<BannerModel> bannerModel = BannerModel().obs;
   setMapController() {

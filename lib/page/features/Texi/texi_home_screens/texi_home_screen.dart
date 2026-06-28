@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -321,7 +320,8 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
     } else if (selectedPaymentMethod == "wallet") {
       paymentMethodId = homeCtrl.paymentSettingModel.value.myWallet?.idPaymentMethod?.toString() ?? "2";
     } else {
-      paymentMethodId = "upi_mock";
+      // UPI: use cash payment method ID as fallback since "upi_mock" is not a valid FK
+      paymentMethodId = homeCtrl.paymentSettingModel.value.cash?.idPaymentMethod?.toString() ?? "1";
     }
 
     Map<String, dynamic> bodyParams = {
@@ -336,6 +336,7 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
       'duree': homeCtrl.duration.toString(),
       'id_conducteur': driver.id.toString(),
       'id_payment': paymentMethodId,
+      'id_type_vehicule': selectedVehicle!.id.toString(),
       'depart_name': homeCtrl.departureController.text,
       'destination_name': homeCtrl.destinationController.text,
       'stops': [],

@@ -28,6 +28,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'page/chats_screen/conversation_screen.dart';
 import 'page/completed_ride_screens/trip_history_screen.dart';
+import 'page/auth_screens/phone_entry_screen.dart';
 import 'page/on_boarding_screen.dart';
 import 'service/localization_service.dart';
 import 'utils/Preferences.dart';
@@ -318,8 +319,8 @@ class AppRoutes {
                     return MainDashboard();
                 }
 
-                // Default to MainDashboard (as per your original code)
-                return const MainDashboard();
+                // Not logged in → new OTP auth flow (phone number first)
+                return const PhoneEntryScreen(mode: 'signup');
             }
         );
     }

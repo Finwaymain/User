@@ -33,14 +33,15 @@ class MyProfileController extends GetxController {
 
   getUsrData() async {
     UserModel userModel = Constant.getUserData();
-    fullNameController.value.text = userModel.data!.prenom!;
-    lastNameController.value.text = userModel.data!.nom!;
-    emailController.value.text = userModel.data!.email!;
-    phoneController.value.text = userModel.data!.phone!;
-    userCat.value = userModel.data!.userCat!;
-    photoPath.value = userModel.data!.photoPath!;
-    countryCode.value.text = userModel.data!.country!;
-    userId.value = userModel.data!.id.toString();
+    if (userModel.data == null) return; // not logged in yet
+    fullNameController.value.text = userModel.data!.prenom ?? '';
+    lastNameController.value.text = userModel.data!.nom ?? '';
+    emailController.value.text = userModel.data!.email ?? '';
+    phoneController.value.text = userModel.data!.phone ?? '';
+    userCat.value = userModel.data!.userCat ?? 'user_app';
+    photoPath.value = userModel.data!.photoPath ?? '';
+    countryCode.value.text = userModel.data!.country ?? '';
+    userId.value = userModel.data!.id?.toString() ?? '';
 
     log("PhoneNumber :: ${userModel.toJson().toString()}");
   }

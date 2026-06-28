@@ -38,7 +38,7 @@ class _InProgressScreenState extends State<InProgressScreen> {
   void initState() {
     super.initState();
     _fetchActiveRides();
-    _getUserLocation();
+    _getUserLocation(requestIfNeeded: false);
     
     // Poll for active rides status every 6 seconds
     _refreshTimer = Timer.periodic(const Duration(seconds: 6), (_) {
@@ -53,17 +53,21 @@ class _InProgressScreenState extends State<InProgressScreen> {
     super.dispose();
   }
 
-  Future<void> _getUserLocation() async {
+  Future<void> _getUserLocation({bool requestIfNeeded = false}) async {
     try {
       bool serviceEnabled = await _location.serviceEnabled();
       if (!serviceEnabled) {
-        serviceEnabled = await _location.requestService();
+        if (requestIfNeeded) {
+          serviceEnabled = await _location.requestService();
+        }
         if (!serviceEnabled) return;
       }
 
       loc.PermissionStatus permissionGranted = await _location.hasPermission();
       if (permissionGranted == loc.PermissionStatus.denied) {
-        permissionGranted = await _location.requestPermission();
+        if (requestIfNeeded) {
+          permissionGranted = await _location.requestPermission();
+        }
         if (permissionGranted != loc.PermissionStatus.granted) return;
       }
 
@@ -176,7 +180,7 @@ class _InProgressScreenState extends State<InProgressScreen> {
                       Icons.my_location,
                       color: isDark ? Colors.white : AppThemeData.grey900,
                     ),
-                    onPressed: _getUserLocation,
+                    onPressed: () => _getUserLocation(requestIfNeeded: true),
                   ),
                 ),
 
