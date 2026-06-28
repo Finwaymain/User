@@ -51,7 +51,8 @@ class SettingsController extends GetxController {
         Constant.driverLocationUpdate = model.data!.driverLocationUpdate!;
         Constant.deliverChargeParcel = model.data!.deliverChargeParcel!;
         Constant.parcelActive = model.data!.parcelActive!;
-        Constant.parcelPerWeightCharge = model.data!.parcelPerWeightCharge!;
+        Constant.parcelPerWeightCharge = model.data!.parcelPerWeightCharge ?? "0";
+        Constant.parcelPerHeightCharge = model.data!.parcelPerHeightCharge ?? "0";
         Constant.allTaxList = model.data!.taxModel!;
         // Constant.taxType = model.data!.taxType!;
         // Constant.taxName = model.data!.taxName!;

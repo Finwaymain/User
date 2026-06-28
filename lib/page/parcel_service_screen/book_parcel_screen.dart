@@ -5,6 +5,7 @@ import 'package:finway/constant/show_toast_dialog.dart';
 import 'package:finway/controller/parcel_service_controller.dart';
 import 'package:finway/page/parcel_service_screen/parcel_cart_screen.dart';
 import 'package:finway/page/parcel_service_screen/place_picker_osm.dart';
+import 'package:finway/page/parcel_service_screen/place_picker_google.dart';
 import 'package:finway/themes/appbar_cust.dart';
 import 'package:finway/themes/button_them.dart';
 import 'package:finway/themes/constant_colors.dart';
@@ -195,70 +196,15 @@ class BookParcelScreen extends StatelessWidget {
                                     }
                                   });
                                 } else {
-                                  // Navigator.push(
-                                  //     context,
-                                  //     MaterialPageRoute(
-                                  //       builder: (context) => PlacePicker(
-                                  //         apiKey: Constant.kGoogleApiKey!,
-                                  //         onPlacePicked: (result) async {
-                                  //           controller.senderAddress.value = result.formattedAddress!;
-                                  //           // controller.sAddressController.text =
-                                  //           //     result.formattedAddress!;
-                                  //           controller.senderLocation =
-                                  //               LatLng(double.parse(result.geometry!.location.lat.toString()), double.parse(result.geometry!.location.lng.toString()));
-
-                                  //           await Constant()
-                                  //               .getAddressFromLatLong(Position.fromMap({
-                                  //             'latitude': double.parse(result.geometry!.location.lat.toString()),
-                                  //             'longitude': double.parse(result.geometry!.location.lng.toString()),
-                                  //             'timestamp': 0
-                                  //           }))
-                                  //               .then((value) {
-                                  //             controller.senderAddressCity.value = value.toString().split(",").last.trim();
-                                  //           });
-                                  //           Get.back();
-                                  //         },
-                                  //         initialPosition: const LatLng(-33.8567844, 151.213108),
-                                  //         useCurrentLocation: true,
-                                  //         selectInitialPosition: true,
-                                  //         usePinPointingSearch: true,
-                                  //         usePlaceDetailSearch: true,
-                                  //         zoomGesturesEnabled: true,
-                                  //         zoomControlsEnabled: true,
-                                  //         initialMapType: MapType.terrain,
-                                  //         resizeToAvoidBottomInset: false, // only works in page mode, less flickery, remove if wrong offsets
-                                  //       ),
-                                  //     ));
-                                  String apiKey = Constant.kGoogleApiKey!;
-                                  Prediction? p = await PlacesAutocomplete.show(
-                                    context: context,
-                                    apiKey: apiKey,
-                                    mode: Mode.overlay, // Options: fullscreen or overlay
-                                    language: "en",
-                                    components: [Component(Component.country, "us")], // Restrict search to a specific country if needed
-                                  );
-
-                                  if (p != null) {
-                                    final places = GoogleMapsPlaces(apiKey: apiKey);
-                                    final detail = await places.getDetailsByPlaceId(p.placeId!);
-
-                                    final location = detail.result.geometry!.location;
-
-                                    controller.senderAddress.value = detail.result.formattedAddress!;
-                                    controller.senderLocation = LatLng(location.lat, location.lng);
-
-                                    await Constant()
-                                        .getAddressFromLatLong(Position.fromMap({
-                                      'latitude': location.lat,
-                                      'longitude': location.lng,
-                                      'timestamp': 0,
-                                    }))
-                                        .then((value) {
-                                      controller.senderAddressCity.value = value.toString().split(",").last.trim();
-                                    });
-
-                                    Get.back();
-                                  }
+                                  Get.to(() => const GoogleLocationPicker())?.then((value) {
+                                    if (value != null) {
+                                      controller.senderAddress.value = value['address'];
+                                      controller.senderLocation = LatLng(value['lat'], value['lng']);
+                                      controller.senderAddressCity.value = value['city']!;
+                                      log("Sender Addres :: ${controller.senderAddressCity.value.toString()}");
+                                      log("Reciver Addres :: ${controller.senderAddressCity.value.toString()}");
+                                    }
+                                  });
                                 }
                               },
                               child: Container(
@@ -325,6 +271,8 @@ class BookParcelScreen extends StatelessWidget {
                               },
                               hintText: 'Mobile number'.tr,
                               controller: controller.sPhoneController.value,
+                              initialCountryCode: 'IN',
+                              countries: const ['IN'],
                             ),
                             SizedBox(
                               height: 53,
@@ -462,72 +410,14 @@ class BookParcelScreen extends StatelessWidget {
                                     }
                                   });
                                 } else {
-                                  String apiKey = Constant.kGoogleApiKey!;
-
-                                  Prediction? p = await PlacesAutocomplete.show(
-                                    context: context,
-                                    apiKey: apiKey,
-                                    mode: Mode.overlay, // Use overlay mode (or Mode.fullscreen if needed)
-                                    language: "en",
-                                    components: [Component(Component.country, "us")], // Restrict to specific country if necessary
-                                  );
-
-                                  if (p != null) {
-                                    final places = GoogleMapsPlaces(apiKey: apiKey);
-                                    final detail = await places.getDetailsByPlaceId(p.placeId!);
-                                    final location = detail.result.geometry!.location;
-
-                                    // Update receiver address and location
-                                    controller.receiverAddress.value = detail.result.formattedAddress!;
-                                    controller.receiverLocation = LatLng(location.lat, location.lng);
-
-                                    // Get city name from coordinates
-                                    await Constant()
-                                        .getAddressFromLatLong(Position.fromMap({
-                                      'latitude': location.lat,
-                                      'longitude': location.lng,
-                                      'timestamp': 0,
-                                    }))
-                                        .then((value) {
-                                      controller.receiverAddressCity.value = value.toString().split(",").last.trim();
-                                    });
-
-                                    Get.back();
-                                  }
-                                  // Navigator.push(
-                                  //   context,
-                                  //   MaterialPageRoute(
-                                  //     builder: (context) => PlacePicker(
-                                  //       apiKey: Constant.kGoogleApiKey!,
-                                  //       onPlacePicked: (result) async {
-                                  //         controller.receiverAddress.value = result.formattedAddress!;
-                                  //         controller.receiverLocation =
-                                  //             LatLng(double.parse(result.geometry!.location.lat.toString()), double.parse(result.geometry!.location.lng.toString()));
-
-                                  //         await Constant()
-                                  //             .getAddressFromLatLong(Position.fromMap({
-                                  //           'latitude': double.parse(result.geometry!.location.lat.toString()),
-                                  //           'longitude': double.parse(result.geometry!.location.lng.toString()),
-                                  //           'timestamp': 0
-                                  //         }))
-                                  //             .then((value) {
-                                  //           controller.receiverAddressCity.value = value.toString().split(",").last.trim();
-                                  //         });
-
-                                  //         Get.back();
-                                  //       },
-                                  //       initialPosition: const LatLng(-33.8567844, 151.213108),
-                                  //       useCurrentLocation: true,
-                                  //       selectInitialPosition: true,
-                                  //       usePinPointingSearch: true,
-                                  //       usePlaceDetailSearch: true,
-                                  //       zoomGesturesEnabled: true,
-                                  //       zoomControlsEnabled: true,
-                                  //       initialMapType: MapType.terrain,
-                                  //       resizeToAvoidBottomInset: false, // only works in page mode, less flickery, remove if wrong offsets
-                                  //     ),
-                                  //   ),
-                                  // );
+                                  Get.to(() => const GoogleLocationPicker())?.then((value) {
+                                    if (value != null) {
+                                      log("value :: ${value.toString()}");
+                                      controller.receiverAddress.value = value['address'];
+                                      controller.receiverLocation = LatLng(value['lat'], value['lng']);
+                                      controller.receiverAddressCity.value = value['city'];
+                                    }
+                                  });
                                 }
                               },
                               child: Container(
@@ -594,6 +484,8 @@ class BookParcelScreen extends StatelessWidget {
                               },
                               hintText: 'Mobile number'.tr,
                               controller: controller.rPhoneController.value,
+                              initialCountryCode: 'IN',
+                              countries: const ['IN'],
                             ),
                             SizedBox(
                               height: 53,
@@ -651,6 +543,11 @@ class BookParcelScreen extends StatelessWidget {
                           context,
                           title: 'Continue'.tr,
                           onPress: () async {
+                            final sDigits = controller.sPhoneController.value.text.replaceAll(RegExp(r'\D'), '');
+                            final rDigits = controller.rPhoneController.value.text.replaceAll(RegExp(r'\D'), '');
+                            bool isValidSender = (sDigits.length == 10) || (sDigits.length == 12 && sDigits.startsWith('91'));
+                            bool isValidReceiver = (rDigits.length == 10) || (rDigits.length == 12 && rDigits.startsWith('91'));
+
                             if (controller.sNameController.value.text.isEmpty) {
                               ShowToastDialog.showToast(
                                 "Please Enter Sender Name.",
@@ -658,6 +555,10 @@ class BookParcelScreen extends StatelessWidget {
                             } else if (controller.sPhoneController.value.text.isEmpty) {
                               ShowToastDialog.showToast(
                                 "Please Enter Sender Phone number.",
+                              );
+                            } else if (!isValidSender) {
+                              ShowToastDialog.showToast(
+                                "Please Enter valid 10-digit Indian phone number for Sender.",
                               );
                             } else if (controller.senderDate.isEmpty || controller.senderTime.isEmpty) {
                               ShowToastDialog.showToast(
@@ -678,6 +579,10 @@ class BookParcelScreen extends StatelessWidget {
                             } else if (controller.rPhoneController.value.text.isEmpty) {
                               ShowToastDialog.showToast(
                                 "Please Enter Receiver Phone number.",
+                              );
+                            } else if (!isValidReceiver) {
+                              ShowToastDialog.showToast(
+                                "Please Enter valid 10-digit Indian phone number for Receiver.",
                               );
                             } else if (controller.receiverDate.isEmpty || controller.receiverTime.isEmpty) {
                               ShowToastDialog.showToast("Select receiver date and time.");

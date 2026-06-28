@@ -95,7 +95,7 @@ class SearchAddressController extends GetxController {
       if (Constant.selectedMapType == 'google') {
         print("Using Google Places Autocomplete API...");
         final autocompleteUri = Uri.parse(
-          "https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${Uri.encodeComponent(text)}&key=${Constant.kGoogleApiKey}&language=${Get.locale?.languageCode ?? 'en'}"
+          "https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${Uri.encodeComponent(text)}&components=country:in&key=${Constant.kGoogleApiKey}&language=${Get.locale?.languageCode ?? 'en'}"
         );
         final response = await http.get(autocompleteUri);
         if (response.statusCode == 200) {
@@ -157,6 +157,10 @@ class SearchAddressController extends GetxController {
               final String? city = props['city']?.toString();
               final String? state = props['state']?.toString();
               final String? country = props['country']?.toString();
+
+              if (country != null && !country.toLowerCase().contains('india') && !country.toLowerCase().contains('in')) {
+                continue;
+              }
               
               final address = Address(
                 name: name,
@@ -187,7 +191,7 @@ class SearchAddressController extends GetxController {
       // Fallback 2: Query Nominatim Search API directly using HTTP client with a standard User-Agent
       print("Fallback 2: Querying Nominatim Search API directly...");
       final nominatimUri = Uri.parse(
-        "https://nominatim.openstreetmap.org/search?q=${Uri.encodeComponent(text)}&format=json&limit=5&addressdetails=1"
+        "https://nominatim.openstreetmap.org/search?q=${Uri.encodeComponent(text)}&format=json&limit=5&addressdetails=1&countrycodes=in"
       );
       final nominatimResponse = await http.get(nominatimUri, headers: {
         'User-Agent': Platform.isAndroid ? 'com.cabme' : 'com.cabme.ios',

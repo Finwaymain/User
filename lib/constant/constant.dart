@@ -57,6 +57,7 @@ class Constant {
   static String deliverChargeParcel = "0";
   static String? parcelActive = "yes";
   static String? parcelPerWeightCharge = "";
+  static String? parcelPerHeightCharge = "";
   static String? jsonNotificationFileURL = "";
   static String? senderId = "";
   static String? homeScreenType = "UberHome"; //"OlaHome";

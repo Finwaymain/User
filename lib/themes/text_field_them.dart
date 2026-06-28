@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:intl_phone_field/phone_number.dart';
+import 'package:intl_phone_field/countries.dart' as intl_countries;
 import 'package:provider/provider.dart';
 
 class TextFieldThem {
@@ -220,6 +221,9 @@ class MobileTextFieldWidget extends StatelessWidget {
   final List<TextInputFormatter>? inputFormatters;
   final Color? hintColor;
   final ValueChanged<PhoneNumber>? onChanged;
+  final List<String>? countries;
+  final String? initialCountryCode;
+
   const MobileTextFieldWidget({
     super.key,
     required this.hintText,
@@ -231,6 +235,8 @@ class MobileTextFieldWidget extends StatelessWidget {
     this.hintColor,
     this.inputFormatters,
     this.onChanged,
+    this.countries,
+    this.initialCountryCode,
   });
 
   @override
@@ -250,7 +256,10 @@ class MobileTextFieldWidget extends StatelessWidget {
         onChanged: onChanged,
         invalidNumberMessage: "number invalid".tr,
         showDropdownIcon: false,
-        disableLengthCheck: true,
+        disableLengthCheck: countries != null ? false : true,
+        countries: countries != null ? intl_countries.countries.where((c) => countries!.contains(c.code)).toList() : null,
+        initialCountryCode: initialCountryCode,
+        inputFormatters: inputFormatters,
         decoration: InputDecoration(
           contentPadding: const EdgeInsets.symmetric(vertical: 14),
           border: InputBorder.none,

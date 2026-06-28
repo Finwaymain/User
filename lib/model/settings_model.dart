@@ -70,6 +70,7 @@ class Data {
   String? deliveryChargeParcel;
   String? parcelActive;
   String? parcelPerWeightCharge;
+  String? parcelPerHeightCharge;
   String? homeScreenType;
 
   Data(
@@ -114,6 +115,7 @@ class Data {
       this.taxModel,
       this.deliveryChargeParcel,
       this.parcelPerWeightCharge,
+      this.parcelPerHeightCharge,
       this.parcelActive,
       this.homeScreenType});
 
@@ -165,6 +167,7 @@ class Data {
     deliveryChargeParcel = json['delivery_charge_parcel'].toString();
     parcelActive = json['parcel_active'].toString();
     parcelPerWeightCharge = json['parcel_per_weight_charge'].toString();
+    parcelPerHeightCharge = json['parcel_per_height_charge'].toString();
     homeScreenType = json['home_screen_type'].toString();
   }
 
@@ -207,6 +210,7 @@ class Data {
     data['tax'] = taxModel?.map((v) => v.toJson()).toList();
 
     data['parcel_per_weight_charge'] = parcelPerWeightCharge;
+    data['parcel_per_height_charge'] = parcelPerHeightCharge;
     data['serviceJson'] = serviceJson;
     data['senderId'] = senderId;
     data['parcel_active'] = parcelActive;
