@@ -16,7 +16,7 @@ class MainHomeController extends GetxController
   final featureCards = [
     {
       "routeName": "/addFund",
-      "icon": Icons.attach_money,
+      "icon": Icons.payments_rounded,
       "title": "Add Fund",
       "status": 1,
     },
