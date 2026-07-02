@@ -1,6 +1,5 @@
 import 'package:finway/constant/constant.dart';
 import 'package:finway/constant/show_toast_dialog.dart';
-import 'package:finway/controller/phone_number_controller.dart';
 import 'package:finway/controller/search_address_controller.dart';
 import 'package:finway/themes/appbar_cust.dart';
 import 'package:finway/themes/constant_colors.dart';
@@ -13,8 +12,6 @@ import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
 class AddressSearchScreen extends StatelessWidget {
-  final PhoneNumberController controller = Get.put(PhoneNumberController());
-
   AddressSearchScreen({super.key});
 
   @override

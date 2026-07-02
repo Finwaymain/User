@@ -31,7 +31,7 @@ import '../../../utils/Preferences.dart';
 import '../../../utils/dark_theme_provider.dart';
 import '../../MainDashBoard/widget/animated_feature_card.dart';
 import '../../MainDashBoard/widget/service_card.dart';
-import '../../auth_screens/login_screen.dart';
+import '../../auth_screens/phone_entry_screen.dart';
 import '../../features/SmartValue/MPinChange/view/mpin_change_screen.dart';
 import '../../features/SmartValue/Medical/view/medical_screen.dart';
 import '../../features/SmartValue/MyQR/view/my_qr_view.dart';
@@ -77,7 +77,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_paypal/flutter_paypal.dart';
 import 'package:flutter_stripe/flutter_stripe.dart' hide Address;
 import '../../new_ride_screens/new_ride_screen.dart';
-import '../../rented_vehicle.dart';
+
 import '../../parcel_service_screen/book_parcel_screen.dart';
 import '../../parcel_service_screen/parcel_category_screen.dart';
 import '../../marketplace/view/marketplace_home_screen.dart';
@@ -165,7 +165,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
 
   void _startBookingFlow({SearchInfo? destinationResult}) async {
     if (!Preferences.getBoolean(Preferences.isLogin)) {
-      Get.to(() => const LoginScreen(), transition: Transition.rightToLeftWithFade);
+      Get.to(() => const PhoneEntryScreen(), transition: Transition.rightToLeftWithFade);
       return;
     }
 
@@ -392,76 +392,80 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
 
                         const SizedBox(height: 10),
 
+                        // Header Row with fixed height to prevent vertical misalignment
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                height: 38,
+                                alignment: Alignment.bottomLeft,
+                                padding: const EdgeInsets.only(left: 22, bottom: 4),
+                                child: Text(
+                                  "Features &\nWallet",
+                                  style: TextStyle(
+                                    fontFamily: AppThemeData.bold,
+                                    fontSize: 13.5,
+                                    color: textColor,
+                                    height: 1.2,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Container(
+                                height: 38,
+                                alignment: Alignment.bottomLeft,
+                                padding: const EdgeInsets.only(left: 8, bottom: 4),
+                                child: Text(
+                                  "Services",
+                                  style: TextStyle(
+                                    fontFamily: AppThemeData.bold,
+                                    fontSize: 13.5,
+                                    color: textColor,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 8),
+
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Left Column: Features & Wallet
-                            SizedBox(
-                              width: 120,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 22, bottom: 8),
-                                    child: Text(
-                                      "Features &\nWallet",
-                                      style: TextStyle(
-                                        fontFamily: AppThemeData.bold,
-                                        fontSize: 13.5,
-                                        color: textColor,
-                                        height: 1.2,
-                                      ),
-                                    ),
-                                  ),
-                                  Column(
-                                    children: activeFeatureEntries.map<Widget>((entry) {
-                                      return Padding(
-                                        padding: const EdgeInsets.only(left: 18, bottom: 12),
-                                        child: GestureDetector(
-                                          onTap: () => mainHomeController.onFeatureTap(entry.key),
-                                          child: AnimatedFeatureCard(
-                                            icon: entry.value['icon'] as IconData,
-                                            title: entry.value['title'] as String,
-                                          ),
-                                        ),
-                                      );
-                                    }).toList(),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            // Right Column: Services
+                            // Left Column: Features & Wallet Cards
                             Expanded(
                               child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 12, bottom: 8),
-                                
-                                    child: Text(
-                                      "Services",
-                                      style: TextStyle(
-                                        fontFamily: AppThemeData.bold,
-                                        fontSize: 13.5,
-                                        color: textColor,
+                                children: activeFeatureEntries.map<Widget>((entry) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(left: 22, right: 8, bottom: 12),
+                                    child: GestureDetector(
+                                      onTap: () => mainHomeController.onFeatureTap(entry.key),
+                                      child: AnimatedFeatureCard(
+                                        icon: entry.value['icon'] as IconData,
+                                        title: entry.value['title'] as String,
                                       ),
                                     ),
-                                  ),
-                                  Column(
-                                    children: activeServiceEntries.map<Widget>((entry) {
-                                      return Padding(
-                                        padding: const EdgeInsets.only(left: 8, right: 18, bottom: 12),
-                                        child: GestureDetector(
-                                          onTap: () => mainHomeController.onServiceTap(entry.key),
-                                          child: ServiceCard(
-                                            title: entry.value['title'] as String,
-                                            subtitle: entry.value['subtitle'] as String,
-                                          ),
-                                        ),
-                                      );
-                                    }).toList(),
-                                  ),
-                                ],
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                            // Right Column: Services Cards
+                            Expanded(
+                              child: Column(
+                                children: activeServiceEntries.map<Widget>((entry) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(left: 8, right: 22, bottom: 12),
+                                    child: GestureDetector(
+                                      onTap: () => mainHomeController.onServiceTap(entry.key),
+                                      child: ServiceCard(
+                                        title: entry.value['title'] as String,
+                                        subtitle: entry.value['subtitle'] as String,
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
                               ),
                             ),
                           ],
@@ -475,6 +479,10 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                               icon: Icons.directions_car_outlined,
                               text: 'Ride Booking',
                               onTap: () {
+                                if (!Preferences.getBoolean(Preferences.isLogin)) {
+                                  Get.to(() => const PhoneEntryScreen(), transition: Transition.rightToLeftWithFade);
+                                  return;
+                                }
                                 Get.to(() => TexiDashboard(), transition: Transition.rightToLeftWithFade);
                               },
                             ),
@@ -483,29 +491,19 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                               text: 'Ride History',
                               onTap: () {
                                 if (!Preferences.getBoolean(Preferences.isLogin)) {
-                                  Get.to(() => const LoginScreen(), transition: Transition.rightToLeftWithFade);
+                                  Get.to(() => const PhoneEntryScreen(), transition: Transition.rightToLeftWithFade);
                                   return;
                                 }
                                 Get.to(() => const NewRideScreen(), transition: Transition.rightToLeftWithFade);
                               },
                             ),
-                            VerticalIconWithText(
-                              icon: Icons.car_rental_outlined,
-                              text: 'Rental Vehicle',
-                              onTap: () {
-                                if (!Preferences.getBoolean(Preferences.isLogin)) {
-                                  Get.to(() => const LoginScreen(), transition: Transition.rightToLeftWithFade);
-                                  return;
-                                }
-                                Get.to(() => RentedVehicleScreen(), transition: Transition.rightToLeftWithFade);
-                              },
-                            ),
+
                             VerticalIconWithText(
                               icon: Icons.local_post_office_outlined,
                               text: 'Parcel Service',
                               onTap: () {
                                 if (!Preferences.getBoolean(Preferences.isLogin)) {
-                                  Get.to(() => const LoginScreen(), transition: Transition.rightToLeftWithFade);
+                                  Get.to(() => const PhoneEntryScreen(), transition: Transition.rightToLeftWithFade);
                                   return;
                                 }
                                 Get.to(() => const ParcelCategoryScreen(), transition: Transition.rightToLeftWithFade);
@@ -515,6 +513,10 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                               icon: Icons.share_location_outlined,
                               text: 'Shared Ride',
                               onTap: () {
+                                if (!Preferences.getBoolean(Preferences.isLogin)) {
+                                  Get.to(() => const PhoneEntryScreen(), transition: Transition.rightToLeftWithFade);
+                                  return;
+                                }
                                 Get.to(() => const InProgressScreen(), transition: Transition.rightToLeftWithFade);
                               },
                             ),
@@ -523,7 +525,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                               text: 'Marketplace',
                               onTap: () {
                                 if (!Preferences.getBoolean(Preferences.isLogin)) {
-                                  Get.to(() => const LoginScreen(), transition: Transition.rightToLeftWithFade);
+                                  Get.to(() => const PhoneEntryScreen(), transition: Transition.rightToLeftWithFade);
                                   return;
                                 }
                                 Get.to(() => const MarketplaceHomeScreen(), transition: Transition.rightToLeftWithFade);
@@ -541,7 +543,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                               text: 'Account Details',
                               onTap: () {
                                 if (!Preferences.getBoolean(Preferences.isLogin)) {
-                                  Get.to(() => const LoginScreen(), transition: Transition.rightToLeftWithFade);
+                                  Get.to(() => const PhoneEntryScreen(), transition: Transition.rightToLeftWithFade);
                                   return;
                                 }
                                 Get.to(() => AccountDetails(), transition: Transition.rightToLeftWithFade);
@@ -552,7 +554,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                               text: 'Add Person',
                               onTap: () {
                                 if (!Preferences.getBoolean(Preferences.isLogin)) {
-                                  Get.to(() => const LoginScreen(), transition: Transition.rightToLeftWithFade);
+                                  Get.to(() => const PhoneEntryScreen(), transition: Transition.rightToLeftWithFade);
                                   return;
                                 }
                                 Get.to(() => AddUserScreen(), transition: Transition.rightToLeftWithFade);
@@ -563,7 +565,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                               text: 'Transfer Money',
                               onTap: () {
                                 if (!Preferences.getBoolean(Preferences.isLogin)) {
-                                  Get.to(() => const LoginScreen(), transition: Transition.rightToLeftWithFade);
+                                  Get.to(() => const PhoneEntryScreen(), transition: Transition.rightToLeftWithFade);
                                   return;
                                 }
                                 Get.to(() => ScannerAndTransferScreen(), transition: Transition.rightToLeftWithFade);
@@ -574,7 +576,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                               text: 'My QR Code',
                               onTap: () {
                                 if (!Preferences.getBoolean(Preferences.isLogin)) {
-                                  Get.to(() => const LoginScreen(), transition: Transition.rightToLeftWithFade);
+                                  Get.to(() => const PhoneEntryScreen(), transition: Transition.rightToLeftWithFade);
                                   return;
                                 }
                                 Get.to(() => MyQRScreen(), transition: Transition.rightToLeftWithFade);
@@ -585,7 +587,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                               text: 'Set M-PIN',
                               onTap: () {
                                 if (!Preferences.getBoolean(Preferences.isLogin)) {
-                                  Get.to(() => const LoginScreen(), transition: Transition.rightToLeftWithFade);
+                                  Get.to(() => const PhoneEntryScreen(), transition: Transition.rightToLeftWithFade);
                                   return;
                                 }
                                 Get.to(() => MPinChangeScreen(), transition: Transition.rightToLeftWithFade);
@@ -596,7 +598,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                               text: 'Payouts',
                               onTap: () {
                                 if (!Preferences.getBoolean(Preferences.isLogin)) {
-                                  Get.to(() => const LoginScreen(), transition: Transition.rightToLeftWithFade);
+                                  Get.to(() => const PhoneEntryScreen(), transition: Transition.rightToLeftWithFade);
                                   return;
                                 }
                                 Get.to(() => PayoutScreen(), transition: Transition.rightToLeftWithFade);
@@ -607,7 +609,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                               text: 'Refer & Earn',
                               onTap: () {
                                 if (!Preferences.getBoolean(Preferences.isLogin)) {
-                                  Get.to(() => const LoginScreen(), transition: Transition.rightToLeftWithFade);
+                                  Get.to(() => const PhoneEntryScreen(), transition: Transition.rightToLeftWithFade);
                                   return;
                                 }
                                 Get.to(() => ReferralScreen(), transition: Transition.rightToLeftWithFade);
@@ -625,7 +627,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                               text: 'Medical Cards',
                               onTap: () {
                                 if (!Preferences.getBoolean(Preferences.isLogin)) {
-                                  Get.to(() => const LoginScreen(), transition: Transition.rightToLeftWithFade);
+                                  Get.to(() => const PhoneEntryScreen(), transition: Transition.rightToLeftWithFade);
                                   return;
                                 }
                                 Get.to(() => MedicalScreen(), transition: Transition.rightToLeftWithFade);

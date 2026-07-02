@@ -9,7 +9,7 @@ import '../../../constant/image_constant.dart';
 import '../../../controller/dash_board_controller.dart';
 import '../../../utils/Preferences.dart';
 import '../../../utils/dark_theme_provider.dart';
-import '../../auth_screens/login_screen.dart';
+import '../../auth_screens/phone_entry_screen.dart';
 
 class CustomDrawer extends StatelessWidget {
   const CustomDrawer({super.key});
@@ -320,7 +320,7 @@ class CustomDrawer extends StatelessWidget {
                       child: ElevatedButton(
                         onPressed: () {
                           if (!isLogin) {
-                            Get.to(() => const LoginScreen(),
+                            Get.to(() => const PhoneEntryScreen(),
                                 transition: Transition.rightToLeftWithFade);
                           } else {}
                         },

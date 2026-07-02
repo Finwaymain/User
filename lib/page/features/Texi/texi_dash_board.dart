@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
+import 'package:finway/utils/Preferences.dart';
 import '../../../constant/image_constant.dart';
 import 'texi_home_screens/texi_home_osm_screen.dart';
 import 'texi_home_screens/texi_home_screen.dart';
@@ -37,6 +38,7 @@ class TexiDashboard extends StatelessWidget {
 
 buildAppDrawer(BuildContext context, DashBoardController controller) {
   final themeChange = Provider.of<DarkThemeProvider>(context);
+  final bool isLogin = Preferences.getBoolean(Preferences.isLogin) ?? false;
 
   var drawerOptions = <Widget>[];
   for (var i = 0; i < controller.drawerTexiItems.length; i++) {
@@ -76,17 +78,11 @@ buildAppDrawer(BuildContext context, DashBoardController controller) {
                     width: 24,
                     height: 24,
                     colorFilter: ColorFilter.mode(
-                      controller.drawerItems[i].title ==
-                              controller
-                                  .drawerItems[
-                                      controller.drawerItems.length - 1]
-                                  .title
-                          ? AppThemeData.error200
-                          : controller.selectedDrawerIndex.value == i
-                              ? AppThemeData.primary200
-                              : themeChange.getThem()
-                                  ? AppThemeData.grey900Dark
-                                  : AppThemeData.grey900,
+                      controller.selectedDrawerIndex.value == i
+                          ? AppThemeData.primary200
+                          : themeChange.getThem()
+                              ? AppThemeData.grey900Dark
+                              : AppThemeData.grey900,
                       BlendMode.srcIn,
                     ),
                   ),
@@ -96,17 +92,11 @@ buildAppDrawer(BuildContext context, DashBoardController controller) {
                   Text(
                     d.title,
                     style: TextStyle(
-                      color: controller.drawerItems[i].title ==
-                              controller
-                                  .drawerItems[
-                                      controller.drawerItems.length - 1]
-                                  .title
-                          ? AppThemeData.error200
-                          : controller.selectedDrawerIndex.value == i
-                              ? AppThemeData.primary200
-                              : themeChange.getThem()
-                                  ? AppThemeData.grey900Dark
-                                  : AppThemeData.grey900,
+                      color: controller.selectedDrawerIndex.value == i
+                          ? AppThemeData.primary200
+                          : themeChange.getThem()
+                              ? AppThemeData.grey900Dark
+                              : AppThemeData.grey900,
                       fontSize: 16,
                       fontFamily: AppThemeData.medium,
                     ),
@@ -150,7 +140,7 @@ buildAppDrawer(BuildContext context, DashBoardController controller) {
               ],
             ),
           ),
-          if ((controller.drawerItems.length - 2) > i)
+          if ((controller.drawerTexiItems.length - 1) > i)
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16),
               height: 0.5,
@@ -169,23 +159,6 @@ buildAppDrawer(BuildContext context, DashBoardController controller) {
         : AppThemeData.surface50,
     child: ListView(
       children: [
-        // Row(
-        //   mainAxisAlignment: MainAxisAlignment.start,
-        //   children: [
-        //     IconButton(
-        //       onPressed: () {
-        //        Scaffold.of(context).closeDrawer();
-        //       },
-        //       icon: SvgPicture.asset(
-        //         'assets/icons/ic_back_arrow.svg',
-        //         colorFilter: ColorFilter.mode(
-        //           themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
-        //           BlendMode.srcIn,
-        //         ),
-        //       ),
-        //     ),
-        //   ],
-        // ),
         const SizedBox(height: 40),
         Column(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -197,9 +170,9 @@ buildAppDrawer(BuildContext context, DashBoardController controller) {
                 onTap: () {},
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(80.0),
-                  child: controller.userModel?.data?.photoPath?.isEmpty == true
+                  child: isLogin && controller.userModel?.data?.photoPath?.isNotEmpty == true
                       ? CachedNetworkImage(
-                          imageUrl: Constant.placeholderUrl,
+                          imageUrl: controller.userModel!.data!.photoPath!,
                           height: 120,
                           width: 120,
                           fit: BoxFit.cover,
@@ -213,7 +186,7 @@ buildAppDrawer(BuildContext context, DashBoardController controller) {
                           ),
                         )
                       : CachedNetworkImage(
-                          imageUrl: controller.userModel?.data?.photoPath ?? '',
+                          imageUrl: Constant.placeholderUrl,
                           height: 120,
                           width: 120,
                           fit: BoxFit.cover,
@@ -232,7 +205,9 @@ buildAppDrawer(BuildContext context, DashBoardController controller) {
             Padding(
               padding: const EdgeInsets.only(top: 20),
               child: Text(
-                "${controller.userModel!.data!.prenom} ${controller.userModel!.data!.nom}",
+                isLogin && controller.userModel?.data != null
+                    ? "${controller.userModel!.data!.prenom} ${controller.userModel!.data!.nom}"
+                    : "Guest User",
                 style: TextStyle(
                   color: themeChange.getThem()
                       ? AppThemeData.grey900Dark
@@ -245,7 +220,9 @@ buildAppDrawer(BuildContext context, DashBoardController controller) {
             Padding(
               padding: const EdgeInsets.only(top: 4),
               child: Text(
-                '${controller.userModel!.data!.email}',
+                isLogin && controller.userModel?.data != null
+                    ? '${controller.userModel!.data!.email}'
+                    : 'guest@${Constant.appName}.tr',
                 style: TextStyle(
                   color: themeChange.getThem()
                       ? AppThemeData.grey500Dark

@@ -1,6 +1,5 @@
 import 'package:finway/controller/auth_otp_controller.dart';
-import 'package:finway/page/MainDashBoard/screen/main_dashboard.dart';
-import 'package:finway/page/auth_screens/profile_setup_screen.dart';
+import 'package:finway/page/auth_screens/mpin_setup_screen.dart';
 import 'package:finway/themes/button_them.dart';
 import 'package:finway/themes/constant_colors.dart';
 import 'package:finway/utils/dark_theme_provider.dart';
@@ -9,11 +8,8 @@ import 'package:get/get.dart';
 import 'package:pinput/pinput.dart';
 import 'package:provider/provider.dart';
 
-/// Step 2 (signup) or Step 2 (login) — OTP entry.
-/// For signup: verifies phone OTP (dummy 1234) → goes to ProfileSetupScreen
-/// For login: (mode='login') this screen is reused for email OTP verification
 class PhoneOtpScreen extends StatelessWidget {
-  final String mode; // 'signup' or 'login'
+  final String mode; // 'signup' or 'reset_mpin'
 
   const PhoneOtpScreen({super.key, required this.mode});
 
@@ -27,15 +23,12 @@ class PhoneOtpScreen extends StatelessWidget {
     final bgBody = isDark ? AppThemeData.surface50Dark : AppThemeData.surface50;
     final subColor = isDark ? AppThemeData.grey400Dark : AppThemeData.grey400;
 
-    final bool isLoginMode = mode == 'login';
-
     return Scaffold(
       backgroundColor: bgTop,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Top (coloured) header ──────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
               child: Column(
@@ -48,7 +41,7 @@ class PhoneOtpScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    isLoginMode ? 'Check your email'.tr : 'Verify phone'.tr,
+                    'Verify phone'.tr,
                     style: const TextStyle(
                       fontSize: 26,
                       fontFamily: 'Switzer-Bold',
@@ -57,9 +50,7 @@ class PhoneOtpScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Obx(() => Text(
-                        isLoginMode
-                            ? 'OTP sent to ${controller.emailHint.value}'.tr
-                            : 'Enter the 4-digit code sent to ${controller.phone.value}'.tr,
+                        'Enter the 4-digit code sent to ${controller.phone.value}'.tr,
                         style: const TextStyle(
                           fontSize: 14,
                           fontFamily: 'Switzer-Regular',
@@ -71,7 +62,6 @@ class PhoneOtpScreen extends StatelessWidget {
               ),
             ),
 
-            // ── White card body ────────────────────────────────────────────────
             Expanded(
               child: Container(
                 width: double.infinity,
@@ -84,7 +74,6 @@ class PhoneOtpScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // ── OTP pinput ─────────────────────────────────────────
                       Obx(() {
                         final activeTheme = PinTheme(
                           height: 56,
@@ -117,10 +106,8 @@ class PhoneOtpScreen extends StatelessWidget {
                           ),
                         );
                         return Pinput(
-                          controller: isLoginMode
-                              ? controller.emailOtpController.value
-                              : controller.phoneOtpController.value,
-                          length: isLoginMode ? 6 : 4,
+                          controller: controller.phoneOtpController.value,
+                          length: 4,
                           defaultPinTheme: defaultTheme,
                           focusedPinTheme: activeTheme,
                           keyboardType: TextInputType.number,
@@ -131,44 +118,28 @@ class PhoneOtpScreen extends StatelessWidget {
 
                       const SizedBox(height: 32),
 
-                      // ── Verify button ──────────────────────────────────────
                       Obx(() => ButtonThem.buildButton(
                             context,
                             title: controller.isLoading.value ? 'Please wait...' : 'Verify'.tr,
                             onPress: controller.isLoading.value
                                 ? () {}
                                 : () async {
-                              final otp = isLoginMode
-                                  ? controller.emailOtpController.value.text.trim()
-                                  : controller.phoneOtpController.value.text.trim();
+                              final otp = controller.phoneOtpController.value.text.trim();
+                              if (otp.length != 4) return;
 
-                              if (isLoginMode) {
-                                if (otp.length != 6) return;
-                                final user = await controller.verifyLoginEmailOtp(otp);
-                                if (user != null) {
-                                  Get.offAll(() => MainDashboard());
-                                }
-                              } else {
-                                if (otp.length != 4) return;
-                                final ok = await controller.verifyPhoneOtp(otp);
-                                if (ok) {
-                                  Get.to(() => ProfileSetupScreen());
-                                }
+                              final ok = await controller.verifyPhoneOtp(otp);
+                              if (ok) {
+                                Get.off(() => MpinSetupScreen(mode: mode, otp: otp));
                               }
                             },
                           )),
 
                       const SizedBox(height: 24),
 
-                      // ── Resend OTP ─────────────────────────────────────────
                       Obx(() => controller.canResend.value
                           ? GestureDetector(
                               onTap: () async {
-                                if (isLoginMode) {
-                                  await controller.loginByPhone(controller.phone.value);
-                                } else {
-                                  await controller.sendPhoneOtp(controller.phone.value, mode: 'signup');
-                                }
+                                await controller.sendPhoneOtp(controller.phone.value, mode: 'signup');
                               },
                               child: Text(
                                 'Resend OTP'.tr,
@@ -192,7 +163,6 @@ class PhoneOtpScreen extends StatelessWidget {
 
                       const SizedBox(height: 16),
 
-                      // ── Wrong number / go back ─────────────────────────────
                       GestureDetector(
                         onTap: () => Get.back(),
                         child: Text(

@@ -149,52 +149,42 @@ class _TexiHomeOSMScreenState extends State<TexiHomeOSMScreen> {
                                   ),
                                 ),
                                 child: DefaultTabController(
-                                  length: 3,
+                                  length: Constant.parcelActive.toString() == "yes" ? 2 : 1,
                                   child: Column(children: [
-                                    TabBar(
-                                      controller: controller.tabController,
-                                      isScrollable: false,
-                                      indicatorSize: TabBarIndicatorSize.tab,
-                                      indicatorColor: AppThemeData.primary200,
-                                      indicatorWeight: 0.1,
-                                      dividerColor: Colors.transparent,
-                                      labelColor: themeChange.getThem()
-                                          ? AppThemeData.grey900Dark
-                                          : AppThemeData.grey900,
-                                      automaticIndicatorColorAdjustment: true,
-                                      labelStyle: TextStyle(
-                                          fontFamily: AppThemeData.medium,
-                                          fontSize: 13,
-                                          color: themeChange.getThem()
-                                              ? AppThemeData.grey900Dark
-                                              : AppThemeData.grey900),
-                                      unselectedLabelStyle: TextStyle(
-                                          fontFamily: AppThemeData.regular,
-                                          fontSize: 13,
-                                          color: themeChange.getThem()
-                                              ? AppThemeData.grey500Dark
-                                              : AppThemeData.grey500),
-                                      tabs: [
-                                        Tab(
-                                          icon: SvgPicture.asset(
-                                            'assets/icons/ic_booking_icon.svg',
-                                            width: 45,
-                                            height: 45,
-                                            fit: BoxFit.cover,
+                                    if (Constant.parcelActive.toString() == "yes")
+                                      TabBar(
+                                        controller: controller.tabController,
+                                        isScrollable: false,
+                                        indicatorSize: TabBarIndicatorSize.tab,
+                                        indicatorColor: AppThemeData.primary200,
+                                        indicatorWeight: 0.1,
+                                        dividerColor: Colors.transparent,
+                                        labelColor: themeChange.getThem()
+                                            ? AppThemeData.grey900Dark
+                                            : AppThemeData.grey900,
+                                        automaticIndicatorColorAdjustment: true,
+                                        labelStyle: TextStyle(
+                                            fontFamily: AppThemeData.medium,
+                                            fontSize: 13,
+                                            color: themeChange.getThem()
+                                                ? AppThemeData.grey900Dark
+                                                : AppThemeData.grey900),
+                                        unselectedLabelStyle: TextStyle(
+                                            fontFamily: AppThemeData.regular,
+                                            fontSize: 13,
+                                            color: themeChange.getThem()
+                                                ? AppThemeData.grey500Dark
+                                                : AppThemeData.grey500),
+                                        tabs: [
+                                          Tab(
+                                            icon: SvgPicture.asset(
+                                              'assets/icons/ic_booking_icon.svg',
+                                              width: 45,
+                                              height: 45,
+                                              fit: BoxFit.cover,
+                                            ),
+                                            text: 'Ride Booking'.tr,
                                           ),
-                                          text: 'Ride Booking'.tr,
-                                        ),
-                                        Tab(
-                                          icon: SvgPicture.asset(
-                                            'assets/icons/ic_rental_icon.svg',
-                                            width: 45,
-                                            height: 45,
-                                            fit: BoxFit.cover,
-                                          ),
-                                          text: 'Rent Vehicle'.tr,
-                                        ),
-                                        if (Constant.parcelActive.toString() ==
-                                            "yes")
                                           Tab(
                                             icon: SvgPicture.asset(
                                               'assets/icons/ic_parcel_icon.svg',
@@ -204,15 +194,34 @@ class _TexiHomeOSMScreenState extends State<TexiHomeOSMScreen> {
                                             ),
                                             text: 'Parcel Service'.tr,
                                           ),
-                                      ],
-                                    ),
+                                        ],
+                                      ),
                                     Expanded(
-                                      child: TabBarView(
-                                          physics:
-                                              NeverScrollableScrollPhysics(),
-                                          controller: controller.tabController,
-                                          children: [
-                                            RideBookingTab(
+                                      child: Constant.parcelActive.toString() == "yes"
+                                          ? TabBarView(
+                                              physics:
+                                                  NeverScrollableScrollPhysics(),
+                                              controller: controller.tabController,
+                                              children: [
+                                                RideBookingTab(
+                                                  controller: controller,
+                                                  isDarkMode: themeChange.getThem(),
+                                                  onTripOptionBottomSheet: () =>
+                                                      _showTripOptionBottomSheet(
+                                                          context,
+                                                          themeChange.getThem(),
+                                                          controller),
+                                                  onPendingPaymentDialog: () =>
+                                                      _pendingPaymentDialog(
+                                                          context),
+                                                ),
+                                                ParcelServiceTab(
+                                                  controller: controller,
+                                                  isDarkMode:
+                                                      themeChange.getThem(),
+                                                ),
+                                              ])
+                                          : RideBookingTab(
                                               controller: controller,
                                               isDarkMode: themeChange.getThem(),
                                               onTripOptionBottomSheet: () =>
@@ -224,16 +233,6 @@ class _TexiHomeOSMScreenState extends State<TexiHomeOSMScreen> {
                                                   _pendingPaymentDialog(
                                                       context),
                                             ),
-                                            SizedBox(), // Rent Vehicle tab
-                                            if (Constant.parcelActive
-                                                    .toString() ==
-                                                "yes")
-                                              ParcelServiceTab(
-                                                controller: controller,
-                                                isDarkMode:
-                                                    themeChange.getThem(),
-                                              ),
-                                          ]),
                                     )
                                   ]),
                                 ),

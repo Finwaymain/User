@@ -17,6 +17,7 @@ class ServiceCard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
+      height: 84,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: AppThemeData.primary200,
@@ -24,6 +25,7 @@ class ServiceCard extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             title,

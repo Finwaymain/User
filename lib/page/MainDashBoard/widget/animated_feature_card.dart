@@ -45,7 +45,7 @@ class _AnimatedFeatureCardState extends State<AnimatedFeatureCard> with SingleTi
     return ScaleTransition(
       scale: _scaleAnimation,
       child: Container(
-        width: 84,
+        width: double.infinity,
         height: 84,
         decoration: BoxDecoration(
           color: isDark ? AppThemeData.grey800 : Colors.white,

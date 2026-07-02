@@ -6,7 +6,7 @@ import 'package:finway/constant/constant.dart';
 import 'package:finway/constant/show_toast_dialog.dart';
 import 'package:finway/controller/dash_board_controller.dart';
 import 'package:finway/controller/my_profile_controller.dart';
-import 'package:finway/page/auth_screens/login_screen.dart';
+import 'package:finway/page/auth_screens/phone_entry_screen.dart';
 import 'package:finway/themes/appbar_cust.dart';
 import 'package:finway/themes/button_them.dart';
 import 'package:finway/themes/constant_colors.dart';
@@ -95,7 +95,7 @@ class MyProfileScreen extends StatelessWidget {
                                                 ShowToastDialog.showToast(value['message']);
                                                 Get.back();
                                                 Preferences.clearSharPreference();
-                                                Get.offAll(const LoginScreen());
+                                                Get.offAll(const PhoneEntryScreen());
                                               }
                                             }
                                           });

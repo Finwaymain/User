@@ -5,17 +5,16 @@ import 'dart:io';
 import 'package:finway/constant/constant.dart';
 import 'package:finway/constant/show_toast_dialog.dart';
 import 'package:finway/model/user_model.dart';
-import 'package:finway/page/auth_screens/login_screen.dart';
+import 'package:finway/page/auth_screens/phone_entry_screen.dart';
 import 'package:finway/page/features/Texi/texi_dash_board.dart';
 import 'package:finway/page/favotite_ride_screens/favorite_ride_screen.dart';
-import 'package:finway/page/localization_screens/localization_screen.dart';
 import 'package:finway/page/my_profile/change_password_screen.dart';
 import 'package:finway/page/my_profile/my_profile_screen.dart';
 import 'package:finway/page/new_ride_screens/new_ride_screen.dart';
 import 'package:finway/page/parcel_service_screen/all_parcel_screen.dart';
 import 'package:finway/page/privacy_policy/privacy_policy_screen.dart';
 import 'package:finway/page/referral_screen/referral_screen.dart';
-import 'package:finway/page/rented_vehicle.dart';
+
 import 'package:finway/page/terms_service/terms_of_service_screen.dart';
 import 'package:finway/page/wallet/wallet_screen.dart';
 import 'package:finway/service/api.dart';
@@ -77,11 +76,6 @@ class DashBoardController extends GetxController {
         description: 'Access frequently booked rides in one tap',
         icon: 'assets/icons/ic_rent.svg',
       ),
-      DrawerItem(
-        title: 'Rent Ride History'.tr,
-        description: 'Track your previous rented ride activity here',
-        icon: 'assets/icons/ic_fav.svg',
-      ),
       if (Constant.parcelActive.toString() == "yes")
         DrawerItem(
           title: 'Parcel History'.tr,
@@ -137,15 +131,10 @@ class DashBoardController extends GetxController {
         icon: 'assets/icons/ic_refer.svg',
       ),
       DrawerItem(
-        title: 'Change Language'.tr,
-        description: 'Switch between supported languages anytime easily',
-        icon: 'assets/icons/ic_language.svg',
-        section: 'App Settings'.tr,
-      ),
-      DrawerItem(
         title: 'Terms & Conditions'.tr,
         description: 'Read detailed user agreement and policies',
         icon: 'assets/icons/ic_terms.svg',
+        section: 'App Settings'.tr,
       ),
       DrawerItem(
         title: 'Privacy & Policy'.tr,
@@ -182,185 +171,59 @@ class DashBoardController extends GetxController {
 
   onSelectItem(int index,bool isLogin) async {
     Get.back();
-    if( index == 1 || index == 2 || index == 3 || index == 4 ) {
-      if(!isLogin){
-        Get.to(LoginScreen());
+    if (index >= drawerItems.length) return;
+    var item = drawerItems[index];
+    if (item.title == 'Wallet'.tr || item.title == 'My Profile'.tr || item.title == 'Change Password'.tr || item.title == 'Refer a Friend'.tr) {
+      if (!isLogin) {
+        Get.to(const PhoneEntryScreen());
         return;
       }
     }
-    if (Constant.parcelActive.toString() == "yes") {
-
-     if (index == 1) {
-
-        Get.to(WalletScreen());
-      } else if (index == 2) {
-        Get.to(MyProfileScreen());
-      } else if (index == 3) {
-        Get.to(ChangePasswordScreen());
-      } else if (index == 4) {
-        Get.to(const ReferralScreen());
-      } else if (index == 5) {
-        Get.to(const LocalizationScreens(intentType: "dashBoard",));
-      } else if (index == 6) {
-        Get.to(const TermsOfServiceScreen());
-      } else if (index == 7) {
-        Get.to(const PrivacyPolicyScreen());
-      } else if (index == 8) {
-      } else if (index == 9) {
-
-        try {
-          if (await inAppReview.isAvailable()) {
-            inAppReview.requestReview();
-          } else {
-            log(":::::::::InAppReview:::::::::::");
-            inAppReview.openStoreListing();
-          }
-        } catch (e) {
-          log("Error triggering in-app review: $e");
-        }
-      } else if (index == 10) {
-        Preferences.clearKeyData(Preferences.isLogin);
-        Preferences.clearKeyData(Preferences.user);
-        Preferences.clearKeyData(Preferences.userId);
-        Get.offAll(const LoginScreen());
-      } else {
-        selectedDrawerIndex.value = index;
-      }
-    }
-    else {
-       if (index == 1) {
-        Get.to(WalletScreen());
-      } else if (index == 2) {
-        Get.to(MyProfileScreen());
-      } else if (index == 3) {
-        Get.to(ChangePasswordScreen);
-      } else if (index == 4) {
-        Get.to(const ReferralScreen());
-      } else if (index == 5) {
-        Get.to(const LocalizationScreens(
-          intentType: "dashBoard",
-        ));
-      } else if (index == 6) {
-        Get.to(const TermsOfServiceScreen());
-      } else if (index == 7) {
-        Get.to(const PrivacyPolicyScreen());
-      } else if (index == 8) {
-      } else if (index == 9) {
-        try {
-          if (await inAppReview.isAvailable()) {
-            inAppReview.requestReview();
-          } else {
-            log(":::::::::InAppReview:::::::::::");
-            inAppReview.openStoreListing();
-          }
-        } catch (e) {
-          log("Error triggering in-app review: $e");
-        }
-      } else {
-        if (index == 10) {
-          Preferences.clearKeyData(Preferences.isLogin);
-          Preferences.clearKeyData(Preferences.user);
-          Preferences.clearKeyData(Preferences.userId);
-          Get.offAll(const LoginScreen());
+    if (item.title == 'Wallet'.tr) {
+      Get.to(WalletScreen());
+    } else if (item.title == 'My Profile'.tr) {
+      Get.to(MyProfileScreen());
+    } else if (item.title == 'Change Password'.tr) {
+      Get.to(ChangePasswordScreen());
+    } else if (item.title == 'Refer a Friend'.tr) {
+      Get.to(const ReferralScreen());
+    } else if (item.title == 'Terms & Conditions'.tr) {
+      Get.to(const TermsOfServiceScreen());
+    } else if (item.title == 'Privacy & Policy'.tr) {
+      Get.to(const PrivacyPolicyScreen());
+    } else if (item.title == 'Rate the App'.tr) {
+      try {
+        if (await inAppReview.isAvailable()) {
+          inAppReview.requestReview();
         } else {
-          selectedDrawerIndex.value = index;
+          log(":::::::::InAppReview:::::::::::");
+          inAppReview.openStoreListing();
         }
+      } catch (e) {
+        log("Error triggering in-app review: $e");
       }
+    } else if (item.title == 'Log Out'.tr) {
+      Preferences.clearKeyData(Preferences.isLogin);
+      Preferences.clearKeyData(Preferences.user);
+      Preferences.clearKeyData(Preferences.userId);
+      Get.offAll(const PhoneEntryScreen());
+    } else {
+      selectedDrawerIndex.value = index;
     }
   }
 
   onTexiSelectItem(int index) async {
     Get.back();
-    if (Constant.parcelActive.toString() == "yes") {
-      if (index == 1) {
-        Get.to(const NewRideScreen());
-      } else if (index == 2) {
-        Get.to(const FavoriteRideScreen());
-      } else if (index == 3) {
-        Get.to(const RentedVehicleScreen());
-      } else if (index == 4) {
-        Get.to(const AllParcelScreen());
-      } else if (index == 5) {
-        Get.to(WalletScreen());
-      } else if (index == 6) {
-        Get.to(MyProfileScreen());
-      } else if (index == 7) {
-        Get.to(ChangePasswordScreen());
-      } else if (index == 8) {
-        Get.to(const ReferralScreen());
-      } else if (index == 9) {
-        Get.to(const LocalizationScreens(
-          intentType: "dashBoard",
-        ));
-      } else if (index == 10) {
-        Get.to(const TermsOfServiceScreen());
-      } else if (index == 11) {
-        Get.to(const PrivacyPolicyScreen());
-      } else if (index == 12) {
-      } else if (index == 13) {
-        try {
-          if (await inAppReview.isAvailable()) {
-            inAppReview.requestReview();
-          } else {
-            log(":::::::::InAppReview:::::::::::");
-            inAppReview.openStoreListing();
-          }
-        } catch (e) {
-          log("Error triggering in-app review: $e");
-        }
-      } else if (index == 14) {
-        Preferences.clearKeyData(Preferences.isLogin);
-        Preferences.clearKeyData(Preferences.user);
-        Preferences.clearKeyData(Preferences.userId);
-        Get.offAll(const LoginScreen());
-      } else {
-        selectedDrawerIndex.value = index;
-      }
+    if (index >= drawerTexiItems.length) return;
+    var item = drawerTexiItems[index];
+    if (item.title == 'All Rides'.tr) {
+      Get.to(const NewRideScreen());
+    } else if (item.title == 'Favourite Rides'.tr) {
+      Get.to(const FavoriteRideScreen());
+    } else if (item.title == 'Parcel History'.tr) {
+      Get.to(const AllParcelScreen());
     } else {
-      if (index == 1) {
-        Get.to(const NewRideScreen());
-      } else if (index == 2) {
-        Get.to(const FavoriteRideScreen());
-      } else if (index == 3) {
-        Get.to(const RentedVehicleScreen());
-      } else if (index == 4) {
-        Get.to(WalletScreen());
-      } else if (index == 5) {
-        Get.to(MyProfileScreen());
-      } else if (index == 6) {
-        Get.to(ChangePasswordScreen);
-      } else if (index == 7) {
-        Get.to(const ReferralScreen());
-      } else if (index == 8) {
-        Get.to(const LocalizationScreens(
-          intentType: "dashBoard",
-        ));
-      } else if (index == 9) {
-        Get.to(const TermsOfServiceScreen());
-      } else if (index == 10) {
-        Get.to(const PrivacyPolicyScreen());
-      } else if (index == 11) {
-      } else if (index == 12) {
-        try {
-          if (await inAppReview.isAvailable()) {
-            inAppReview.requestReview();
-          } else {
-            log(":::::::::InAppReview:::::::::::");
-            inAppReview.openStoreListing();
-          }
-        } catch (e) {
-          log("Error triggering in-app review: $e");
-        }
-      } else {
-        if (index == 13) {
-          Preferences.clearKeyData(Preferences.isLogin);
-          Preferences.clearKeyData(Preferences.user);
-          Preferences.clearKeyData(Preferences.userId);
-          Get.offAll(const LoginScreen());
-        } else {
-          selectedDrawerIndex.value = index;
-        }
-      }
+      selectedDrawerIndex.value = index;
     }
   }
 
@@ -382,7 +245,7 @@ class DashBoardController extends GetxController {
         Preferences.clearKeyData(Preferences.userId);
         ShowToastDialog.closeLoader();
         ShowToastDialog.showToast('An admin has deleted your account. You no longer have access.'.tr);
-        Get.offAll(const LoginScreen());
+        Get.offAll(const PhoneEntryScreen());
       } else {
         ShowToastDialog.showToast('Something want wrong. Please try again later');
         throw Exception('Failed to load album');

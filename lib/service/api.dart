@@ -134,5 +134,10 @@ class API {
   static const authVerifyEmailRegister  = "${baseUrl}auth/verify-email-otp-register";
   static const authLoginByPhone         = "${baseUrl}auth/login-by-phone";
   static const authVerifyLoginEmailOtp  = "${baseUrl}auth/verify-login-email-otp";
+  // Conditional Login / MPIN flow
+  static const authCheckUser            = "${baseUrl}auth/check-user";
+  static const authLoginByMpin          = "${baseUrl}auth/login-by-mpin";
+  static const authResetMpin            = "${baseUrl}auth/reset-mpin";
+  static const authRegisterSimple       = "${baseUrl}auth/register-simple";
   // ───────────────────────────────────────────────────────────────────────────
 }

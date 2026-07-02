@@ -5,7 +5,7 @@ import 'package:finway/constant/logdata.dart';
 import 'package:finway/constant/show_toast_dialog.dart';
 import 'package:finway/controller/settings_controller.dart';
 import 'package:finway/model/user_model.dart';
-import 'package:finway/page/auth_screens/signup_screen.dart';
+import 'package:finway/page/auth_screens/phone_entry_screen.dart';
 import 'package:finway/service/api.dart';
 import 'package:finway/utils/Preferences.dart';
 import 'package:crypto/crypto.dart';
@@ -180,7 +180,7 @@ class LoginController extends GetxController {
             });
           } else if (value == false) {
             ShowToastDialog.closeLoader();
-            Get.off(SignupScreen(), arguments: {
+            Get.off(const PhoneEntryScreen(), arguments: {
               'email': googleUser.user!.email,
               'firstName': googleUser.user!.displayName,
               'login_type': "google",
@@ -232,7 +232,7 @@ class LoginController extends GetxController {
             });
           } else if (value == false) {
             ShowToastDialog.closeLoader();
-            Get.off(SignupScreen(), arguments: {
+            Get.off(const PhoneEntryScreen(), arguments: {
               'email': userCredential.user!.email,
               'firstName': appleCredential.givenName,
               'lastname': appleCredential.familyName,

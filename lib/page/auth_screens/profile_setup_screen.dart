@@ -1,6 +1,6 @@
-// ignore_for_file: must_be_immutable
+import 'package:finway/constant/show_toast_dialog.dart';
 import 'package:finway/controller/auth_otp_controller.dart';
-import 'package:finway/page/auth_screens/email_entry_screen.dart';
+import 'package:finway/page/MainDashBoard/screen/main_dashboard.dart';
 import 'package:finway/themes/button_them.dart';
 import 'package:finway/themes/constant_colors.dart';
 import 'package:finway/utils/dark_theme_provider.dart';
@@ -8,9 +8,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
-/// Step 3 of signup — collect first name and last name.
 class ProfileSetupScreen extends StatelessWidget {
-  const ProfileSetupScreen({super.key});
+  final String otp;
+  final String mpin;
+
+  const ProfileSetupScreen({super.key, required this.otp, required this.mpin});
 
   @override
   Widget build(BuildContext context) {
@@ -64,12 +66,7 @@ class ProfileSetupScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 8),
-
-              // Progress indicator
-              _buildProgress(step: 3),
-              const SizedBox(height: 28),
-
+              const SizedBox(height: 16),
               Text(
                 'What\'s your name?'.tr,
                 style: TextStyle(
@@ -80,7 +77,7 @@ class ProfileSetupScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'This will be shown on your ride profile.'.tr,
+                'This will be shown on your profile and ride receipts.'.tr,
                 style: TextStyle(fontSize: 14, color: hintColor, fontFamily: AppThemeData.regular),
               ),
 
@@ -101,23 +98,38 @@ class ProfileSetupScreen extends StatelessWidget {
                 controller: controller.lastNameController.value,
                 style: TextStyle(color: labelColor, fontFamily: AppThemeData.medium),
                 textCapitalization: TextCapitalization.words,
-                decoration: inputDecoration('Last name'.tr, 'e.g. Sharma', Icons.person_outline_rounded),
+                decoration: inputDecoration('Last name (Optional)'.tr, 'e.g. Sharma', Icons.person_outline_rounded),
               ),
 
               const Spacer(),
 
               Obx(() => ButtonThem.buildButton(
                     context,
-                    title: controller.isLoading.value ? 'Please wait...' : 'Continue'.tr,
+                    title: controller.isLoading.value ? 'Creating account...' : 'Complete Registration'.tr,
                     onPress: controller.isLoading.value
                         ? () {}
-                        : () {
-                      final first = controller.firstNameController.value.text.trim();
-                      if (first.isEmpty) {
-                        return;
-                      }
-                      Get.to(() => EmailEntryScreen());
-                    },
+                        : () async {
+                            final first = controller.firstNameController.value.text.trim();
+                            final last = controller.lastNameController.value.text.trim();
+
+                            if (first.isEmpty) {
+                              ShowToastDialog.showToast('Please enter your first name.'.tr);
+                              return;
+                            }
+
+                            final user = await controller.registerSimple(
+                              phoneNumber: controller.phone.value,
+                              otp: otp,
+                              mpin: mpin,
+                              firstName: first,
+                              lastName: last,
+                              userCat: 'customer',
+                            );
+
+                            if (user != null) {
+                              Get.offAll(() => MainDashboard());
+                            }
+                          },
                   )),
 
               const SizedBox(height: 24),
@@ -125,24 +137,6 @@ class ProfileSetupScreen extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildProgress({required int step}) {
-    return Row(
-      children: List.generate(5, (i) {
-        final active = i < step;
-        return Expanded(
-          child: Container(
-            height: 4,
-            margin: EdgeInsets.only(right: i < 4 ? 4 : 0),
-            decoration: BoxDecoration(
-              color: active ? AppThemeData.primary200 : AppThemeData.grey200,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-        );
-      }),
     );
   }
 }

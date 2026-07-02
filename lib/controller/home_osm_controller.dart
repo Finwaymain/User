@@ -13,7 +13,6 @@ import 'package:finway/model/driver_location_update.dart';
 import 'package:finway/model/driver_model.dart';
 import 'package:finway/model/payment_method_model.dart';
 import 'package:finway/model/vehicle_category_model.dart';
-import 'package:finway/page/rent_vehicle_screens/rent_vehicle_screen.dart';
 import 'package:finway/service/api.dart';
 import 'package:finway/utils/Preferences.dart';
 import 'package:flutter/material.dart';
@@ -202,19 +201,10 @@ class HomeOsmController extends GetxController with GetSingleTickerProviderState
 
   setTabr() {
     if (Constant.parcelActive.toString() == "yes") {
-      tabController = TabController(length: 3, vsync: this);
-    } else {
       tabController = TabController(length: 2, vsync: this);
+    } else {
+      tabController = TabController(length: 1, vsync: this);
     }
-    tabController?.addListener(() {
-      if (tabController!.indexIsChanging) {
-        if (tabController?.index == 1) {
-          Get.to(RentVehicleScreen())?.then((v) {
-            tabController?.animateTo(0, duration: const Duration(milliseconds: 100));
-          });
-        }
-      }
-    });
   }
 
   Widget? departureIcon;

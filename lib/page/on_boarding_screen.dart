@@ -1,6 +1,5 @@
 import  'package:finway/constant/constant.dart';
 import 'package:finway/controller/on_boarding_controller.dart';
-import 'package:finway/page/auth_screens/login_screen.dart';
 import 'package:finway/themes/button_them.dart';
 import 'package:finway/themes/constant_colors.dart';
 import 'package:finway/themes/responsive.dart';

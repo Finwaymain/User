@@ -295,15 +295,14 @@ class ParcelServiceController extends GetxController {
 
       Map<String, dynamic> response = jsonDecode(String.fromCharCodes(responseData));
 
-      if (res.statusCode == 200) {
+      if (res.statusCode == 200 && response['success']?.toString().toLowerCase() == 'success') {
         ShowToastDialog.closeLoader();
         Get.offAll(const ParcelSuccessScreen());
-
         return response;
       } else {
         ShowToastDialog.closeLoader();
-        ShowToastDialog.showToast('Something want wrong. Please try again later');
-        throw Exception('Failed to load album');
+        final errMsg = response['error'] ?? response['message'] ?? 'Booking failed. Please try again.';
+        ShowToastDialog.showToast(errMsg.toString());
       }
     } on TimeoutException catch (e) {
       ShowToastDialog.closeLoader();

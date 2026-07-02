@@ -9,7 +9,6 @@ import 'package:finway/model/ride_model.dart';
 import 'package:finway/page/MainDashBoard/screen/main_dashboard.dart';
 import 'package:finway/page/features/SmartValue/MPinChange/controller/mpin_change_controller.dart';
 import 'package:finway/page/features/SmartValue/Medical/controllers/medical_card_controller.dart';
-import 'package:finway/page/localization_screens/localization_screen.dart';
 import 'package:finway/page/route_view_screen/route_osm_view_screen.dart';
 import 'package:finway/page/route_view_screen/route_view_screen.dart';
 import 'package:finway/page/features/SmartValue/AddPerson/controller/add_user_controller.dart';
@@ -306,7 +305,7 @@ class AppRoutes {
             builder: (controller) {
                 // Check if language is selected
                 if (Preferences.getString(Preferences.languageCodeKey).toString().isEmpty) {
-                    return const LocalizationScreens(intentType: "main");
+                    Preferences.setString(Preferences.languageCodeKey, 'en');
                 }
 
                 // Check if onboarding is finished

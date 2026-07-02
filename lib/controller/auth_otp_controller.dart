@@ -250,6 +250,137 @@ class AuthOtpController extends GetxController {
     }
   }
 
+  // ── Check if user exists by phone ──────────────────────────────────────────
+  Future<bool?> checkUserExists(String phoneNumber, {String userCat = 'customer'}) async {
+    try {
+      isLoading.value = true;
+      final body = jsonEncode({
+        'phone': phoneNumber,
+        'user_cat': userCat,
+      });
+      final res = await http.post(Uri.parse(API.authCheckUser), headers: API.authheader, body: body);
+      final data = json.decode(res.body);
+      isLoading.value = false;
+
+      if (res.statusCode == 200 && data['success'] == 'success') {
+        return data['exists'] == true;
+      } else {
+        ShowToastDialog.showToast(data['error'] ?? 'Check user failed');
+        return null;
+      }
+    } on SocketException {
+      isLoading.value = false;
+      ShowToastDialog.showToast('No internet connection');
+      return null;
+    } catch (e) {
+      isLoading.value = false;
+      ShowToastDialog.showToast(e.toString());
+      return null;
+    }
+  }
+
+  // ── Login by MPIN ──────────────────────────────────────────────────────────
+  Future<UserModel?> loginByMpin(String phoneNumber, String mpin, {String userCat = 'customer'}) async {
+    try {
+      isLoading.value = true;
+      final body = jsonEncode({
+        'phone': phoneNumber,
+        'mpin': mpin,
+        'user_cat': userCat,
+      });
+      final res = await http.post(Uri.parse(API.authLoginByMpin), headers: API.authheader, body: body);
+      final data = json.decode(res.body);
+      isLoading.value = false;
+
+      if (res.statusCode == 200 && data['success'] == 'success') {
+        return await _saveAndReturnUser(data);
+      } else {
+        ShowToastDialog.showToast(data['error'] ?? 'Incorrect MPIN');
+        return null;
+      }
+    } on SocketException {
+      isLoading.value = false;
+      ShowToastDialog.showToast('No internet connection');
+      return null;
+    } catch (e) {
+      isLoading.value = false;
+      ShowToastDialog.showToast(e.toString());
+      return null;
+    }
+  }
+
+  // ── Reset MPIN ─────────────────────────────────────────────────────────────
+  Future<bool> resetMpin(String phoneNumber, String otp, String mpin, {String userCat = 'customer'}) async {
+    try {
+      isLoading.value = true;
+      final body = jsonEncode({
+        'phone': phoneNumber,
+        'otp': otp,
+        'mpin': mpin,
+        'user_cat': userCat,
+      });
+      final res = await http.post(Uri.parse(API.authResetMpin), headers: API.authheader, body: body);
+      final data = json.decode(res.body);
+      isLoading.value = false;
+
+      if (res.statusCode == 200 && data['success'] == 'success') {
+        ShowToastDialog.showToast(data['message'] ?? 'MPIN reset successfully.');
+        return true;
+      } else {
+        ShowToastDialog.showToast(data['error'] ?? 'Failed to reset MPIN');
+        return false;
+      }
+    } on SocketException {
+      isLoading.value = false;
+      ShowToastDialog.showToast('No internet connection');
+      return false;
+    } catch (e) {
+      isLoading.value = false;
+      ShowToastDialog.showToast(e.toString());
+      return false;
+    }
+  }
+
+  // ── Register Simple (Name + OTP + MPIN) ────────────────────────────────────
+  Future<UserModel?> registerSimple({
+    required String phoneNumber,
+    required String otp,
+    required String mpin,
+    required String firstName,
+    String lastName = '',
+    String userCat = 'customer',
+  }) async {
+    try {
+      isLoading.value = true;
+      final body = jsonEncode({
+        'phone': phoneNumber,
+        'otp': otp,
+        'mpin': mpin,
+        'firstname': firstName,
+        'lastname': lastName,
+        'user_cat': userCat,
+      });
+      final res = await http.post(Uri.parse(API.authRegisterSimple), headers: API.authheader, body: body);
+      final data = json.decode(res.body);
+      isLoading.value = false;
+
+      if (res.statusCode == 200 && data['success'] == 'success') {
+        return await _saveAndReturnUser(data);
+      } else {
+        ShowToastDialog.showToast(data['error'] ?? 'Registration failed');
+        return null;
+      }
+    } on SocketException {
+      isLoading.value = false;
+      ShowToastDialog.showToast('No internet connection');
+      return null;
+    } catch (e) {
+      isLoading.value = false;
+      ShowToastDialog.showToast(e.toString());
+      return null;
+    }
+  }
+
   // ── Shared helper: persist session ──────────────────────────────────────────
   Future<UserModel> _saveAndReturnUser(Map<String, dynamic> responseBody) async {
     final model = UserModel.fromJson(responseBody);

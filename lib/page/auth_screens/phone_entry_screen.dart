@@ -1,6 +1,5 @@
-// ignore_for_file: must_be_immutable
 import 'package:finway/controller/auth_otp_controller.dart';
-import 'package:finway/page/auth_screens/login_screen.dart';
+import 'package:finway/page/auth_screens/mpin_login_screen.dart';
 import 'package:finway/page/auth_screens/phone_otp_screen.dart';
 import 'package:finway/themes/button_them.dart';
 import 'package:finway/themes/constant_colors.dart';
@@ -10,9 +9,6 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
-/// Step 1 of the new auth flow.
-/// Accepts an Indian phone number and routes to OTP verification.
-/// [mode] = 'signup' (default) or 'login'
 class PhoneEntryScreen extends StatelessWidget {
   final String mode;
 
@@ -35,12 +31,6 @@ class PhoneEntryScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: mode == 'signup'
-            ? null
-            : IconButton(
-                icon: Icon(Icons.arrow_back_ios_new_rounded, color: labelColor, size: 20),
-                onPressed: () => Get.back(),
-              ),
       ),
       body: SafeArea(
         child: Padding(
@@ -50,9 +40,8 @@ class PhoneEntryScreen extends StatelessWidget {
             children: [
               const SizedBox(height: 16),
 
-              // Header
               Text(
-                mode == 'signup' ? 'Create account'.tr : 'Welcome back'.tr,
+                'Enter mobile number'.tr,
                 style: TextStyle(
                   fontSize: 28,
                   fontFamily: AppThemeData.bold,
@@ -61,9 +50,7 @@ class PhoneEntryScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                mode == 'signup'
-                    ? 'Enter your mobile number to get started.'.tr
-                    : 'Enter your registered mobile number.'.tr,
+                'We will check if you have an account or create a new one.'.tr,
                 style: TextStyle(
                   fontSize: 15,
                   fontFamily: AppThemeData.regular,
@@ -73,7 +60,7 @@ class PhoneEntryScreen extends StatelessWidget {
 
               const SizedBox(height: 40),
 
-              // Phone input
+              // Phone input container
               Container(
                 decoration: BoxDecoration(
                   color: inputBg,
@@ -82,7 +69,6 @@ class PhoneEntryScreen extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    // Country prefix chip
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
                       decoration: BoxDecoration(
@@ -103,7 +89,6 @@ class PhoneEntryScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                    // Number field
                     Expanded(
                       child: TextField(
                         controller: controller.phoneController.value,
@@ -141,86 +126,36 @@ class PhoneEntryScreen extends StatelessWidget {
 
               const Spacer(),
 
-              // Continue button
               Obx(() => ButtonThem.buildButton(
                     context,
-                    title: controller.isLoading.value ? 'Please wait...' : 'Continue'.tr,
+                    title: controller.isLoading.value ? 'Checking details...' : 'Continue'.tr,
                     onPress: controller.isLoading.value
                         ? () {}
                         : () async {
-                      final number = controller.phoneController.value.text.trim();
-                      if (number.length != 10) {
-                        return;
-                      }
-                      final fullPhone = '+91$number';
+                            final number = controller.phoneController.value.text.trim();
+                            if (number.length != 10) {
+                              Get.snackbar('Error', 'Please enter a valid 10-digit mobile number.'.tr);
+                              return;
+                            }
+                            final fullPhone = '+91$number';
 
-                      if (mode == 'signup') {
-                        final sent = await controller.sendPhoneOtp(fullPhone, mode: 'signup');
-                        if (sent) {
-                          Get.to(() => PhoneOtpScreen(mode: mode));
-                        }
-                      } else {
-                        // Login: send email OTP directly
-                        final sent = await controller.loginByPhone(fullPhone);
-                        if (sent) {
-                          Get.to(() => PhoneOtpScreen(mode: 'login'));
-                        }
-                      }
-                    },
+                            // Call check user exists
+                            final exists = await controller.checkUserExists(fullPhone, userCat: 'customer');
+                            if (exists == null) return; // error handled by controller
+
+                            if (exists) {
+                              // Returning user: go directly to MPIN login screen
+                              controller.phone.value = fullPhone;
+                              Get.to(() => MpinLoginScreen(phone: fullPhone));
+                            } else {
+                              // New user: send phone OTP & navigate to Otp screen
+                              final sent = await controller.sendPhoneOtp(fullPhone, mode: 'signup');
+                              if (sent) {
+                                Get.to(() => const PhoneOtpScreen(mode: 'signup'));
+                              }
+                            }
+                          },
                   )),
-
-              const SizedBox(height: 20),
-
-              // Toggle between login and signup
-              Center(
-                child: Text.rich(
-                  TextSpan(
-                    text: mode == 'signup' ? 'Already have an account? '.tr : 'Don\'t have an account? '.tr,
-                    style: TextStyle(
-                      color: hintColor,
-                      fontFamily: AppThemeData.regular,
-                      fontSize: 14,
-                    ),
-                    children: [
-                      WidgetSpan(
-                        child: GestureDetector(
-                          onTap: () => Get.offAll(() => mode == 'signup'
-                              ? PhoneEntryScreen(mode: 'login')
-                              : PhoneEntryScreen(mode: 'signup')),
-                          child: Text(
-                            mode == 'signup' ? 'Log in'.tr : 'Sign up'.tr,
-                            style: TextStyle(
-                              color: AppThemeData.primary200,
-                              fontFamily: AppThemeData.semiBold,
-                              fontSize: 14,
-                              decoration: TextDecoration.underline,
-                              decorationColor: AppThemeData.primary200,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              // Legacy fallback for existing users without phone
-              Center(
-                child: GestureDetector(
-                  onTap: () => Get.to(() => const LegacyLoginScreen()),
-                  child: Text(
-                    'Login with email & password'.tr,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: AppThemeData.grey400,
-                      fontFamily: AppThemeData.regular,
-                      decoration: TextDecoration.underline,
-                    ),
-                  ),
-                ),
-              ),
 
               const SizedBox(height: 24),
             ],

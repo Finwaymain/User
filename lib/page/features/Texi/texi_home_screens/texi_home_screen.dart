@@ -28,7 +28,7 @@ import 'package:finway/utils/Preferences.dart';
 import 'package:finway/utils/dark_theme_provider.dart';
 import 'package:finway/service/db_helper.dart';
 import 'package:finway/service/api.dart';
-import 'package:finway/page/auth_screens/login_screen.dart';
+import 'package:finway/page/auth_screens/phone_entry_screen.dart';
 import 'package:finway/page/new_ride_screens/new_ride_screen.dart';
 
 class TexiHomeScreen extends StatefulWidget {
@@ -489,7 +489,7 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
                           icon: const Icon(Icons.history),
                           onPressed: () {
                             if (!Preferences.getBoolean(Preferences.isLogin)) {
-                              Get.to(() => const LoginScreen(), transition: Transition.rightToLeftWithFade);
+                              Get.to(() => const PhoneEntryScreen(), transition: Transition.rightToLeftWithFade);
                               return;
                             }
                             Get.to(() => const NewRideScreen(), transition: Transition.rightToLeftWithFade);
