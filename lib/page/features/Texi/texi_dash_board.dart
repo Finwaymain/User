@@ -74,12 +74,8 @@ class _TexiDashboardState extends State<TexiDashboard> {
                   Row(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+                        icon: const Icon(Icons.arrow_back, size: 24),
                         onPressed: () => Get.back(),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.menu, size: 24),
-                        onPressed: () => _scaffoldKey.currentState?.openDrawer(),
                       ),
                       const SizedBox(width: 8),
                       Text(
@@ -108,57 +104,38 @@ class _TexiDashboardState extends State<TexiDashboard> {
                   // Promotional Travel & Transport Banner Card
                   Container(
                     width: double.infinity,
-                    height: 150,
+                    height: 145,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          isDarkMode ? const Color(0xFF1E3A8A) : AppThemeData.primary200,
-                          isDarkMode ? const Color(0xFF1E293B) : const Color(0xFF1E40AF),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(24),
+                      color: isDarkMode ? const Color(0xFF1E293B) : const Color(0xFFEAF5FC),
+                      borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: AppThemeData.primary200.withOpacity(0.2),
-                          blurRadius: 16,
-                          offset: const Offset(0, 8),
+                          color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.04),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
                         )
                       ],
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(20),
                       child: Stack(
                         children: [
-                          // Decorative shapes
+                          // Background design circle
                           Positioned(
                             right: -20,
-                            top: -20,
+                            bottom: -20,
                             child: Container(
-                              width: 140,
-                              height: 140,
+                              width: 170,
+                              height: 170,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Colors.white.withOpacity(0.04),
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            left: -40,
-                            bottom: -40,
-                            child: Container(
-                              width: 120,
-                              height: 120,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white.withOpacity(0.03),
+                                color: Colors.white.withOpacity(isDarkMode ? 0.05 : 0.4),
                               ),
                             ),
                           ),
                           // Content Row
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                             child: Row(
                               children: [
                                 Expanded(
@@ -171,85 +148,70 @@ class _TexiDashboardState extends State<TexiDashboard> {
                                         "Travel & Transport".tr,
                                         style: const TextStyle(
                                           fontFamily: AppThemeData.bold,
-                                          fontSize: 22,
-                                          color: Colors.white,
+                                          fontSize: 20,
+                                          color: Color(0xFF2E7D32),
                                         ),
                                       ),
-                                      const SizedBox(height: 8),
+                                      const SizedBox(height: 6),
                                       Text(
-                                        "Book rides, deliver parcels and more".tr,
+                                        "Book rides, deliver parcels\nand more".tr,
                                         style: TextStyle(
-                                          fontFamily: AppThemeData.regular,
+                                          fontFamily: AppThemeData.medium,
                                           fontSize: 13,
-                                          color: Colors.white.withOpacity(0.85),
+                                          color: isDarkMode ? Colors.white70 : const Color(0xFF37474F),
+                                          height: 1.3,
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-                                // Overlapping Car and Scooter Graphics
                                 Expanded(
                                   flex: 4,
                                   child: Stack(
+                                    alignment: Alignment.center,
                                     clipBehavior: Clip.none,
                                     children: [
-                                      // Secondary background circle
+                                      // Faint Road Line
                                       Positioned(
-                                        right: 15,
-                                        top: 10,
-                                        child: Container(
-                                          width: 70,
-                                          height: 70,
-                                          decoration: BoxDecoration(
-                                            color: Colors.white.withOpacity(0.15),
-                                            shape: BoxShape.circle,
-                                          ),
-                                        ),
-                                      ),
-                                      // Car container
-                                      Positioned(
-                                        right: 30,
-                                        bottom: 5,
-                                        child: Transform.rotate(
-                                          angle: -0.1,
-                                          child: Container(
-                                            padding: const EdgeInsets.all(10),
-                                            decoration: BoxDecoration(
-                                              color: Colors.white,
-                                              borderRadius: BorderRadius.circular(16),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Colors.black.withOpacity(0.15),
-                                                  blurRadius: 10,
-                                                  offset: const Offset(0, 4),
-                                                )
-                                              ],
-                                            ),
-                                            child: Icon(Icons.directions_car_rounded, size: 36, color: AppThemeData.primary200),
-                                          ),
-                                        ),
-                                      ),
-                                      // Scooter/Bike container
-                                      Positioned(
+                                        bottom: 12,
+                                        left: 0,
                                         right: 0,
-                                        bottom: 25,
-                                        child: Transform.rotate(
-                                          angle: 0.15,
-                                          child: Container(
-                                            padding: const EdgeInsets.all(8),
-                                            decoration: BoxDecoration(
-                                              color: const Color(0xFF10B981), // Emerald green
-                                              borderRadius: BorderRadius.circular(12),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Colors.black.withOpacity(0.2),
-                                                  blurRadius: 8,
-                                                  offset: const Offset(2, 4),
-                                                )
-                                              ],
-                                            ),
-                                            child: const Icon(Icons.two_wheeler_rounded, size: 24, color: Colors.white),
-                                          ),
+                                        child: Container(
+                                          height: 3,
+                                          color: Colors.grey.withOpacity(0.3),
+                                        ),
+                                      ),
+                                      // Car (white sedan/mini asset or icon)
+                                      Positioned(
+                                        left: -15,
+                                        bottom: 0,
+                                        child: Image.asset(
+                                          'assets/images/sedan.png',
+                                          width: 85,
+                                          fit: BoxFit.contain,
+                                          errorBuilder: (context, error, stackTrace) {
+                                            return const Icon(Icons.directions_car_rounded, color: Colors.white, size: 48);
+                                          },
+                                        ),
+                                      ),
+                                      // Scooter/Bike
+                                      Positioned(
+                                        right: -5,
+                                        bottom: 2,
+                                        child: const Icon(
+                                          Icons.two_wheeler_rounded,
+                                          color: Color(0xFF2E7D32),
+                                          size: 40,
+                                        ),
+                                      ),
+                                      // Location Pin Icon
+                                      Positioned(
+                                        right: 28,
+                                        top: 12,
+                                        child: const Icon(
+                                          Icons.location_on_rounded,
+                                          color: Color(0xFF2E7D32),
+                                          size: 28,
                                         ),
                                       ),
                                     ],
@@ -274,49 +236,50 @@ class _TexiDashboardState extends State<TexiDashboard> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  GridView.count(
-                    crossAxisCount: 2,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    mainAxisSpacing: 16,
-                    crossAxisSpacing: 16,
-                    childAspectRatio: 1.25,
+                  Row(
                     children: [
-                      _buildServiceItem(
-                        title: "Cab Ride".tr,
-                        subtitle: "Local & Outstation".tr,
-                        icon: Icons.directions_car_rounded,
-                        iconColor: AppThemeData.primary200,
-                        bgColor: AppThemeData.primary200.withOpacity(0.08),
-                        onTap: () => _onServiceTap("Cab", 0),
-                        isDarkMode: isDarkMode,
+                      Expanded(
+                        child: _buildRideServiceItem(
+                          title: "Cab Ride".tr,
+                          subtitle: "Local & Outstation".tr,
+                          icon: Icons.directions_car_rounded,
+                          iconColor: const Color(0xFF2E7D32),
+                          onTap: () => _onServiceTap("Cab", 0),
+                          isDarkMode: isDarkMode,
+                        ),
                       ),
-                      _buildServiceItem(
-                        title: "Bike Ride".tr,
-                        subtitle: "Quick & Affordable".tr,
-                        icon: Icons.two_wheeler_rounded,
-                        iconColor: AppThemeData.warning200,
-                        bgColor: AppThemeData.warning200.withOpacity(0.08),
-                        onTap: () => _onServiceTap("Bike", 0),
-                        isDarkMode: isDarkMode,
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _buildRideServiceItem(
+                          title: "Bike Ride".tr,
+                          subtitle: "Quick & Affordable".tr,
+                          icon: Icons.two_wheeler_rounded,
+                          iconColor: const Color(0xFF2E7D32),
+                          onTap: () => _onServiceTap("Bike", 0),
+                          isDarkMode: isDarkMode,
+                        ),
                       ),
-                      _buildServiceItem(
-                        title: "Sharing Cab".tr,
-                        subtitle: "Local Ride".tr,
-                        icon: Icons.people_rounded,
-                        iconColor: const Color(0xFF0D9488),
-                        bgColor: const Color(0xFF0D9488).withOpacity(0.08),
-                        onTap: () => _onServiceTap("Sharing", 0),
-                        isDarkMode: isDarkMode,
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _buildRideServiceItem(
+                          title: "Sharing Cab".tr,
+                          subtitle: "Local".tr,
+                          icon: Icons.people_rounded,
+                          iconColor: const Color(0xFF2E7D32),
+                          onTap: () => _onServiceTap("Sharing", 0),
+                          isDarkMode: isDarkMode,
+                        ),
                       ),
-                      _buildServiceItem(
-                        title: "Sharing Cab".tr,
-                        subtitle: "Outstation".tr,
-                        icon: Icons.add_road_rounded,
-                        iconColor: const Color(0xFF7C3AED),
-                        bgColor: const Color(0xFF7C3AED).withOpacity(0.08),
-                        onTap: () => _onServiceTap("Sharing Outstation", 0),
-                        isDarkMode: isDarkMode,
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _buildRideServiceItem(
+                          title: "Sharing Cab".tr,
+                          subtitle: "Outstation".tr,
+                          icon: Icons.work_rounded,
+                          iconColor: const Color(0xFF2E7D32),
+                          onTap: () => _onServiceTap("Sharing Outstation", 0),
+                          isDarkMode: isDarkMode,
+                        ),
                       ),
                     ],
                   ),
@@ -335,24 +298,20 @@ class _TexiDashboardState extends State<TexiDashboard> {
                   Row(
                     children: [
                       Expanded(
-                        child: _buildServiceItem(
+                        child: _buildLogisticsServiceItem(
                           title: "Transport Pick & Drop".tr,
                           subtitle: "Goods Transport".tr,
-                          icon: Icons.local_shipping_rounded,
-                          iconColor: const Color(0xFFE11D48),
-                          bgColor: const Color(0xFFE11D48).withOpacity(0.08),
+                          iconWidget: const Icon(Icons.local_shipping_rounded, color: Color(0xFF2E7D32), size: 32),
                           onTap: () => _onServiceTap("Logistics", 1),
                           isDarkMode: isDarkMode,
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 12),
                       Expanded(
-                        child: _buildServiceItem(
+                        child: _buildLogisticsServiceItem(
                           title: "Parcel & Delivery Support".tr,
                           subtitle: "Fast & Reliable".tr,
-                          icon: Icons.local_post_office_outlined,
-                          iconColor: const Color(0xFFEA580C),
-                          bgColor: const Color(0xFFEA580C).withOpacity(0.08),
+                          iconWidget: const Icon(Icons.inventory_2_rounded, color: Color(0xFFE67E22), size: 32),
                           onTap: () => _onServiceTap("Parcel & Delivery Support", 1),
                           isDarkMode: isDarkMode,
                         ),
@@ -368,63 +327,129 @@ class _TexiDashboardState extends State<TexiDashboard> {
     );
   }
 
-  Widget _buildServiceItem({
+  Widget _buildRideServiceItem({
     required String title,
     required String subtitle,
     required IconData icon,
     required Color iconColor,
-    required Color bgColor,
     required VoidCallback onTap,
     required bool isDarkMode,
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        height: 115,
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
         decoration: BoxDecoration(
-          color: isDarkMode ? AppThemeData.grey100Dark : Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          color: isDarkMode ? AppThemeData.grey800Dark : Colors.white,
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isDarkMode ? AppThemeData.grey200Dark : Colors.grey.shade100,
-            width: 1.5,
+            color: isDarkMode ? AppThemeData.grey200Dark : const Color(0xFFEEEEEE),
+            width: 1.0,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withOpacity(isDarkMode ? 0.15 : 0.03),
               blurRadius: 8,
-              offset: const Offset(0, 4),
+              offset: const Offset(0, 3),
             )
           ],
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: bgColor,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: iconColor, size: 24),
-            ),
-            const SizedBox(height: 12),
+            Icon(icon, color: iconColor, size: 28),
+            const SizedBox(height: 10),
             Text(
               title,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontFamily: AppThemeData.semiBold,
-                fontSize: 14,
+                fontFamily: AppThemeData.bold,
+                fontSize: 11,
                 color: isDarkMode ? AppThemeData.grey900Dark : AppThemeData.grey900,
               ),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 3),
             Text(
               subtitle,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontFamily: AppThemeData.regular,
-                fontSize: 11,
+                fontSize: 8.5,
                 color: isDarkMode ? AppThemeData.grey500Dark : AppThemeData.grey500,
+                height: 1.1,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogisticsServiceItem({
+    required String title,
+    required String subtitle,
+    required Widget iconWidget,
+    required VoidCallback onTap,
+    required bool isDarkMode,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        decoration: BoxDecoration(
+          color: isDarkMode ? AppThemeData.grey800Dark : const Color(0xFFF5F5F7),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDarkMode ? AppThemeData.grey200Dark : const Color(0xFFEEEEEE),
+            width: 1.0,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(isDarkMode ? 0.1 : 0.02),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            )
+          ],
+        ),
+        child: Row(
+          children: [
+            iconWidget,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: AppThemeData.bold,
+                      fontSize: 13,
+                      color: isDarkMode ? AppThemeData.grey900Dark : AppThemeData.grey900,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: AppThemeData.medium,
+                      fontSize: 10.5,
+                      color: isDarkMode ? AppThemeData.grey500Dark : AppThemeData.grey500,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

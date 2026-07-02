@@ -29,6 +29,8 @@ import 'package:finway/utils/dark_theme_provider.dart';
 import 'package:finway/service/db_helper.dart';
 import 'package:finway/service/api.dart';
 import 'package:finway/page/auth_screens/phone_entry_screen.dart';
+import 'package:finway/page/route_view_screen/route_view_screen.dart';
+import 'package:finway/page/route_view_screen/route_osm_view_screen.dart';
 import 'package:finway/page/new_ride_screens/new_ride_screen.dart';
 
 class TexiHomeScreen extends StatefulWidget {
@@ -59,12 +61,23 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
   String selectedPaymentMethod = "cash"; // cash, wallet, upi
   bool isSimulatingUPI = false;
   String upiStepText = "";
+  
+  // Drag sheet state variables
+  double sheetOffset = 0.0;
+  bool isDragging = false;
+  final GlobalKey _sheetKey = GlobalKey();
+  double _sheetHeight = 450.0;
+  
+  // Booking progress guard
+  bool isBookingInProgress = false;
 
   @override
   void initState() {
     super.initState();
     selectedTabIndex = widget.initialTab ?? 0;
-    checkActiveRide();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      checkActiveRide();
+    });
     loadHistory();
     fetchVehicleCategories();
   }
@@ -88,7 +101,19 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
               .toList();
 
           if (rides.isNotEmpty && mounted) {
-            Get.off(() => const InProgressScreen());
+            final activeRide = rides.first;
+            if (activeRide.statut == 'new') {
+              Get.offAll(() => const SearchingDriverScreen(), arguments: {
+                'rideData': activeRide,
+              });
+            } else {
+              var argumentData = {'type': activeRide.statut, 'data': activeRide};
+              if (Constant.selectedMapType == 'osm') {
+                Get.offAll(() => RouteOsmViewScreen(), arguments: argumentData);
+              } else {
+                Get.offAll(() => RouteViewScreen(), arguments: argumentData);
+              }
+            }
           }
         }
       }
@@ -310,6 +335,8 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
   }
 
   Future<void> executeBooking() async {
+    if (isBookingInProgress) return;
+
     final homeCtrl = Get.find<HomeController>();
     
     if (selectedVehicle == null) {
@@ -322,75 +349,105 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
       return;
     }
 
-    // Select the first available driver from searched vehicle
-    final driver = nearbyDrivers!.data!.first;
+    setState(() {
+      isBookingInProgress = true;
+    });
 
-    // Price calculation
-    double tripPrice = double.tryParse(selectedVehicle!.prix ?? '0') ?? 0.0;
-    double totalCout = tripPrice * (homeCtrl.distance.value > 0.0 ? homeCtrl.distance.value : 1.0);
+    try {
+      // Select the first available driver from searched vehicle
+      final driver = nearbyDrivers!.data!.first;
 
-    // Resolve paymentMethodId
-    String paymentMethodId = "";
-    if (selectedPaymentMethod == "cash") {
-      paymentMethodId = homeCtrl.paymentSettingModel.value.cash?.idPaymentMethod?.toString() ?? "1";
-    } else if (selectedPaymentMethod == "wallet") {
-      paymentMethodId = homeCtrl.paymentSettingModel.value.myWallet?.idPaymentMethod?.toString() ?? "2";
-    } else {
-      // UPI: use cash payment method ID as fallback since "upi_mock" is not a valid FK
-      paymentMethodId = homeCtrl.paymentSettingModel.value.cash?.idPaymentMethod?.toString() ?? "1";
-    }
+      // Price calculation
+      double tripPrice = double.tryParse(selectedVehicle!.prix ?? '0') ?? 0.0;
+      double totalCout = tripPrice * (homeCtrl.distance.value > 0.0 ? homeCtrl.distance.value : 1.0);
 
-    Map<String, dynamic> bodyParams = {
-      'user_id': Preferences.getInt(Preferences.userId).toString(),
-      'lat1': homeCtrl.departureLatLong.value.latitude.toString(),
-      'lng1': homeCtrl.departureLatLong.value.longitude.toString(),
-      'lat2': homeCtrl.destinationLatLong.value.latitude.toString(),
-      'lng2': homeCtrl.destinationLatLong.value.longitude.toString(),
-      'cout': totalCout.toString(),
-      'distance': homeCtrl.distance.value.toString(),
-      'distance_unit': Constant.distanceUnit.toString(),
-      'duree': homeCtrl.duration.toString(),
-      'id_conducteur': driver.id.toString(),
-      'id_payment': paymentMethodId,
-      'id_type_vehicule': selectedVehicle!.id.toString(),
-      'depart_name': homeCtrl.departureController.text,
-      'destination_name': homeCtrl.destinationController.text,
-      'stops': [],
-      'place': '',
-      'number_poeple': '1',
-      'image': '',
-      'image_name': "",
-      'statut_round': 'no',
-      'trip_objective': '',
-      'age_children1': '',
-      'age_children2': '',
-      'age_children3': '',
-    };
+      // Resolve paymentMethodId
+      String paymentMethodId = "";
+      if (selectedPaymentMethod == "cash") {
+        paymentMethodId = homeCtrl.paymentSettingModel.value.cash?.idPaymentMethod?.toString() ?? "1";
+      } else if (selectedPaymentMethod == "wallet") {
+        paymentMethodId = homeCtrl.paymentSettingModel.value.myWallet?.idPaymentMethod?.toString() ?? "2";
+      } else {
+        // UPI: use cash payment method ID as fallback since "upi_mock" is not a valid FK
+        paymentMethodId = homeCtrl.paymentSettingModel.value.cash?.idPaymentMethod?.toString() ?? "1";
+      }
 
-    if (selectedPaymentMethod == "upi") {
-      await simulateUPILaunch(() {
-        homeCtrl.bookRide(bodyParams).then((value) {
-          if (value != null && value['success'] == "success") {
-            Get.off(() => const SearchingDriverScreen(), arguments: {
-              'rideData': RideData.fromJson(value['data']),
-              'bookingBodyParams': bodyParams,
+      Map<String, dynamic> bodyParams = {
+        'user_id': Preferences.getInt(Preferences.userId).toString(),
+        'lat1': homeCtrl.departureLatLong.value.latitude.toString(),
+        'lng1': homeCtrl.departureLatLong.value.longitude.toString(),
+        'lat2': homeCtrl.destinationLatLong.value.latitude.toString(),
+        'lng2': homeCtrl.destinationLatLong.value.longitude.toString(),
+        'cout': totalCout.toString(),
+        'distance': homeCtrl.distance.value.toString(),
+        'distance_unit': Constant.distanceUnit.toString(),
+        'duree': homeCtrl.duration.toString(),
+        'id_conducteur': driver.id.toString(),
+        'id_payment': paymentMethodId,
+        'id_type_vehicule': selectedVehicle!.id.toString(),
+        'depart_name': homeCtrl.departureController.text,
+        'destination_name': homeCtrl.destinationController.text,
+        'stops': [],
+        'place': '',
+        'number_poeple': '1',
+        'image': '',
+        'image_name': "",
+        'statut_round': 'no',
+        'trip_objective': '',
+        'age_children1': '',
+        'age_children2': '',
+        'age_children3': '',
+      };
+
+      if (selectedPaymentMethod == "upi") {
+        await simulateUPILaunch(() async {
+          try {
+            final value = await homeCtrl.bookRide(bodyParams);
+            setState(() {
+              isBookingInProgress = false;
             });
-          } else {
-            ShowToastDialog.showToast(value != null ? value['error'] : "Booking failed");
+            if (value != null && value['success'] == "success") {
+              Get.offAll(() => const SearchingDriverScreen(), arguments: {
+                'rideData': RideData.fromJson(value['data']),
+                'bookingBodyParams': bodyParams,
+              });
+            } else {
+              String errorMsg = value != null ? value['error'] : "Booking failed";
+              ShowToastDialog.showToast(errorMsg);
+              if (errorMsg.toLowerCase().contains("already on an active ride")) {
+                checkActiveRide();
+              }
+            }
+          } catch (e) {
+            setState(() {
+              isBookingInProgress = false;
+            });
+            ShowToastDialog.showToast("Booking failed: $e");
           }
         });
-      });
-    } else {
-      homeCtrl.bookRide(bodyParams).then((value) {
+      } else {
+        final value = await homeCtrl.bookRide(bodyParams);
+        setState(() {
+          isBookingInProgress = false;
+        });
         if (value != null && value['success'] == "success") {
-          Get.off(() => const SearchingDriverScreen(), arguments: {
+          Get.offAll(() => const SearchingDriverScreen(), arguments: {
             'rideData': RideData.fromJson(value['data']),
             'bookingBodyParams': bodyParams,
           });
         } else {
-          ShowToastDialog.showToast(value != null ? value['error'] : "Booking failed");
+          String errorMsg = value != null ? value['error'] : "Booking failed";
+          ShowToastDialog.showToast(errorMsg);
+          if (errorMsg.toLowerCase().contains("already on an active ride")) {
+            checkActiveRide();
+          }
         }
+      }
+    } catch (e) {
+      setState(() {
+        isBookingInProgress = false;
       });
+      ShowToastDialog.showToast("An error occurred: $e");
     }
   }
 
@@ -514,10 +571,48 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
                 left: 0,
                 right: 0,
                 bottom: 0,
-                child: AnimatedSize(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOutQuart,
-                  child: Container(
+                child: GestureDetector(
+                  onVerticalDragStart: (details) {
+                    setState(() {
+                      isDragging = true;
+                    });
+                  },
+                  onVerticalDragUpdate: (details) {
+                    final RenderBox? renderBox = _sheetKey.currentContext?.findRenderObject() as RenderBox?;
+                    if (renderBox != null) {
+                      _sheetHeight = renderBox.size.height;
+                    }
+                    double maxOffset = _sheetHeight - 84.0;
+                    if (maxOffset < 200.0) maxOffset = 320.0;
+
+                    setState(() {
+                      sheetOffset += details.primaryDelta!;
+                      if (sheetOffset < 0) sheetOffset = 0;
+                      if (sheetOffset > maxOffset) sheetOffset = maxOffset;
+                    });
+                  },
+                  onVerticalDragEnd: (details) {
+                    final RenderBox? renderBox = _sheetKey.currentContext?.findRenderObject() as RenderBox?;
+                    if (renderBox != null) {
+                      _sheetHeight = renderBox.size.height;
+                    }
+                    double maxOffset = _sheetHeight - 84.0;
+                    if (maxOffset < 200.0) maxOffset = 320.0;
+
+                    setState(() {
+                      isDragging = false;
+                      if (sheetOffset > maxOffset / 2 || (details.primaryVelocity ?? 0) > 300) {
+                        sheetOffset = maxOffset;
+                      } else {
+                        sheetOffset = 0;
+                      }
+                    });
+                  },
+                  child: AnimatedContainer(
+                    key: _sheetKey,
+                    duration: Duration(milliseconds: isDragging ? 0 : 250),
+                    curve: Curves.easeOutQuart,
+                    transform: Matrix4.translationValues(0, sheetOffset, 0),
                     decoration: BoxDecoration(
                       color: isDarkMode ? AppThemeData.surface50Dark : Colors.white,
                       borderRadius: const BorderRadius.only(
@@ -532,10 +627,27 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
                         )
                       ],
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                    child: isPickingOnMap
-                        ? buildMapPickingPanel()
-                        : buildUnifiedBookingPanel(controller, isDarkMode),
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Drag Handle
+                        Center(
+                          child: Container(
+                            width: 48,
+                            height: 5,
+                            margin: const EdgeInsets.only(bottom: 12),
+                            decoration: BoxDecoration(
+                              color: isDarkMode ? Colors.grey[800] : Colors.grey[300],
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                        isPickingOnMap
+                            ? buildMapPickingPanel()
+                            : buildUnifiedBookingPanel(controller, isDarkMode),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -648,7 +760,7 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
                     Get.to(() => const PhoneEntryScreen(), transition: Transition.rightToLeftWithFade);
                     return;
                   }
-                  Get.to(() => const NewRideScreen(), transition: Transition.rightToLeftWithFade);
+                  Get.to(() => NewRideScreen(), transition: Transition.rightToLeftWithFade);
                 },
               ),
             ],
@@ -1086,11 +1198,20 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
-                  onPressed: executeBooking,
-                  child: Text(
-                    "Confirm & Continue".tr,
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
+                  onPressed: isBookingInProgress ? null : executeBooking,
+                  child: isBookingInProgress
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Text(
+                          "Confirm & Continue".tr,
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
                 ),
               ),
             ],

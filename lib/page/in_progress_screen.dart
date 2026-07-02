@@ -37,12 +37,16 @@ class _InProgressScreenState extends State<InProgressScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchActiveRides();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchActiveRides();
+    });
     _getUserLocation(requestIfNeeded: false);
     
     // Poll for active rides status every 6 seconds
     _refreshTimer = Timer.periodic(const Duration(seconds: 6), (_) {
-      _fetchActiveRides();
+      if (mounted) {
+        _fetchActiveRides();
+      }
     });
   }
 
@@ -114,15 +118,15 @@ class _InProgressScreenState extends State<InProgressScreen> {
             _refreshTimer?.cancel();
 
             if (activeRide.statut == 'new') {
-              Get.off(() => const SearchingDriverScreen(), arguments: {
+              Get.offAll(() => const SearchingDriverScreen(), arguments: {
                 'rideData': activeRide,
               });
             } else {
               var argumentData = {'type': activeRide.statut, 'data': activeRide};
               if (Constant.selectedMapType == 'osm') {
-                Get.off(() => const RouteOsmViewScreen(), arguments: argumentData);
+                Get.offAll(() => const RouteOsmViewScreen(), arguments: argumentData);
               } else {
-                Get.off(() => const RouteViewScreen(), arguments: argumentData);
+                Get.offAll(() => const RouteViewScreen(), arguments: argumentData);
               }
             }
             return;

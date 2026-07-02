@@ -13,6 +13,15 @@ import '../../features/SmartValue/ScanAndTransfer/view/scanner_and_transfer_scre
 import '../widget/custom_app_bar.dart';
 import '../widget/custom_bottom_navbar.dart';
 import '../widget/custom_drawer.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../../../utils/Preferences.dart';
+import '../../../service/api.dart';
+import '../../../model/ride_model.dart';
+import '../../../constant/constant.dart';
+import '../../new_ride_screens/searching_driver_screen.dart';
+import '../../route_view_screen/route_view_screen.dart';
+import '../../route_view_screen/route_osm_view_screen.dart';
 import '../../home_screen/view/home_screen.dart';
 
 class MainDashboard extends StatefulWidget {
@@ -38,6 +47,55 @@ class _MainDashboardState extends State<MainDashboard> {
     // Center(child: Text("Travel Screen")),
     // Center(child: Text("Receipt Screen")),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkActiveRideAndRedirect();
+    });
+  }
+
+  Future<void> _checkActiveRideAndRedirect() async {
+    try {
+      if (!Preferences.getBoolean(Preferences.isLogin)) return;
+      final userId = Preferences.getInt(Preferences.userId);
+      final response = await http.get(
+        Uri.parse('${API.newRide}?id_user_app=$userId'),
+        headers: API.header,
+      );
+      if (response.statusCode == 200) {
+        final body = json.decode(response.body);
+        if (body['success'] == 'success' && body['data'] != null) {
+          final rides = (body['data'] as List)
+              .map((e) => RideData.fromJson(e as Map<String, dynamic>))
+              .where((r) =>
+                  r.statut == 'confirmed' ||
+                  r.statut == 'on ride' ||
+                  r.statut == 'new')
+              .toList();
+
+          if (rides.isNotEmpty && mounted) {
+            final activeRide = rides.first;
+            if (activeRide.statut == 'new') {
+              Get.offAll(() => const SearchingDriverScreen(), arguments: {
+                'rideData': activeRide,
+              });
+            } else {
+              var argumentData = {'type': activeRide.statut, 'data': activeRide};
+              if (Constant.selectedMapType == 'osm') {
+                Get.offAll(() => RouteOsmViewScreen(), arguments: argumentData);
+              } else {
+                Get.offAll(() => RouteViewScreen(), arguments: argumentData);
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('MainDashboard check active ride error: $e');
+    }
+  }
 
   void _onTabSelected(int index) {
     setState(() => currentIndex = index);

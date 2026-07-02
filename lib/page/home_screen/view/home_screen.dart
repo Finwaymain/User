@@ -1016,13 +1016,10 @@ class AddFundScreen extends StatelessWidget {
                 prefix: Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: Text(
-                    Constant.currency.toString(),
-                    style: TextStyle(
-                      color: AppThemeData.primary200,
-                      fontFamily: AppThemeData.bold,
-                      fontSize: 20,
-                    ),
+                  child: Icon(
+                    Icons.payments_rounded,
+                    color: AppThemeData.primary200,
+                    size: 24,
                   ),
                 ),
               ),

@@ -6,6 +6,7 @@ import 'package:finway/constant/constant.dart';
 import 'package:finway/controller/searching_driver_controller.dart';
 import 'package:finway/themes/constant_colors.dart';
 import 'package:finway/utils/dark_theme_provider.dart';
+import 'package:finway/page/MainDashBoard/screen/main_dashboard.dart';
 
 
 
@@ -272,7 +273,7 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen> with Tick
             onPressed: () async {
               bool success = await controller.cancelSearch();
               if (success) {
-                Get.back();
+                Get.offAll(() => const MainDashboard());
               }
             },
             style: TextButton.styleFrom(
@@ -369,7 +370,7 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen> with Tick
           // Cancel button
           TextButton(
             onPressed: () {
-              Get.back();
+              Get.offAll(() => const MainDashboard());
             },
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
