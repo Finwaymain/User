@@ -32,7 +32,9 @@ import 'package:finway/page/auth_screens/phone_entry_screen.dart';
 import 'package:finway/page/new_ride_screens/new_ride_screen.dart';
 
 class TexiHomeScreen extends StatefulWidget {
-  const TexiHomeScreen({super.key});
+  final String? initialVehicleCategory;
+  final int? initialTab;
+  const TexiHomeScreen({super.key, this.initialVehicleCategory, this.initialTab});
 
   @override
   State<TexiHomeScreen> createState() => _TexiHomeScreenState();
@@ -41,6 +43,7 @@ class TexiHomeScreen extends StatefulWidget {
 class _TexiHomeScreenState extends State<TexiHomeScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final dashBoardController = Get.put(DashBoardController());
+  int selectedTabIndex = 0;
   
   bool isLocationSelected = false;
   bool isPickingOnMap = false;
@@ -60,6 +63,7 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
   @override
   void initState() {
     super.initState();
+    selectedTabIndex = widget.initialTab ?? 0;
     checkActiveRide();
     loadHistory();
     fetchVehicleCategories();
@@ -114,7 +118,14 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
         if (mounted) {
           setState(() {
             vehicleCategoryModel = categories;
-            selectedVehicle = categories.data!.first;
+            if (widget.initialVehicleCategory != null) {
+              selectedVehicle = categories.data!.firstWhere(
+                (cat) => cat.libelle?.toLowerCase().contains(widget.initialVehicleCategory!.toLowerCase()) ?? false,
+                orElse: () => categories.data!.first,
+              );
+            } else {
+              selectedVehicle = categories.data!.first;
+            }
           });
           fetchNearbyDrivers();
         }
@@ -437,69 +448,6 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
                   ),
                 ),
 
-              // Custom floating appbar
-              Positioned(
-                top: 40,
-                left: 16,
-                right: 16,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: isDarkMode ? AppThemeData.surface50Dark : Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.08),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      )
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.menu),
-                        onPressed: () {
-                          _scaffoldKey.currentState?.openDrawer();
-                        },
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        "Fiinway Ride".tr,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontFamily: AppThemeData.semiBold,
-                          color: isDarkMode ? Colors.white : Colors.black87,
-                        ),
-                      ),
-                      const Spacer(),
-                      if (isLocationSelected || isPickingOnMap)
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () {
-                            setState(() {
-                              isLocationSelected = false;
-                              isPickingOnMap = false;
-                            });
-                            controller.polyLines.clear();
-                          },
-                        )
-                      else
-                        IconButton(
-                          icon: const Icon(Icons.history),
-                          onPressed: () {
-                            if (!Preferences.getBoolean(Preferences.isLogin)) {
-                              Get.to(() => const PhoneEntryScreen(), transition: Transition.rightToLeftWithFade);
-                              return;
-                            }
-                            Get.to(() => const NewRideScreen(), transition: Transition.rightToLeftWithFade);
-                          },
-                        )
-                    ],
-                  ),
-                ),
-              ),
-
               // Pin crosshair for map selection mode
               if (isPickingOnMap)
                 Align(
@@ -513,6 +461,52 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
                       ),
                     ),
                   ),
+                ),
+
+              // Custom Header / Address Card
+              if (isPickingOnMap)
+                Positioned(
+                  top: 40,
+                  left: 16,
+                  right: 16,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isDarkMode ? AppThemeData.surface50Dark : Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.08),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        )
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back),
+                          onPressed: () {
+                            setState(() {
+                              isPickingOnMap = false;
+                            });
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          pickingDrop ? "Choose Drop Location".tr : "Choose Pickup Location".tr,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                Positioned(
+                  top: 40,
+                  left: 16,
+                  right: 16,
+                  child: buildTopAddressCard(controller, isDarkMode),
                 ),
 
               // Bottom Sheet Panel
@@ -541,9 +535,7 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
                     child: isPickingOnMap
                         ? buildMapPickingPanel()
-                        : isLocationSelected
-                            ? buildBookingDetailsPanel(controller, isDarkMode)
-                            : buildSearchLocationPanel(controller, isDarkMode),
+                        : buildUnifiedBookingPanel(controller, isDarkMode),
                   ),
                 ),
               ),
@@ -615,153 +607,193 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
     );
   }
 
-  Widget buildSearchLocationPanel(HomeController controller, bool isDarkMode) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // Title greeting
-        Text(
-          "Plan Your Journey".tr,
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: isDarkMode ? Colors.white : Colors.black87,
+  Widget buildTopAddressCard(HomeController controller, bool isDarkMode) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      decoration: BoxDecoration(
+        color: isDarkMode ? AppThemeData.surface50Dark : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Header inside the card
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+                onPressed: () => Get.back(),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                "Book Your Ride".tr,
+                style: TextStyle(
+                  fontFamily: AppThemeData.bold,
+                  fontSize: 18,
+                  color: isDarkMode ? AppThemeData.grey900Dark : AppThemeData.grey900,
+                ),
+              ),
+              const Spacer(),
+              IconButton(
+                icon: const Icon(Icons.history, size: 22),
+                onPressed: () {
+                  if (!Preferences.getBoolean(Preferences.isLogin)) {
+                    Get.to(() => const PhoneEntryScreen(), transition: Transition.rightToLeftWithFade);
+                    return;
+                  }
+                  Get.to(() => const NewRideScreen(), transition: Transition.rightToLeftWithFade);
+                },
+              ),
+            ],
           ),
-        ),
-        const SizedBox(height: 16),
+          const SizedBox(height: 12),
 
-        // Pickup Input
-        InkWell(
-          onTap: () => selectSearchLocation(false),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              color: isDarkMode ? AppThemeData.grey800 : Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.my_location, color: Colors.green, size: 20),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    controller.departureController.text.isNotEmpty
-                        ? controller.departureController.text
-                        : "Current Location".tr,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: isDarkMode ? Colors.white70 : Colors.black87,
-                      fontSize: 14,
-                    ),
+          // Address inputs with connecting line
+          Row(
+            children: [
+              // Connecting line indicator
+              Column(
+                children: [
+                  const Icon(Icons.circle, color: Colors.green, size: 14),
+                  Container(
+                    width: 2,
+                    height: 36,
+                    color: Colors.grey.shade300,
                   ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 10),
-
-        // Destination Input (Search bar)
-        InkWell(
-          onTap: () => selectSearchLocation(true),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              color: isDarkMode ? AppThemeData.grey800 : Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppThemeData.primary200.withOpacity(0.5), width: 1.5),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.search, color: AppThemeData.primary200, size: 22),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    controller.destinationController.text.isNotEmpty
-                        ? controller.destinationController.text
-                        : "Where to go?".tr,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: controller.destinationController.text.isNotEmpty
-                          ? (isDarkMode ? Colors.white : Colors.black87)
-                          : Colors.grey,
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
+                  const Icon(Icons.circle, color: Colors.red, size: 14),
+                ],
+              ),
+              const SizedBox(width: 12),
+              // Fields
+              Expanded(
+                child: Column(
+                  children: [
+                    InkWell(
+                      onTap: () => selectSearchLocation(false),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Text(
+                          controller.departureController.text.isNotEmpty
+                              ? controller.departureController.text
+                              : "Enter Pickup Location".tr,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: AppThemeData.medium,
+                            fontSize: 14,
+                            color: controller.departureController.text.isNotEmpty
+                                ? (isDarkMode ? AppThemeData.grey900Dark : AppThemeData.grey900)
+                                : Colors.grey,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                    const Divider(height: 12),
+                    InkWell(
+                      onTap: () => selectSearchLocation(true),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Text(
+                          controller.destinationController.text.isNotEmpty
+                              ? controller.destinationController.text
+                              : "Where to go?".tr,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: AppThemeData.medium,
+                            fontSize: 14,
+                            color: controller.destinationController.text.isNotEmpty
+                                ? (isDarkMode ? AppThemeData.grey900Dark : AppThemeData.grey900)
+                                : Colors.grey,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-
-        // Pick on map option
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            TextButton.icon(
-              onPressed: () => startMapPicking(false),
-              icon: const Icon(Icons.pin_drop_outlined, size: 18),
-              label: Text("Pick Pickup on Map".tr),
-            ),
-            TextButton.icon(
-              onPressed: () => startMapPicking(true),
-              icon: const Icon(Icons.map_outlined, size: 18),
-              label: Text("Pick Drop on Map".tr),
-            ),
-          ],
-        ),
-
-        // SQLite persistent Search History List
-        if (searchHistory.isNotEmpty) ...[
-          const Divider(height: 20),
-          Text(
-            "Recent Searches".tr,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-          ),
-          const SizedBox(height: 8),
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: searchHistory.length > 3 ? 3 : searchHistory.length,
-            itemBuilder: (context, index) {
-              final hist = searchHistory[index];
-              return ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.history, color: Colors.grey),
-                title: Text(
-                  hist.address,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 13),
-                ),
-                onTap: () {
-                  controller.destinationLatLong.value = LatLng(hist.latitude, hist.longitude);
-                  controller.destinationController.text = hist.address;
-                  if (controller.departureController.text.isNotEmpty) {
+              ),
+              const SizedBox(width: 8),
+              // Swap Button
+              IconButton(
+                icon: Icon(Icons.swap_vert_rounded, color: AppThemeData.primary200),
+                onPressed: () {
+                  final tempText = controller.departureController.text;
+                  final tempLatLng = controller.departureLatLong.value;
+                  controller.departureController.text = controller.destinationController.text;
+                  controller.departureLatLong.value = controller.destinationLatLong.value;
+                  controller.destinationController.text = tempText;
+                  controller.destinationLatLong.value = tempLatLng;
+                  if (controller.departureController.text.isNotEmpty &&
+                      controller.destinationController.text.isNotEmpty) {
                     setState(() {
                       isLocationSelected = true;
                     });
                     controller.getDirections();
                     fetchVehicleCategories();
+                  } else {
+                    setState(() {
+                      isLocationSelected = false;
+                    });
                   }
                 },
-              );
-            },
-          )
-        ]
-      ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Map Picking helper buttons
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              TextButton.icon(
+                onPressed: () => startMapPicking(false),
+                icon: const Icon(Icons.map_outlined, size: 16),
+                label: Text("Pick Pickup on Map".tr, style: const TextStyle(fontSize: 12)),
+              ),
+              TextButton.icon(
+                onPressed: () => startMapPicking(true),
+                icon: const Icon(Icons.pin_drop_outlined, size: 16),
+                label: Text("Pick Drop on Map".tr, style: const TextStyle(fontSize: 12)),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
-  Widget buildBookingDetailsPanel(HomeController controller, bool isDarkMode) {
-    // Basic price show
-    double basePrice = double.tryParse(selectedVehicle?.prix ?? '0.0') ?? 0.0;
+  Widget buildUnifiedBookingPanel(HomeController controller, bool isDarkMode) {
+    // Filter categories based on selected tab index
+    final allCategories = vehicleCategoryModel?.data ?? [];
+    final displayedCategories = allCategories.where((cat) {
+      final name = cat.libelle?.toLowerCase() ?? '';
+      final isLogistics = name.contains('truck') || name.contains('delivery') || name.contains('goods') || name.contains('logistics') || name.contains('cargo');
+      return selectedTabIndex == 1 ? isLogistics : !isLogistics;
+    }).toList();
+
+    // If database has no logistics categories, show a mock cargo category when tab is 1
+    if (selectedTabIndex == 1 && displayedCategories.isEmpty) {
+      displayedCategories.add(VehicleData(
+        id: "-99",
+        libelle: "Cargo Truck",
+        image: "https://cdn-icons-png.flaticon.com/512/2769/2769339.png",
+        prix: "25.0",
+      ));
+    }
+
     double distanceVal = double.tryParse(controller.distance.value.toString()) ?? 0.0;
+    
+    // Select a baseline or selected category price
+    double basePrice = double.tryParse(selectedVehicle?.prix ?? '0.0') ?? 0.0;
     double tripPrice = basePrice * distanceVal;
     if (tripPrice < 1.0) tripPrice = basePrice;
 
@@ -769,257 +801,307 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Locations preview
+        // Tab bar selector
         Row(
           children: [
-            const Icon(Icons.circle, color: Colors.green, size: 12),
-            const SizedBox(width: 8),
             Expanded(
-              child: Text(
-                controller.departureController.text,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 13),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Row(
-          children: [
-            const Icon(Icons.circle, color: Colors.red, size: 12),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                controller.destinationController.text,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
-        ),
-        const Divider(height: 20),
-
-        // Horizontal vehicle categories list
-        if (vehicleCategoryModel != null && vehicleCategoryModel!.data != null) ...[
-          const Text(
-            "Select Vehicle Category",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 100,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: vehicleCategoryModel!.data!.length,
-              itemBuilder: (context, index) {
-                final category = vehicleCategoryModel!.data![index];
-                final isSelected = selectedVehicle?.id == category.id;
-                
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      selectedVehicle = category;
-                    });
-                    fetchNearbyDrivers();
-                  },
-                  child: Container(
-                    width: 110,
-                    margin: const EdgeInsets.only(right: 12),
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? AppThemeData.primary200.withOpacity(0.12)
-                          : (isDarkMode ? AppThemeData.grey800 : Colors.grey.shade50),
-                      border: Border.all(
-                        color: isSelected ? AppThemeData.primary200 : Colors.transparent,
-                        width: 2,
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Expanded(
-                          child: CachedNetworkImage(
-                            imageUrl: category.image.toString(),
-                            placeholder: (context, url) => const SizedBox(),
-                            errorWidget: (context, url, error) => const Icon(Icons.directions_car),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          category.libelle.toString(),
-                          maxLines: 1,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          ),
-                        ),
-                        Text(
-                          Constant().amountShow(
-                            amount: ((double.tryParse(category.prix ?? '') ?? 0.0) * (distanceVal > 0.0 ? distanceVal : 1.0)).toString(),
-                          ),
-                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppThemeData.primary200),
-                        )
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-
-        // In search vehicle list available drivers
-        const Divider(height: 24),
-        Text(
-          "Available Drivers (${selectedVehicle?.libelle ?? ''})".tr,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-        ),
-        const SizedBox(height: 8),
-        isLoadingDrivers
-            ? const Center(child: Padding(
-                padding: EdgeInsets.all(8.0),
-                child: CircularProgressIndicator(),
-              ))
-            : selectedVehicle == null
-                ? const Padding(
-                    padding: EdgeInsets.all(12.0),
-                    child: Text(
-                      "Please select a vehicle category to view available drivers.",
-                      style: TextStyle(color: Colors.grey, fontSize: 13),
-                    ),
-                  )
-                : nearbyDrivers == null || nearbyDrivers!.data == null || nearbyDrivers!.data!.isEmpty
-                    ? Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: Text(
-                          "No drivers found in this category nearby.".tr,
-                          style: const TextStyle(color: Colors.grey, fontSize: 13),
-                        ),
-                      )
-                    : SizedBox(
-                        height: 125,
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: nearbyDrivers!.data!.length,
-                          itemBuilder: (context, index) {
-                            final driver = nearbyDrivers!.data![index];
-                            return Container(
-                              width: 180,
-                              margin: const EdgeInsets.only(right: 12, bottom: 8, top: 4),
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: isDarkMode ? AppThemeData.grey800 : Colors.white,
-                                border: Border.all(color: Colors.grey.withOpacity(0.2)),
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.04),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
-                                  )
-                                ],
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Row(
-                                    children: [
-                                      CircleAvatar(
-                                        backgroundImage: CachedNetworkImageProvider(driver.photo ?? Constant.placeholderUrl ?? ''),
-                                        radius: 18,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              "${driver.prenom} ${driver.nom}",
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-                                            ),
-                                            Row(
-                                              children: [
-                                                const Icon(Icons.star, color: Colors.amber, size: 12),
-                                                const SizedBox(width: 2),
-                                                Text(
-                                                  driver.moyenne ?? "5.0",
-                                                  style: const TextStyle(fontSize: 10, color: Colors.grey),
-                                                ),
-                                              ],
-                                            )
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const Spacer(),
-                                  Text(
-                                    driver.brand ?? "Active Driver",
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 11, color: AppThemeData.primary200),
-                                  ),
-                                  Text(
-                                    driver.numberplate ?? "",
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(fontSize: 10, color: Colors.grey),
-                                  )
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-
-        // Payment Method Picker
-        const Divider(height: 20),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              "Payment Method",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            DropdownButton<String>(
-              value: selectedPaymentMethod,
-              items: [
-                DropdownMenuItem(value: "cash", child: Text("Cash".tr)),
-                DropdownMenuItem(value: "wallet", child: Text("Wallet".tr)),
-                DropdownMenuItem(value: "upi", child: Text("UPI (Mock)".tr)),
-              ],
-              onChanged: (val) {
-                if (val != null) {
+              child: InkWell(
+                onTap: () {
                   setState(() {
-                    selectedPaymentMethod = val;
+                    selectedTabIndex = 0;
+                    if (displayedCategories.isNotEmpty) {
+                      selectedVehicle = displayedCategories.first;
+                    }
                   });
-                }
-              },
-            )
+                },
+                child: Column(
+                  children: [
+                    Text(
+                      "Ride Services".tr,
+                      style: TextStyle(
+                        fontFamily: AppThemeData.semiBold,
+                        fontSize: 14,
+                        color: selectedTabIndex == 0
+                            ? AppThemeData.primary200
+                            : (isDarkMode ? AppThemeData.grey500Dark : AppThemeData.grey500),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      height: 2,
+                      color: selectedTabIndex == 0 ? AppThemeData.primary200 : Colors.transparent,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Expanded(
+              child: InkWell(
+                onTap: () {
+                  setState(() {
+                    selectedTabIndex = 1;
+                    if (displayedCategories.isNotEmpty) {
+                      selectedVehicle = displayedCategories.first;
+                    }
+                  });
+                },
+                child: Column(
+                  children: [
+                    Text(
+                      "Logistics & Delivery".tr,
+                      style: TextStyle(
+                        fontFamily: AppThemeData.semiBold,
+                        fontSize: 14,
+                        color: selectedTabIndex == 1
+                            ? AppThemeData.primary200
+                            : (isDarkMode ? AppThemeData.grey500Dark : AppThemeData.grey500),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      height: 2,
+                      color: selectedTabIndex == 1 ? AppThemeData.primary200 : Colors.transparent,
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 16),
 
-        // Book Button
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppThemeData.primary200,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        // List of categories (vertical)
+        if (vehicleCategoryModel == null)
+          const Center(child: CircularProgressIndicator())
+        else if (displayedCategories.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Text(
+              "No services available under this category.".tr,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.grey),
+            ),
+          )
+        else
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: displayedCategories.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 10),
+            itemBuilder: (context, index) {
+              final category = displayedCategories[index];
+              final isSelected = selectedVehicle?.id == category.id;
+              
+              double categoryBasePrice = double.tryParse(category.prix ?? '0.0') ?? 0.0;
+              double calculatedPrice = categoryBasePrice * (distanceVal > 0.0 ? distanceVal : 1.0);
+              if (calculatedPrice < 1.0) calculatedPrice = categoryBasePrice;
+
+              return InkWell(
+                onTap: () {
+                  setState(() {
+                    selectedVehicle = category;
+                  });
+                  if (isLocationSelected) {
+                    fetchNearbyDrivers();
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppThemeData.primary200.withOpacity(0.08)
+                        : (isDarkMode ? AppThemeData.grey800 : Colors.white),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isSelected ? AppThemeData.primary200 : Colors.grey.withOpacity(0.15),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: CachedNetworkImage(
+                          imageUrl: category.image.toString(),
+                          width: 44,
+                          height: 44,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => const Icon(Icons.directions_car, size: 24),
+                          errorWidget: (context, url, error) => const Icon(Icons.directions_car, size: 24),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              category.libelle.toString(),
+                              style: TextStyle(
+                                fontFamily: AppThemeData.semiBold,
+                                fontSize: 14,
+                                color: isDarkMode ? AppThemeData.grey900Dark : AppThemeData.grey900,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              isLocationSelected
+                                  ? "${controller.duration.value} away"
+                                  : "Select route to see time".tr,
+                              style: TextStyle(
+                                fontFamily: AppThemeData.regular,
+                                fontSize: 11,
+                                color: isDarkMode ? AppThemeData.grey500Dark : AppThemeData.grey500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            isLocationSelected
+                                ? Constant().amountShow(amount: calculatedPrice.toString())
+                                : "---",
+                            style: TextStyle(
+                              fontFamily: AppThemeData.bold,
+                              fontSize: 15,
+                              color: isDarkMode ? AppThemeData.grey900Dark : AppThemeData.grey900,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Icon(
+                            isSelected ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded,
+                            color: isSelected ? AppThemeData.primary200 : Colors.grey,
+                            size: 18,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
-          onPressed: executeBooking,
-          child: Text(
-            "${"Book Ride - ".tr}${Constant().amountShow(amount: tripPrice.toString())}",
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+        const SizedBox(height: 20),
+
+        // Payment Method Selector with Wallet Balance
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: isDarkMode ? AppThemeData.grey100Dark : Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.grey.withOpacity(0.1)),
           ),
-        )
+          child: Row(
+            children: [
+              Icon(Icons.account_balance_wallet_outlined, color: AppThemeData.primary200, size: 22),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Payment Method".tr,
+                      style: TextStyle(
+                        fontFamily: AppThemeData.medium,
+                        fontSize: 12,
+                        color: isDarkMode ? AppThemeData.grey500Dark : AppThemeData.grey500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      selectedPaymentMethod == "wallet"
+                          ? "Wallet Balance (₹ 1,250)".tr
+                          : selectedPaymentMethod == "upi"
+                              ? "UPI Payment (Mock)".tr
+                              : "Cash Payment".tr,
+                      style: TextStyle(
+                        fontFamily: AppThemeData.semiBold,
+                        fontSize: 13,
+                        color: isDarkMode ? AppThemeData.grey900Dark : AppThemeData.grey900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              DropdownButton<String>(
+                value: selectedPaymentMethod,
+                underline: const SizedBox(),
+                icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                items: [
+                  DropdownMenuItem(value: "cash", child: Text("Cash".tr)),
+                  DropdownMenuItem(value: "wallet", child: Text("Wallet".tr)),
+                  DropdownMenuItem(value: "upi", child: Text("UPI".tr)),
+                ],
+                onChanged: (val) {
+                  if (val != null) {
+                    setState(() {
+                      selectedPaymentMethod = val;
+                    });
+                  }
+                },
+              )
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        // Footer showing Fare Details and Confirm Button
+        if (isLocationSelected) ...[
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Total Fare".tr,
+                      style: TextStyle(
+                        fontFamily: AppThemeData.regular,
+                        fontSize: 12,
+                        color: isDarkMode ? AppThemeData.grey500Dark : AppThemeData.grey500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      Constant().amountShow(amount: tripPrice.toString()),
+                      style: TextStyle(
+                        fontFamily: AppThemeData.bold,
+                        fontSize: 22,
+                        color: isDarkMode ? AppThemeData.grey900Dark : AppThemeData.grey900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 2,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF10B981), // Emerald green as requested
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  onPressed: executeBooking,
+                  child: Text(
+                    "Confirm & Continue".tr,
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ] else ...[
+          Text(
+            "Please select pickup & drop locations above to continue.".tr,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.grey, fontSize: 13),
+          ),
+        ],
       ],
     );
   }

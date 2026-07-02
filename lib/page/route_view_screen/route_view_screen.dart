@@ -306,578 +306,452 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
               ),
             ),
           ),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 0,
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: themeChange.getThem() ? AppThemeData.grey200Dark : AppThemeData.grey200,
+          Container(
+            decoration: BoxDecoration(
+              color: themeChange.getThem() ? AppThemeData.surface50Dark : Colors.white,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(28),
+                topRight: Radius.circular(28),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.12),
+                  blurRadius: 20,
+                  offset: const Offset(0, -4),
+                )
+              ],
+            ),
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Handle line
+                    Center(
+                      child: Container(
+                        width: 44,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
                     ),
-                    color: themeChange.getThem() ? AppThemeData.surface50Dark : AppThemeData.surface50,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16),
-                    child: Column(
+                    const SizedBox(height: 16),
+
+                    // Success Banner
+                    Row(
                       children: [
-                        if (rideData!.statut == 'confirmed')
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    'Driver Estimate Arrival Time : '.tr,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontFamily: AppThemeData.medium,
-                                      color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
-                                    ),
-                                  ),
-                                ),
-                                Text(
-                                  driverEstimateArrivalTime,
-                                  style: TextStyle(fontFamily: AppThemeData.medium, color: AppThemeData.secondary200, fontSize: 16),
-                                ),
-                              ],
-                            ),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFD1FAE5),
+                            shape: BoxShape.circle,
                           ),
-                        Visibility(
-                          visible:
-                              Constant.rideOtp.toString().toLowerCase() == 'yes'.toLowerCase() && rideData!.statut == 'confirmed' && rideData!.rideType != 'driver' ? true : false,
+                          child: const Icon(
+                            Icons.check_circle_rounded,
+                            color: Color(0xFF10B981),
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
                           child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Divider(
-                                color: themeChange.getThem() ? AppThemeData.grey200Dark : AppThemeData.grey200,
-                                thickness: 1,
+                              Text(
+                                rideData!.statut == "on ride"
+                                    ? "Trip in Progress".tr
+                                    : "Your Ride is Confirmed!".tr,
+                                style: TextStyle(
+                                  fontFamily: AppThemeData.bold,
+                                  fontSize: 16,
+                                  color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
+                                ),
                               ),
-                              Row(
-                                children: [
-                                  Text(
-                                    'OTP : '.tr,
-                                    style: TextStyle(
-                                      fontFamily: AppThemeData.regular,
-                                      color: themeChange.getThem() ? AppThemeData.grey400 : AppThemeData.grey300Dark,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  Text(
-                                    rideData!.otp.toString(),
-                                    style: TextStyle(
-                                      letterSpacing: 1.2,
-                                      fontFamily: AppThemeData.semiBold,
-                                      color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Divider(
-                                color: themeChange.getThem() ? AppThemeData.grey200Dark : AppThemeData.grey200,
-                                thickness: 1,
+                              const SizedBox(height: 2),
+                              Text(
+                                rideData!.statut == "on ride"
+                                    ? "Heading to your destination".tr
+                                    : "We're finding the best driver for you".tr,
+                                style: TextStyle(
+                                  fontFamily: AppThemeData.medium,
+                                  fontSize: 12,
+                                  color: themeChange.getThem() ? AppThemeData.grey500Dark : AppThemeData.grey500,
+                                ),
                               ),
                             ],
                           ),
                         ),
-                        // Padding(
-                        //   padding: const EdgeInsets.all(8.0),
-                        //   child: Row(
-                        //     crossAxisAlignment: CrossAxisAlignment.center,
-                        //     children: [
-                        //       Expanded(
-                        //         child: Padding(
-                        //           padding: const EdgeInsets.only(left: 5.0),
-                        //           child: Container(
-                        //             height: 100,
-                        //             decoration: BoxDecoration(
-                        //                 border: Border.all(
-                        //                   color: Colors.black12,
-                        //                 ),
-                        //                 borderRadius: const BorderRadius.all(Radius.circular(10))),
-                        //             child: Padding(
-                        //               padding: const EdgeInsets.symmetric(vertical: 20),
-                        //               child: Column(
-                        //                 mainAxisAlignment: MainAxisAlignment.center,
-                        //                 children: [
-                        //                   Image.asset(
-                        //                     'assets/icons/passenger.png',
-                        //                     height: 22,
-                        //                     width: 22,
-                        //                     color: AppThemeData.secondary200,
-                        //                   ),
-                        //                   Padding(
-                        //                     padding: const EdgeInsets.only(top: 8.0),
-                        //                     child: Text(" ${rideData!.numberPoeple.toString()}",
-                        //                         //DateFormat('\$ KK:mm a, dd MMM yyyy').format(date),
-                        //                         style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.black54)),
-                        //                   ),
-                        //                 ],
-                        //               ),
-                        //             ),
-                        //           ),
-                        //         ),
-                        //       ),
-                        //       Expanded(
-                        //         child: Padding(
-                        //           padding: const EdgeInsets.only(left: 5.0),
-                        //           child: Container(
-                        //             height: 100,
-                        //             decoration: BoxDecoration(
-                        //                 border: Border.all(
-                        //                   color: Colors.black12,
-                        //                 ),
-                        //                 borderRadius: const BorderRadius.all(Radius.circular(10))),
-                        //             child: Padding(
-                        //               padding: const EdgeInsets.symmetric(vertical: 20),
-                        //               child: Column(
-                        //                 mainAxisAlignment: MainAxisAlignment.center,
-                        //                 children: [
-                        //                   Text(
-                        //                     Constant.currency.toString(),
-                        //                     style: TextStyle(
-                        //                       color: AppThemeData.secondary200,
-                        //                       fontWeight: FontWeight.bold,
-                        //                       fontSize: 20,
-                        //                     ),
-                        //                   ),
-                        //                   Text(
-                        //                     Constant().amountShow(amount: rideData!.montant!.toString()),
-                        //                     style: const TextStyle(
-                        //                       fontWeight: FontWeight.w800,
-                        //                       color: Colors.black54,
-                        //                     ),
-                        //                   ),
-                        //                 ],
-                        //               ),
-                        //             ),
-                        //           ),
-                        //         ),
-                        //       ),
-                        //       Expanded(
-                        //         child: Padding(
-                        //           padding: const EdgeInsets.only(left: 5.0),
-                        //           child: Container(
-                        //             height: 100,
-                        //             decoration: BoxDecoration(
-                        //                 border: Border.all(
-                        //                   color: Colors.black12,
-                        //                 ),
-                        //                 borderRadius: const BorderRadius.all(Radius.circular(10))),
-                        //             child: Padding(
-                        //               padding: const EdgeInsets.symmetric(vertical: 20),
-                        //               child: Column(
-                        //                 mainAxisAlignment: MainAxisAlignment.center,
-                        //                 children: [
-                        //                   Image.asset(
-                        //                     'assets/icons/ic_distance.png',
-                        //                     height: 22,
-                        //                     width: 22,
-                        //                     color: AppThemeData.secondary200,
-                        //                   ),
-                        //                   Padding(
-                        //                     padding: const EdgeInsets.only(top: 8.0),
-                        //                     child: Text(
-                        //                       "${rideData!.distance.toString()} ${rideData!.distanceUnit}",
-                        //                       overflow: TextOverflow.ellipsis,
-                        //                       style: const TextStyle(
-                        //                         fontWeight: FontWeight.w800,
-                        //                         color: Colors.black54,
-                        //                       ),
-                        //                     ),
-                        //                   ),
-                        //                 ],
-                        //               ),
-                        //             ),
-                        //           ),
-                        //         ),
-                        //       ),
-                        //       Expanded(
-                        //         child: Padding(
-                        //           padding: const EdgeInsets.only(left: 5.0),
-                        //           child: Container(
-                        //             height: 100,
-                        //             decoration: BoxDecoration(
-                        //                 border: Border.all(
-                        //                   color: Colors.black12,
-                        //                 ),
-                        //                 borderRadius: const BorderRadius.all(Radius.circular(10))),
-                        //             child: Padding(
-                        //               padding: const EdgeInsets.symmetric(vertical: 20),
-                        //               child: Column(
-                        //                 mainAxisAlignment: MainAxisAlignment.center,
-                        //                 children: [
-                        //                   Image.asset(
-                        //                     'assets/icons/time.png',
-                        //                     height: 22,
-                        //                     width: 22,
-                        //                     color: AppThemeData.secondary200,
-                        //                   ),
-                        //                   Padding(
-                        //                     padding: const EdgeInsets.only(top: 8.0),
-                        //                     child: Text(
-                        //                       rideData!.duree.toString(),
-                        //                       overflow: TextOverflow.ellipsis,
-                        //                       style: const TextStyle(
-                        //                         fontWeight: FontWeight.w800,
-                        //                         color: Colors.black54,
-                        //                       ),
-                        //                     ),
-                        //                   ),
-                        //                 ],
-                        //               ),
-                        //             ),
-                        //           ),
-                        //         ),
-                        //       ),
-                        //     ],
-                        //   ),
-                        // ),
-                        Padding(
-                          padding: EdgeInsets.only(top: rideData!.statut == 'confirmed' ? 10 : 0),
-                          child: Row(
+                        if (rideData!.statut == 'confirmed' && driverEstimateArrivalTime.isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: AppThemeData.primary200.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              driverEstimateArrivalTime,
+                              style: TextStyle(
+                                fontFamily: AppThemeData.bold,
+                                fontSize: 13,
+                                color: AppThemeData.primary200,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const Divider(height: 28, thickness: 1),
+
+                    // OTP Alert if active and confirmed
+                    if (Constant.rideOtp.toString().toLowerCase() == 'yes'.toLowerCase() && rideData!.statut == 'confirmed' && rideData!.rideType != 'driver') ...[
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppThemeData.primary200.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppThemeData.primary200.withOpacity(0.15)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "Share this OTP to start the ride:".tr,
+                              style: TextStyle(
+                                fontFamily: AppThemeData.medium,
+                                fontSize: 13,
+                                color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
+                              ),
+                            ),
+                            Text(
+                              rideData!.otp.toString(),
+                              style: TextStyle(
+                                fontFamily: AppThemeData.bold,
+                                fontSize: 16,
+                                letterSpacing: 1.5,
+                                color: AppThemeData.primary200,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
+                    // Driver details card
+                    Row(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(30),
+                          child: CachedNetworkImage(
+                            imageUrl: rideData!.photoPath.toString(),
+                            height: 54,
+                            width: 54,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Constant.loader(context),
+                            errorWidget: (context, url, error) => Image.asset(ImageConstant.logo),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(80),
-                                child: CachedNetworkImage(
-                                  imageUrl: rideData!.photoPath.toString(),
-                                  height: 60,
-                                  width: 60,
-                                  fit: BoxFit.cover,
-                                  placeholder: (context, url) => Constant.loader(context),
-                                  errorWidget: (context, url, error) => Image.asset(
-                                    ImageConstant.logo,
-                                  ),
+                              Text(
+                                "${rideData!.prenomConducteur.toString()} ${rideData!.nomConducteur.toString()}",
+                                style: TextStyle(
+                                  fontFamily: AppThemeData.bold,
+                                  fontSize: 15,
+                                  color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
                                 ),
                               ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text("${rideData!.prenomConducteur.toString()} ${rideData!.nomConducteur.toString()}",
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          fontFamily: AppThemeData.semiBold,
-                                          color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
-                                          fontSize: 16,
-                                          letterSpacing: 0.6,
-                                        )),
-                                    const SizedBox(height: 5),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.start,
-                                      children: [
-                                        StarRating(
-                                            size: 20, rating: rideData!.moyenne != "null" ? double.parse(rideData!.moyenne.toString()) : 0.0, color: AppThemeData.secondary200),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
+                              const SizedBox(height: 3),
+                              Row(
                                 children: [
-                                  SingleChildScrollView(
-                                    scrollDirection: Axis.horizontal,
-                                    child: Row(
-                                      children: [
-                                        Visibility(
-                                          visible: rideData!.statut == "confirmed" ? true : false,
-                                          child: InkWell(
-                                              onTap: () {
-                                                Get.to(ConversationScreen(), arguments: {
-                                                  'receiverId': int.parse(rideData!.idConducteur.toString()),
-                                                  'orderId': int.parse(rideData!.id.toString()),
-                                                  'receiverName': "${rideData!.prenomConducteur} ${rideData!.nomConducteur}",
-                                                  'receiverPhoto': rideData!.photoPath
-                                                });
-                                              },
-                                              child: Image.asset(
-                                                'assets/icons/chat_icon.png',
-                                                height: 40,
-                                                width: 40,
-                                                fit: BoxFit.cover,
-                                              )),
-                                        ),
-                                        rideData!.statut != "rejected"
-                                            ? Padding(
-                                                padding: const EdgeInsets.only(left: 10),
-                                                child: InkWell(
-                                                    onTap: () async {
-                                                      ShowToastDialog.showLoader("Please wait".tr);
-                                                      final Location currentLocation = Location();
-                                                      LocationData location = await currentLocation.getLocation();
-                                                      await Share.share(
-                                                        'https://www.google.com/maps/search/?api=1&query=${location.latitude},${location.longitude}',
-                                                        subject: "Cabme".tr,
-                                                      );
-                                                      // await FlutterShareMe()
-                                                      //     .shareToWhatsApp(msg: 'https://www.google.com/maps/search/?api=1&query=${location.latitude},${location.longitude}');
-                                                    },
-                                                    child: Container(
-                                                      alignment: Alignment.center,
-                                                      height: 40,
-                                                      width: 40,
-                                                      decoration: BoxDecoration(
-                                                        shape: BoxShape.circle,
-                                                        color: AppThemeData.secondary200,
-                                                      ),
-                                                      child: SvgPicture.asset(
-                                                        'assets/icons/ic_share.svg',
-                                                        height: 20,
-                                                        width: 20,
-                                                        colorFilter: ColorFilter.mode(
-                                                          themeChange.getThem() ? AppThemeData.surface50Dark : AppThemeData.surface50,
-                                                          BlendMode.srcIn,
-                                                        ),
-                                                      ),
-                                                    )),
-                                              )
-                                            : const Offstage(),
-                                        Padding(
-                                          padding: const EdgeInsets.only(left: 10),
-                                          child: InkWell(
-                                              onTap: () {
-                                                Constant.makePhoneCall(rideData!.driverPhone.toString());
-                                              },
-                                              child: Container(
-                                                alignment: Alignment.center,
-                                                height: 40,
-                                                width: 40,
-                                                decoration: BoxDecoration(
-                                                  shape: BoxShape.circle,
-                                                  color: AppThemeData.warning200,
-                                                ),
-                                                child: SvgPicture.asset(
-                                                  'assets/icons/call_icon.svg',
-                                                  height: 20,
-                                                  width: 20,
-                                                  colorFilter: ColorFilter.mode(
-                                                    themeChange.getThem() ? AppThemeData.surface50Dark : AppThemeData.surface50,
-                                                    BlendMode.srcIn,
-                                                  ),
-                                                ),
-                                              )),
-                                        ),
-                                        Visibility(
-                                          visible: rideData!.statut == "on ride" ? true : false,
-                                          child: Padding(
-                                            padding: const EdgeInsets.only(left: 10),
-                                            child: ButtonThem.buildButton(
-                                              context,
-                                              radius: 5,
-                                              txtSize: 12,
-                                              title: 'sos'.tr,
-                                              btnHeight: 40,
-                                              btnWidthRatio: 0.15,
-                                              onPress: () async {
-                                                LocationData location = await Location().getLocation();
-                                                Map<String, dynamic> bodyParams = {
-                                                  'lat': location.latitude,
-                                                  'lng': location.longitude,
-                                                  'ride_id': rideData!.id,
-                                                };
-                                                controllerRideDetails.sos(bodyParams).then((value) {
-                                                  if (value != null) {
-                                                    if (value['success'] == "success") {
-                                                      ShowToastDialog.showToast(value['message']);
-                                                    }
-                                                  }
-                                                });
-                                              },
-                                            ),
-                                          ),
-                                        ),
-                                      ],
+                                  const Icon(Icons.star_rounded, color: Colors.amber, size: 16),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    rideData!.moyenne != "null" ? rideData!.moyenne.toString() : "5.0",
+                                    style: TextStyle(
+                                      fontFamily: AppThemeData.medium,
+                                      fontSize: 12,
+                                      color: themeChange.getThem() ? AppThemeData.grey500Dark : AppThemeData.grey500,
                                     ),
                                   ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 5.0),
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    width: 4,
+                                    height: 4,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.grey.shade400,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
                                     child: Text(
-                                      rideData!.dateRetour.toString(),
+                                      "${rideData!.color ?? ''} ${rideData!.brand ?? ''} ${rideData!.model ?? ''}",
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
-                                        color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
                                         fontFamily: AppThemeData.medium,
-                                        fontSize: 16,
+                                        fontSize: 12,
+                                        color: themeChange.getThem() ? AppThemeData.grey500Dark : AppThemeData.grey500,
                                       ),
                                     ),
                                   ),
                                 ],
-                              )
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                rideData!.numberplate ?? "",
+                                style: TextStyle(
+                                  fontFamily: AppThemeData.bold,
+                                  fontSize: 12,
+                                  color: AppThemeData.primary200,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        
+                        // Action buttons row
+                        Row(
+                          children: [
+                            if (rideData!.statut == "confirmed")
+                              IconButton(
+                                icon: const Icon(Icons.chat_bubble_outline, color: Colors.blue),
+                                onPressed: () {
+                                  Get.to(ConversationScreen(), arguments: {
+                                    'receiverId': int.parse(rideData!.idConducteur.toString()),
+                                    'orderId': int.parse(rideData!.id.toString()),
+                                    'receiverName': "${rideData!.prenomConducteur} ${rideData!.nomConducteur}",
+                                    'receiverPhoto': rideData!.photoPath
+                                  });
+                                },
+                              ),
+                            IconButton(
+                              icon: const Icon(Icons.phone_outlined, color: Colors.green),
+                              onPressed: () {
+                                Constant.makePhoneCall(rideData!.driverPhone.toString());
+                              },
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
+                    const Divider(height: 28, thickness: 1),
+
+                    // Trip Summary details
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Column(
+                          children: [
+                            const Icon(Icons.circle, color: Colors.green, size: 10),
+                            Container(
+                              width: 1.5,
+                              height: 36,
+                              color: Colors.grey.shade300,
+                            ),
+                            const Icon(Icons.circle, color: Colors.red, size: 10),
+                          ],
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                rideData!.departName ?? "",
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontFamily: AppThemeData.regular,
+                                  fontSize: 13,
+                                  color: themeChange.getThem() ? AppThemeData.grey500Dark : AppThemeData.grey500,
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              Text(
+                                rideData!.destinationName ?? "",
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontFamily: AppThemeData.bold,
+                                  fontSize: 13,
+                                  color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
+                                ),
+                              ),
                             ],
                           ),
                         ),
                       ],
                     ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Row(
-                  children: [
-                    Visibility(
-                      visible: rideData!.statut == "on ride" ? true : false,
-                      child: Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 20),
-                          child: ButtonThem.buildButton(
-                            context,
-                            title: 'I do not feel safe'.tr,
-                            btnWidthRatio: 1,
-                            onPress: () async {
-                              LocationData location = await Location().getLocation();
-                              Map<String, dynamic> bodyParams = {
-                                'lat': location.latitude,
-                                'lng': location.longitude,
-                                'user_id': Preferences.getInt(Preferences.userId).toString(),
-                                'user_name': "${controllerRideDetails.userModel!.data!.prenom} ${controllerRideDetails.userModel!.data!.nom}",
-                                'user_cat': controllerRideDetails.userModel!.data!.userCat,
-                                'id_driver': rideData!.idConducteur,
-                                'feel_safe': 0,
-                                'trip_id': rideData!.id,
-                              };
-                              controllerRideDetails.feelNotSafe(bodyParams).then((value) {
-                                if (value != null) {
-                                  if (value['success'] == "success") {
+                    const SizedBox(height: 16),
+
+                    // Grid details
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Fare Amount".tr,
+                                style: TextStyle(
+                                  fontFamily: AppThemeData.regular,
+                                  fontSize: 11,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                Constant().amountShow(amount: rideData!.montant!.toString()),
+                                style: TextStyle(
+                                  fontFamily: AppThemeData.bold,
+                                  fontSize: 14,
+                                  color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Payment Method".tr,
+                                style: TextStyle(
+                                  fontFamily: AppThemeData.regular,
+                                  fontSize: 11,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                rideData!.payment ?? "Cash",
+                                style: TextStyle(
+                                  fontFamily: AppThemeData.bold,
+                                  fontSize: 14,
+                                  color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Distance".tr,
+                                style: TextStyle(
+                                  fontFamily: AppThemeData.regular,
+                                  fontSize: 11,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                "${rideData!.distance} ${rideData!.distanceUnit}",
+                                style: TextStyle(
+                                  fontFamily: AppThemeData.bold,
+                                  fontSize: 14,
+                                  color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Actions buttons at the very bottom
+                    Row(
+                      children: [
+                        if (rideData!.statut == "on ride") ...[
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppThemeData.error200,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              onPressed: () async {
+                                LocationData location = await Location().getLocation();
+                                Map<String, dynamic> bodyParams = {
+                                  'lat': location.latitude,
+                                  'lng': location.longitude,
+                                  'user_id': Preferences.getInt(Preferences.userId).toString(),
+                                  'user_name': "${controllerRideDetails.userModel!.data!.prenom} ${controllerRideDetails.userModel!.data!.nom}",
+                                  'user_cat': controllerRideDetails.userModel!.data!.userCat,
+                                  'id_driver': rideData!.idConducteur,
+                                  'feel_safe': 0,
+                                  'trip_id': rideData!.id,
+                                };
+                                controllerRideDetails.feelNotSafe(bodyParams).then((value) {
+                                  if (value != null && value['success'] == "success") {
                                     ShowToastDialog.showToast("Report submitted".tr);
                                   }
-                                }
-                              });
-                            },
+                                });
+                              },
+                              icon: const Icon(Icons.warning_amber_rounded, color: Colors.white),
+                              label: Text("SOS - Report Safety".tr, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                            ),
                           ),
-                        ),
-                      ),
-                    ),
-                    // Visibility(
-                    //   visible: rideData!.statut == "confirmed" ? true : false,
-                    //   child: Expanded(
-                    //     child: Padding(
-                    //       padding: const EdgeInsets.only(bottom: 5),
-                    //       child: ButtonThem.buildButton(
-                    //         context,
-                    //         title: 'Conform Ride'.tr,
-                    //         btnHeight: 45,
-                    //         btnWidthRatio: 0.8,
-                    //         btnColor: AppThemeData.primary200,
-                    //         txtColor: Colors.white,
-                    //         onPress: () async {
-                    //           showDialog(
-                    //             barrierColor: Colors.black26,
-                    //             context: context,
-                    //             builder: (context) {
-                    //               return CustomAlertDialog(
-                    //                 title: "Do you want to confirm this ride?",
-                    //                 onPressNegative: () {
-                    //                   Get.back();
-                    //                 },
-                    //                 onPressPositive: () {
-                    //                   Map<String, dynamic> bodyParams = {
-                    //                     'id_ride': rideData!.id.toString(),
-                    //                     'id_user': rideData!.idConducteur.toString(),
-                    //                     'use_name': rideData!.prenomConducteur.toString(),
-                    //                     'car_driver_confirmed': 1,
-                    //                     'from_id': Preferences.getInt(Preferences.userId).toString(),
-                    //                   };
-                    //                   controllerRideDetails.setConformRequest(bodyParams).then((value) {
-                    //                     if (value != null) {
-                    //                       Get.back();
-                    //                       showDialog(
-                    //                           context: context,
-                    //                           builder: (BuildContext context) {
-                    //                             return CustomDialogBox(
-                    //                               title: "On ride Successfully",
-                    //                               descriptions: "Ride Successfully On ride .",
-                    //                               onPress: () {
-                    //                                 Get.back();
-                    //                                 controllerDashBoard.onSelectItem(4);
-                    //                               },
-                    //                               img: Image.asset('assets/images/green_checked.png'),
-                    //                             );
-                    //                           });
-                    //                     }
-                    //                   });
-                    //                 },
-                    //               );
-                    //             },
-                    //           );
-                    //         },
-                    //       ),
-                    //     ),
-                    //   ),
-                    // ),
-                    Visibility(
-                      visible: rideData!.statut == "on ride" ? true : false,
-                      child: const SizedBox(width: 10),
-                    ),
-                    Visibility(
-                      visible: rideData!.statut == "rejected" ? false : true,
-                      child: Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 20),
-                          child: ButtonThem.buildButton(
-                            context,
-                            btnColor: AppThemeData.error200,
-                            title: 'Cancel Ride'.tr,
-                            btnWidthRatio: 1,
-                            onPress: () async {
-                              buildShowBottomSheet(context, themeChange.getThem());
-                              // showDialog(
-                              //   barrierColor: Colors.black26,
-                              //   context: context,
-                              //   builder: (context) {
-                              //     return CustomAlertDialog(
-                              //       title: "Do you want to cancel this booking?",
-                              //       onPressNegative: () {
-                              //         Get.back();
-                              //       },
-                              //       onPressPositive: () {
-                              //         Map<String, String> bodyParams = {
-                              //           'id_ride': rideData!.id.toString(),
-                              //           'id_user': rideData!.idConducteur.toString(),
-                              //           'name': rideData!.prenom.toString(),
-                              //           'from_id': Preferences.getInt(Preferences.userId).toString(),
-                              //           'user_cat': controllerRideDetails.userModel!.data!.userCat.toString(),
-                              //         };
-                              //         controllerRideDetails.canceledRide(bodyParams).then((value) {
-                              //           Get.back();
-                              //           if (value != null) {
-                              //             showDialog(
-                              //                 context: context,
-                              //                 builder: (BuildContext context) {
-                              //                   return CustomDialogBox(
-                              //                     title: "Cancel Successfully",
-                              //                     descriptions: "Ride Successfully cancel.",
-                              //                     onPress: () {
-                              //                       Get.back();
-                              //                       controllerDashBoard.onSelectItem(4);
-                              //                     },
-                              //                     img: Image.asset('assets/images/green_checked.png'),
-                              //                   );
-                              //                 });
-                              //           }
-                              //         });
-                              //       },
-                              //     );
-                              //   },
-                              // );
-                            },
+                        ] else if (rideData!.statut != "rejected") ...[
+                          Expanded(
+                            child: OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(color: AppThemeData.error200),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              onPressed: () => buildShowBottomSheet(context, themeChange.getThem()),
+                              child: Text(
+                                "Cancel Ride".tr,
+                                style: TextStyle(color: AppThemeData.error200, fontWeight: FontWeight.bold),
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppThemeData.primary200,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              onPressed: () async {
+                                ShowToastDialog.showLoader("Please wait".tr);
+                                final Location currentLocation = Location();
+                                LocationData location = await currentLocation.getLocation();
+                                await Share.share(
+                                  'https://www.google.com/maps/search/?api=1&query=${location.latitude},${location.longitude}',
+                                  subject: "Cabme".tr,
+                                );
+                              },
+                              icon: const Icon(Icons.share, color: Colors.white, size: 16),
+                              label: Text(
+                                "Share Trip".tr,
+                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                        ]
+                      ],
                     ),
                   ],
                 ),
-              )
-            ],
+              ),
+            ),
           )
         ],
       ),

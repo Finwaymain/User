@@ -25,7 +25,10 @@ import 'widget/ride_booking_tab.dart';
 import 'widget/trip_option_bottom_sheet.dart';
 
 class TexiHomeOSMScreen extends StatefulWidget {
-  const TexiHomeOSMScreen({super.key});
+  final String? initialVehicleCategory;
+  final int? initialTab;
+
+  const TexiHomeOSMScreen({super.key, this.initialVehicleCategory, this.initialTab});
 
   @override
   State<TexiHomeOSMScreen> createState() => _TexiHomeOSMScreenState();
