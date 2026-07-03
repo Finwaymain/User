@@ -176,7 +176,7 @@ class ParcelPaymentScreen extends StatelessWidget {
                 if (controller.isSimulatingUPI.value)
                   Positioned.fill(
                     child: Container(
-                      color: Colors.black.withOpacity(0.7),
+                      color: Colors.black.withValues(alpha: 0.7),
                       child: Center(
                         child: Card(
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

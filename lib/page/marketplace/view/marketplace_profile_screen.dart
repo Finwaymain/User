@@ -8,7 +8,7 @@ import '../controller/marketplace_controller.dart';
 import 'marketplace_orders_screen.dart';
 
 class MarketplaceProfileScreen extends StatelessWidget {
-  const MarketplaceProfileScreen({Key? key}) : super(key: key);
+  const MarketplaceProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +64,7 @@ class MarketplaceProfileScreen extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 40,
-            backgroundColor: AppThemeData.primary200.withOpacity(0.1),
+            backgroundColor: AppThemeData.primary200.withValues(alpha: 0.1),
             child: Icon(Icons.person, size: 40, color: AppThemeData.primary200),
           ),
           const SizedBox(width: 20),
@@ -154,7 +154,7 @@ class MarketplaceProfileScreen extends StatelessWidget {
                 prod['progress'] ?? 0,
                 isDark,
               );
-            }).toList(),
+            }),
         ],
       ),
     );
@@ -183,7 +183,7 @@ class MarketplaceProfileScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDark ? AppThemeData.grey800 : Colors.white,
         borderRadius: BorderRadius.circular(15),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)],
       ),
       child: Row(
         children: [
@@ -211,7 +211,7 @@ class MarketplaceProfileScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.1),
+              color: statusColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
@@ -248,7 +248,7 @@ class MarketplaceProfileScreen extends StatelessWidget {
           decoration: BoxDecoration(
             color: isDark ? AppThemeData.grey800 : Colors.white,
             borderRadius: BorderRadius.circular(15),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)],
           ),
           child: Row(
             children: [

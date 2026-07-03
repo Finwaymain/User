@@ -12,7 +12,7 @@ import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
 class AddressSearchScreen extends StatelessWidget {
-  AddressSearchScreen({super.key});
+  const AddressSearchScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

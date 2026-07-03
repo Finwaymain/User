@@ -11,15 +11,12 @@ import 'package:finway/themes/button_them.dart';
 import 'package:finway/themes/constant_colors.dart';
 import 'package:finway/themes/text_field_them.dart';
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:finway/themes/responsive.dart';
 import 'package:finway/utils/dark_theme_provider.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_google_places_hoc081098/flutter_google_places_hoc081098.dart';
-import 'package:flutter_google_places_hoc081098/google_maps_webservice_places.dart';
 
 class BookParcelScreen extends StatelessWidget {
   const BookParcelScreen({super.key});

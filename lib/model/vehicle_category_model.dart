@@ -48,6 +48,8 @@ class VehicleData {
   String? deliveryCharges;
   String? minimumDeliveryCharges;
   String? minimumDeliveryChargesWithin;
+  String? basePrice;
+  String? perKmPrice;
 
   VehicleData(
       {this.id,
@@ -66,7 +68,9 @@ class VehicleData {
       this.typePerc,
       this.deliveryCharges,
       this.minimumDeliveryCharges,
-      this.minimumDeliveryChargesWithin});
+      this.minimumDeliveryChargesWithin,
+      this.basePrice,
+      this.perKmPrice});
 
   VehicleData.fromJson(Map<String, dynamic> json) {
     id = json['id'].toString();
@@ -86,6 +90,8 @@ class VehicleData {
     deliveryCharges = json['delivery_charges'].toString();
     minimumDeliveryCharges = json['minimum_delivery_charges'].toString();
     minimumDeliveryChargesWithin = json['minimum_delivery_charges_within'].toString();
+    basePrice = json['base_price']?.toString();
+    perKmPrice = json['per_km_price']?.toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -107,6 +113,8 @@ class VehicleData {
     data['delivery_charges'] = deliveryCharges;
     data['minimum_delivery_charges'] = minimumDeliveryCharges;
     data['minimum_delivery_charges_within'] = minimumDeliveryChargesWithin;
+    data['base_price'] = basePrice;
+    data['per_km_price'] = perKmPrice;
     return data;
   }
 }

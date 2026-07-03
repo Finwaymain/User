@@ -5,8 +5,6 @@ import 'package:finway/themes/constant_colors.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:finway/service/api.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:finway/constant/constant.dart';
 
 class MarketplaceController extends GetxController {
   var isLoading = false.obs;

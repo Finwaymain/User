@@ -9,7 +9,7 @@ import 'package:get/get.dart';
 
 class MarketplaceProductDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> product;
-  const MarketplaceProductDetailsScreen({Key? key, required this.product}) : super(key: key);
+  const MarketplaceProductDetailsScreen({super.key, required this.product});
 
   @override
   State<MarketplaceProductDetailsScreen> createState() => _MarketplaceProductDetailsScreenState();
@@ -270,7 +270,7 @@ class _MarketplaceProductDetailsScreenState extends State<MarketplaceProductDeta
         padding: const EdgeInsets.fromLTRB(25, 20, 25, 40),
         decoration: BoxDecoration(
           color: isDark ? AppThemeData.surface50Dark : Colors.white,
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, -10))],
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, -10))],
         ),
         child: Row(
           children: [
@@ -289,7 +289,7 @@ class _MarketplaceProductDetailsScreenState extends State<MarketplaceProductDeta
             const Spacer(),
             Container(
               decoration: BoxDecoration(
-                color: accentGreen.withOpacity(0.1),
+                color: accentGreen.withValues(alpha: 0.1),
                 borderRadius: const BorderRadius.horizontal(left: Radius.circular(10)),
               ),
               child: Row(
@@ -375,9 +375,9 @@ class _MarketplaceProductDetailsScreenState extends State<MarketplaceProductDeta
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 15),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,

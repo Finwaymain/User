@@ -9,7 +9,7 @@ import 'package:provider/provider.dart';
 import '../controller/marketplace_controller.dart';
 
 class AddProductScreen extends StatefulWidget {
-  const AddProductScreen({Key? key}) : super(key: key);
+  const AddProductScreen({super.key});
 
   @override
   State<AddProductScreen> createState() => _AddProductScreenState();
@@ -195,7 +195,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: isDark ? AppThemeData.surface50Dark : Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -5))],
       ),
       child: Row(
         children: [
@@ -276,10 +276,10 @@ class _AddProductScreenState extends State<AddProductScreen> {
               },
               child: Container(
                 decoration: BoxDecoration(
-                  color: isSel ? AppThemeData.primary200.withOpacity(0.1) : (isDark ? AppThemeData.grey800 : Colors.white),
+                  color: isSel ? AppThemeData.primary200.withValues(alpha: 0.1) : (isDark ? AppThemeData.grey800 : Colors.white),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: isSel ? AppThemeData.primary200 : (isDark ? Colors.white10 : Colors.grey[200]!), width: 1.5),
-                  boxShadow: [if(!isSel) BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 5))]
+                  boxShadow: [if(!isSel) BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 5))]
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -325,10 +325,10 @@ class _AddProductScreenState extends State<AddProductScreen> {
             return Container(
               margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
-                color: isSel ? AppThemeData.primary200.withOpacity(0.1) : (isDark ? AppThemeData.grey800 : Colors.white),
+                color: isSel ? AppThemeData.primary200.withValues(alpha: 0.1) : (isDark ? AppThemeData.grey800 : Colors.white),
                 borderRadius: BorderRadius.circular(15),
                 border: Border.all(color: isSel ? AppThemeData.primary200 : (isDark ? Colors.white10 : Colors.grey[200]!)),
-                boxShadow: [if(!isSel) BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 5))]
+                boxShadow: [if(!isSel) BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 5))]
               ),
               child: ListTile(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
@@ -422,7 +422,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                       onTap: () => setState(() => _localImagePaths.removeAt(idx)),
                       child: CircleAvatar(
                         radius: 12,
-                        backgroundColor: Colors.black.withOpacity(0.6),
+                        backgroundColor: Colors.black.withValues(alpha: 0.6),
                         child: const Icon(Icons.close, color: Colors.white, size: 14),
                       ),
                     ),
@@ -441,14 +441,14 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 color: isDark ? AppThemeData.grey800 : Colors.white,
                 borderRadius: BorderRadius.circular(30),
                 border: Border.all(color: isDark ? Colors.white10 : Colors.grey[200]!, style: BorderStyle.solid),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 15, offset: const Offset(0, 8))]
+                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 15, offset: const Offset(0, 8))]
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
                     padding: const EdgeInsets.all(25),
-                    decoration: BoxDecoration(color: AppThemeData.primary200.withOpacity(0.1), shape: BoxShape.circle),
+                    decoration: BoxDecoration(color: AppThemeData.primary200.withValues(alpha: 0.1), shape: BoxShape.circle),
                     child: Icon(Icons.add_a_photo_outlined, color: AppThemeData.primary200, size: 45),
                   ),
                   const SizedBox(height: 20),
@@ -510,7 +510,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
               color: isSel ? AppThemeData.primary200 : (isDark ? AppThemeData.grey800 : Colors.white),
               borderRadius: BorderRadius.circular(15),
               border: Border.all(color: isSel ? AppThemeData.primary200 : (isDark ? Colors.white10 : Colors.grey[300]!)),
-              boxShadow: [if(isSel) BoxShadow(color: AppThemeData.primary200.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))]
+              boxShadow: [if(isSel) BoxShadow(color: AppThemeData.primary200.withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4))]
             ),
             child: Text(
               opt,
@@ -532,14 +532,14 @@ class _AddProductScreenState extends State<AddProductScreen> {
           decoration: BoxDecoration(
             color: isDark ? AppThemeData.grey900 : Colors.white, 
             borderRadius: BorderRadius.circular(35),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 30)]
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 30)]
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
                 padding: const EdgeInsets.all(25),
-                decoration: BoxDecoration(color: AppThemeData.primary200.withOpacity(0.1), shape: BoxShape.circle),
+                decoration: BoxDecoration(color: AppThemeData.primary200.withValues(alpha: 0.1), shape: BoxShape.circle),
                 child: Icon(Icons.check_circle_rounded, color: AppThemeData.primary200, size: 85),
               ),
               const SizedBox(height: 25),

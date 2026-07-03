@@ -7,13 +7,13 @@ import 'package:provider/provider.dart';
 import '../controller/marketplace_controller.dart';
 
 class MarketplaceCartScreen extends StatelessWidget {
-  const MarketplaceCartScreen({Key? key}) : super(key: key);
+  const MarketplaceCartScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final themeChange = Provider.of<DarkThemeProvider>(context);
     final isDark = themeChange.getThem();
-    final MarketplaceController _controller = Get.find<MarketplaceController>();
+    final MarketplaceController controller = Get.find<MarketplaceController>();
 
     return Scaffold(
       backgroundColor: isDark ? AppThemeData.surface50Dark : const Color(0xFFF9FAFB),
@@ -30,7 +30,7 @@ class MarketplaceCartScreen extends StatelessWidget {
           style: TextStyle(color: isDark ? Colors.white : Colors.black, fontFamily: AppThemeData.bold, fontSize: 20),
         ),
       ),
-      body: Obx(() => _controller.cartItems.isEmpty ? _buildEmptyCart(context, isDark) : _buildCartContent(context, isDark, _controller)),
+      body: Obx(() => controller.cartItems.isEmpty ? _buildEmptyCart(context, isDark) : _buildCartContent(context, isDark, controller)),
     );
   }
 
@@ -41,7 +41,7 @@ class MarketplaceCartScreen extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(40),
-            decoration: BoxDecoration(color: AppThemeData.primary200.withOpacity(0.05), shape: BoxShape.circle),
+            decoration: BoxDecoration(color: AppThemeData.primary200.withValues(alpha: 0.05), shape: BoxShape.circle),
             child: Icon(Icons.shopping_bag_outlined, size: 100, color: AppThemeData.primary200),
           ),
           const SizedBox(height: 32),
@@ -99,7 +99,7 @@ class MarketplaceCartScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDark ? AppThemeData.grey800 : Colors.white,
         borderRadius: BorderRadius.circular(25),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, 10))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 20, offset: const Offset(0, 10))],
       ),
       child: Row(
         children: [
@@ -146,7 +146,7 @@ class MarketplaceCartScreen extends StatelessWidget {
           IconButton(
             icon: CircleAvatar(
               radius: 15,
-              backgroundColor: Colors.redAccent.withOpacity(0.1),
+              backgroundColor: Colors.redAccent.withValues(alpha: 0.1),
               child: const Icon(Icons.close_rounded, color: Colors.redAccent, size: 16),
             ),
             onPressed: () => controller.removeFromCart(item['id']),
@@ -190,9 +190,9 @@ class MarketplaceCartScreen extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.fromLTRB(30, 30, 30, 40),
           decoration: BoxDecoration(
-            color: (isDark ? AppThemeData.grey800 : Colors.white).withOpacity(0.85),
+            color: (isDark ? AppThemeData.grey800 : Colors.white).withValues(alpha: 0.85),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
-            border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05)),
+            border: Border.all(color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05)),
           ),
           child: SafeArea(
             bottom: true,
@@ -223,8 +223,8 @@ class MarketplaceCartScreen extends StatelessWidget {
                   child: Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(22),
-                      gradient: LinearGradient(colors: [AppThemeData.primary200, AppThemeData.primary200.withOpacity(0.8)]),
-                      boxShadow: [BoxShadow(color: AppThemeData.primary200.withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8))],
+                      gradient: LinearGradient(colors: [AppThemeData.primary200, AppThemeData.primary200.withValues(alpha: 0.8)]),
+                      boxShadow: [BoxShadow(color: AppThemeData.primary200.withValues(alpha: 0.4), blurRadius: 15, offset: const Offset(0, 8))],
                     ),
                     child: ElevatedButton(
                       onPressed: () => _showDeliveryDetailsBottomSheet(context, isDark, controller),

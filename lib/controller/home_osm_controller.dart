@@ -457,9 +457,45 @@ class HomeOsmController extends GetxController with GetSingleTickerProviderState
       showLog("API :: responseBody :: ${response.body} ");
       Map<String, dynamic> responseBody = json.decode(response.body);
       if (response.statusCode == 200) {
+        VehicleCategoryModel categories = VehicleCategoryModel.fromJson(responseBody);
+        
+        if (categories.data != null &&
+            departureLatLong.value.latitude != 0.0 &&
+            departureLatLong.value.longitude != 0.0) {
+          final lat = departureLatLong.value.latitude.toString();
+          final lng = departureLatLong.value.longitude.toString();
+          final driversResponse = await http.get(
+            Uri.parse("${API.driverDetails}?lat1=$lat&lng1=$lng"),
+            headers: API.header,
+          );
+          if (driversResponse.statusCode == 200) {
+            final driversBody = json.decode(driversResponse.body);
+            final drivers = DriverModel.fromJson(driversBody);
+            if (drivers.success == "Success" && drivers.data != null) {
+              final availableTypes = drivers.data!
+                  .map((d) => d.typeVehicule?.toLowerCase().trim())
+                  .whereType<String>()
+                  .toSet();
+              categories.data = categories.data!.where((category) {
+                final categoryLibelle = category.libelle?.toLowerCase().trim() ?? '';
+                return availableTypes.contains(categoryLibelle);
+              }).toList();
+            } else {
+              categories.data = [];
+            }
+          }
+        }
+
+        if (categories.data == null || categories.data!.isEmpty) {
+          update();
+          ShowToastDialog.closeLoader();
+          ShowToastDialog.showToast("No drivers available in your area.".tr);
+          return null;
+        }
+
         update();
         ShowToastDialog.closeLoader();
-        return VehicleCategoryModel.fromJson(responseBody);
+        return categories;
       } else {
         ShowToastDialog.closeLoader();
         ShowToastDialog.showToast('Something want wrong. Please try again later');
@@ -569,13 +605,13 @@ class HomeOsmController extends GetxController with GetSingleTickerProviderState
           'error': 'Server error: ${response.statusCode}. Please try again later.'
         };
       }
-    } on TimeoutException catch (e) {
+    } on TimeoutException {
       ShowToastDialog.closeLoader();
       return {
         'success': 'failed',
         'error': 'Connection timed out. Please check your network and try again.'
       };
-    } on SocketException catch (e) {
+    } on SocketException {
       ShowToastDialog.closeLoader();
       return {
         'success': 'failed',
@@ -590,7 +626,19 @@ class HomeOsmController extends GetxController with GetSingleTickerProviderState
     }
   }
 
-  double calculateTripPrice({required double distance, required double minimumDeliveryChargesWithin, required double minimumDeliveryCharges, required double deliveryCharges}) {
+  double calculateTripPrice({
+    required double distance,
+    required double minimumDeliveryChargesWithin,
+    required double minimumDeliveryCharges,
+    required double deliveryCharges,
+    double? basePrice,
+    double? perKmPrice,
+  }) {
+    if (basePrice != null || perKmPrice != null) {
+      double base = basePrice ?? 0.0;
+      double perKm = perKmPrice ?? 0.0;
+      return base + (distance * perKm);
+    }
     double cout = 0.0;
 
     if (distance > minimumDeliveryChargesWithin) {

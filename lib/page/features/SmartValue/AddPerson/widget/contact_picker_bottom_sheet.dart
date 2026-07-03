@@ -1,10 +1,7 @@
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:flutter_contacts/flutter_contacts.dart';
 
 import '../../../../../themes/constant_colors.dart';
 import '../../../../../utils/dark_theme_provider.dart';

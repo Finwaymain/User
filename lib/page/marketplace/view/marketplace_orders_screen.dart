@@ -7,7 +7,7 @@ import 'package:intl/intl.dart';
 import '../controller/marketplace_controller.dart';
 
 class MarketplaceOrdersScreen extends StatefulWidget {
-  const MarketplaceOrdersScreen({Key? key}) : super(key: key);
+  const MarketplaceOrdersScreen({super.key});
 
   @override
   State<MarketplaceOrdersScreen> createState() => _MarketplaceOrdersScreenState();
@@ -136,7 +136,7 @@ class _MarketplaceOrdersScreenState extends State<MarketplaceOrdersScreen> with 
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppThemeData.primary200.withOpacity(0.05),
+                color: AppThemeData.primary200.withValues(alpha: 0.05),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, size: 64, color: AppThemeData.primary200),
@@ -173,7 +173,7 @@ class _MarketplaceOrdersScreenState extends State<MarketplaceOrdersScreen> with 
       decoration: BoxDecoration(
         color: isDark ? AppThemeData.grey800 : Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -249,7 +249,7 @@ class _MarketplaceOrdersScreenState extends State<MarketplaceOrdersScreen> with 
                 ],
               ),
             );
-          }).toList(),
+          }),
           
           const Divider(height: 20),
           Row(
@@ -290,7 +290,7 @@ class _MarketplaceOrdersScreenState extends State<MarketplaceOrdersScreen> with 
       decoration: BoxDecoration(
         color: isDark ? AppThemeData.grey800 : Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -362,7 +362,7 @@ class _MarketplaceOrdersScreenState extends State<MarketplaceOrdersScreen> with 
                 ],
               ),
             );
-          }).toList(),
+          }),
           
           const Divider(height: 16),
           Text(
@@ -445,7 +445,7 @@ class _MarketplaceOrdersScreenState extends State<MarketplaceOrdersScreen> with 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(
@@ -460,7 +460,7 @@ class _MarketplaceOrdersScreenState extends State<MarketplaceOrdersScreen> with 
       return Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.red.withOpacity(0.05),
+          color: Colors.red.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(

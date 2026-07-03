@@ -8,7 +8,6 @@ import 'package:image_picker/image_picker.dart';
 
 import '../color_utils.dart';
 import '../controllers/medical_card_controller.dart';
-import '../data/cards_data.dart';
 import '../models/card_data.dart';
 import '../widgets/app_bar_widget.dart';
 import '../widgets/hexagon_pattern_painter.dart';

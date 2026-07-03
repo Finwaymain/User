@@ -8,13 +8,13 @@ import 'marketplace_category_screen.dart';
 import 'marketplace_product_details.dart'; // Self-referential if needed, but I'll use direct screen names.
 
 class MarketplaceCategoryScreen extends StatelessWidget {
-  const MarketplaceCategoryScreen({Key? key}) : super(key: key);
+  const MarketplaceCategoryScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final themeChange = Provider.of<DarkThemeProvider>(context);
     final isDark = themeChange.getThem();
-    final MarketplaceController _controller = Get.find<MarketplaceController>();
+    final MarketplaceController controller = Get.find<MarketplaceController>();
 
     return Scaffold(
       backgroundColor: isDark ? AppThemeData.surface50Dark : const Color(0xFFF9FAFB),
@@ -39,9 +39,9 @@ class MarketplaceCategoryScreen extends StatelessWidget {
           mainAxisSpacing: 24,
           crossAxisSpacing: 24,
         ),
-        itemCount: _controller.categories.length,
+        itemCount: controller.categories.length,
         itemBuilder: (context, index) {
-          final cat = _controller.categories[index];
+          final cat = controller.categories[index];
           return GestureDetector(
             onTap: () => Get.to(() => MarketplaceSubCategoryScreen(
               categoryName: cat['name'] as String,
@@ -52,7 +52,7 @@ class MarketplaceCategoryScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isDark ? AppThemeData.grey800 : Colors.white,
                 borderRadius: BorderRadius.circular(25),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 8))],
+                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 15, offset: const Offset(0, 8))],
               ),
               child: Stack(
                 children: [
@@ -84,7 +84,7 @@ class MarketplaceCategoryScreen extends StatelessWidget {
                     right: 12,
                     child: Container(
                       padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.9), shape: BoxShape.circle),
+                      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.9), shape: BoxShape.circle),
                       child: Icon(_getIconData(cat['icon']), color: AppThemeData.primary200, size: 18),
                     ),
                   ),
@@ -112,7 +112,7 @@ class MarketplaceSubCategoryScreen extends StatelessWidget {
   final String categoryName;
   final List<String> subCategories;
   final String icon;
-  const MarketplaceSubCategoryScreen({Key? key, required this.categoryName, required this.subCategories, required this.icon}) : super(key: key);
+  const MarketplaceSubCategoryScreen({super.key, required this.categoryName, required this.subCategories, required this.icon});
 
   @override
   Widget build(BuildContext context) {
@@ -140,13 +140,13 @@ class MarketplaceSubCategoryScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: isDark ? AppThemeData.grey800 : Colors.white,
               borderRadius: BorderRadius.circular(20),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4))],
             ),
             child: ListTile(
               contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
               leading: Container(
                 padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: AppThemeData.primary200.withOpacity(0.1), shape: BoxShape.circle),
+                decoration: BoxDecoration(color: AppThemeData.primary200.withValues(alpha: 0.1), shape: BoxShape.circle),
                 child: Icon(_getIconData(icon), color: AppThemeData.primary200, size: 20),
               ),
               title: Text(
@@ -186,7 +186,7 @@ class MarketplaceSubCategoryScreen extends StatelessWidget {
 class MarketplaceProductListScreen extends StatefulWidget {
   final String category;
   final String subCategory;
-  const MarketplaceProductListScreen({Key? key, required this.category, required this.subCategory}) : super(key: key);
+  const MarketplaceProductListScreen({super.key, required this.category, required this.subCategory});
 
   @override
   State<MarketplaceProductListScreen> createState() => _MarketplaceProductListScreenState();
@@ -199,9 +199,9 @@ class _MarketplaceProductListScreenState extends State<MarketplaceProductListScr
   Widget build(BuildContext context) {
     final themeChange = Provider.of<DarkThemeProvider>(context);
     final isDark = themeChange.getThem();
-    final MarketplaceController _controller = Get.find<MarketplaceController>();
+    final MarketplaceController controller = Get.find<MarketplaceController>();
 
-    final filtered = _controller.products.where((p) {
+    final filtered = controller.products.where((p) {
       bool categoryMatch = p['mainCategory'] == widget.category && 
           (widget.subCategory == "All" || p['subCategory'] == widget.subCategory);
       
@@ -302,7 +302,7 @@ class _MarketplaceProductListScreenState extends State<MarketplaceProductListScr
           decoration: BoxDecoration(
             color: isDark ? AppThemeData.grey800 : Colors.white,
             borderRadius: BorderRadius.circular(15),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 5))],
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 5))],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -320,7 +320,7 @@ class _MarketplaceProductListScreenState extends State<MarketplaceProductListScr
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: (condition == "New" ? AppThemeData.primary200 : Colors.orangeAccent).withOpacity(0.9),
+                          color: (condition == "New" ? AppThemeData.primary200 : Colors.orangeAccent).withValues(alpha: 0.9),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(condition, style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)),

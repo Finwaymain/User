@@ -335,6 +335,15 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
   }
 
   double calculateRidePrice(VehicleData category, double distanceVal) {
+    double? basePrice = double.tryParse(category.basePrice ?? '');
+    double? perKmPrice = double.tryParse(category.perKmPrice ?? '');
+
+    if (basePrice != null || perKmPrice != null) {
+      double base = basePrice ?? 0.0;
+      double perKm = perKmPrice ?? 0.0;
+      return base + (distanceVal * perKm);
+    }
+
     double prix = double.tryParse(category.prix ?? '0.0') ?? 0.0;
     double deliveryChargesPerKm = double.tryParse(category.deliveryCharges ?? '0.0') ?? 0.0;
     double minimumDeliveryCharges = double.tryParse(category.minimumDeliveryCharges ?? '0.0') ?? 0.0;
@@ -551,7 +560,7 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.08),
+                          color: Colors.black.withValues(alpha: 0.08),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         )
@@ -639,7 +648,7 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.12),
+                          color: Colors.black.withValues(alpha: 0.12),
                           blurRadius: 20,
                           offset: const Offset(0, -6),
                         )
@@ -674,7 +683,7 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
               if (isSimulatingUPI)
                 Positioned.fill(
                   child: Container(
-                    color: Colors.black.withOpacity(0.7),
+                    color: Colors.black.withValues(alpha: 0.7),
                     child: Center(
                       child: Card(
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -745,7 +754,7 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 16,
             offset: const Offset(0, 4),
           )
@@ -1038,11 +1047,11 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? AppThemeData.primary200.withOpacity(0.08)
+                        ? AppThemeData.primary200.withValues(alpha: 0.08)
                         : (isDarkMode ? AppThemeData.grey800 : Colors.white),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: isSelected ? AppThemeData.primary200 : Colors.grey.withOpacity(0.15),
+                      color: isSelected ? AppThemeData.primary200 : Colors.grey.withValues(alpha: 0.15),
                       width: 1.5,
                     ),
                   ),
@@ -1130,7 +1139,7 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
           decoration: BoxDecoration(
             color: isDarkMode ? AppThemeData.grey100Dark : Colors.grey.shade50,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.withOpacity(0.1)),
+            border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
           ),
           child: Row(
             children: [

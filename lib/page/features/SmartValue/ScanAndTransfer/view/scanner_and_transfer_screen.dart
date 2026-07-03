@@ -3,13 +3,10 @@ import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_code_scanner_plus/qr_code_scanner_plus.dart';
-import 'dart:math';
 
 import '../../../../../themes/constant_colors.dart';
-import '../../../../../themes/custom_base_widget.dart';
 import '../../../../../utils/dark_theme_provider.dart';
 import '../../../../MainDashBoard/screen/main_dashboard.dart';
-import '../../../../home_screen/view/home_screen.dart';
 import '../controller/scanner_controller.dart';
 
 

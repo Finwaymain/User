@@ -12,7 +12,6 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../../constant/constant.dart';
-import '../../../../../model/user_model.dart';
 import '../../../../../themes/constant_colors.dart';
 
 class QRController extends GetxController with GetTickerProviderStateMixin {

@@ -110,7 +110,7 @@ class _TexiDashboardState extends State<TexiDashboard> {
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.04),
+                          color: Colors.black.withValues(alpha: isDarkMode ? 0.2 : 0.04),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         )
@@ -129,7 +129,7 @@ class _TexiDashboardState extends State<TexiDashboard> {
                               height: 170,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Colors.white.withOpacity(isDarkMode ? 0.05 : 0.4),
+                                color: Colors.white.withValues(alpha: isDarkMode ? 0.05 : 0.4),
                               ),
                             ),
                           ),
@@ -178,7 +178,7 @@ class _TexiDashboardState extends State<TexiDashboard> {
                                         right: 0,
                                         child: Container(
                                           height: 3,
-                                          color: Colors.grey.withOpacity(0.3),
+                                          color: Colors.grey.withValues(alpha: 0.3),
                                         ),
                                       ),
                                       // Car (white sedan/mini asset or icon)
@@ -350,7 +350,7 @@ class _TexiDashboardState extends State<TexiDashboard> {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isDarkMode ? 0.15 : 0.03),
+              color: Colors.black.withValues(alpha: isDarkMode ? 0.15 : 0.03),
               blurRadius: 8,
               offset: const Offset(0, 3),
             )
@@ -413,7 +413,7 @@ class _TexiDashboardState extends State<TexiDashboard> {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isDarkMode ? 0.1 : 0.02),
+              color: Colors.black.withValues(alpha: isDarkMode ? 0.1 : 0.02),
               blurRadius: 6,
               offset: const Offset(0, 2),
             )

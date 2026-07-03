@@ -14,7 +14,7 @@ import 'marketplace_product_details.dart';
 import 'marketplace_profile_screen.dart';
 
 class MarketplaceHomeScreen extends StatefulWidget {
-  const MarketplaceHomeScreen({Key? key}) : super(key: key);
+  const MarketplaceHomeScreen({super.key});
 
   @override
   State<MarketplaceHomeScreen> createState() => _MarketplaceHomeScreenState();
@@ -25,7 +25,7 @@ class _MarketplaceHomeScreenState extends State<MarketplaceHomeScreen> with Sing
   final TextEditingController _searchController = TextEditingController();
   final MarketplaceController _controller = Get.put(MarketplaceController());
   final ScrollController _scrollController = ScrollController();
-  var _appBarOpacity = 0.0.obs;
+  final _appBarOpacity = 0.0.obs;
 
   @override
   void initState() {
@@ -58,7 +58,7 @@ class _MarketplaceHomeScreenState extends State<MarketplaceHomeScreen> with Sing
           child: Stack(
             alignment: Alignment.topCenter,
             children: [
-              Container(
+              SizedBox(
                 height: 70,
                 child: Container(
                   child: Row(
@@ -75,7 +75,7 @@ class _MarketplaceHomeScreenState extends State<MarketplaceHomeScreen> with Sing
                       Container(
                         height: 30,
                         width: 1.5,
-                        color: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
+                        color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.1),
                       ),
                       _buildNavItem(
                         icon: Icons.grid_view_rounded,
@@ -137,11 +137,11 @@ class _MarketplaceHomeScreenState extends State<MarketplaceHomeScreen> with Sing
             duration: const Duration(milliseconds: 300),
             padding: EdgeInsets.all(isCircular ? 8 : (isSelected ? 10 : 8)),
             decoration: BoxDecoration(
-              color: isSelected ? AppThemeData.primary200.withOpacity(0.12) : Colors.transparent,
+              color: isSelected ? AppThemeData.primary200.withValues(alpha: 0.12) : Colors.transparent,
               borderRadius: isCircular ? null : BorderRadius.circular(20),
               border: isCircular
                   ? Border.all(
-                      color: (isDarkMode ? Colors.white : Colors.black).withOpacity(0.2),
+                      color: (isDarkMode ? Colors.white : Colors.black).withValues(alpha: 0.2),
                       width: 1.5,
                     )
                   : null,
@@ -190,7 +190,7 @@ class _MarketplaceHomeScreenState extends State<MarketplaceHomeScreen> with Sing
               height: 100,
               padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top, left: 20, right: 20),
               decoration: BoxDecoration(
-                color: (isDark ? Colors.black : Colors.white).withOpacity(0.7),
+                color: (isDark ? Colors.black : Colors.white).withValues(alpha: 0.7),
                 border: Border(bottom: BorderSide(color: isDark ? Colors.white10 : Colors.black12, width: 0.5)),
               ),
               child: Row(
@@ -393,7 +393,7 @@ class _MarketplaceHomeScreenState extends State<MarketplaceHomeScreen> with Sing
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: isSelected
-                            ? accentGreen.withOpacity(0.1)
+                            ? accentGreen.withValues(alpha: 0.1)
                             : (isDark ? AppThemeData.grey800 : Colors.grey[100]),
                           borderRadius: BorderRadius.circular(15),
                           border: Border.all(
@@ -550,7 +550,7 @@ class _MarketplaceHomeScreenState extends State<MarketplaceHomeScreen> with Sing
         decoration: BoxDecoration(
           color: isDark ? AppThemeData.grey800 : Colors.white,
           borderRadius: BorderRadius.circular(15),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 5))],
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 5))],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -585,7 +585,7 @@ class _MarketplaceHomeScreenState extends State<MarketplaceHomeScreen> with Sing
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: (condition == "New" ? accentGreen : Colors.orangeAccent).withOpacity(0.9),
+                        color: (condition == "New" ? accentGreen : Colors.orangeAccent).withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -613,7 +613,7 @@ class _MarketplaceHomeScreenState extends State<MarketplaceHomeScreen> with Sing
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: Colors.blue.withOpacity(0.1),
+                            color: Colors.blue.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: const Text("Contact", style: TextStyle(color: Colors.blue, fontSize: 10, fontFamily: AppThemeData.bold)),

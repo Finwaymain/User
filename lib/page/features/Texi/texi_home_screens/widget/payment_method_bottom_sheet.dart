@@ -12,7 +12,6 @@ import 'package:finway/themes/radio_button.dart';
 import 'package:finway/constant/constant.dart';
 import 'package:finway/constant/show_toast_dialog.dart';
 import 'package:finway/utils/Preferences.dart';
-import '../sucess_screen.dart';
 import 'package:finway/page/new_ride_screens/searching_driver_screen.dart';
 import 'package:finway/model/ride_model.dart';
 
