@@ -81,9 +81,7 @@ class HomeController extends GetxController with GetSingleTickerProviderStateMix
 
   setInitData() async {
     isHomePageLoading.value = true;
-    if (Constant.homeScreenType != 'OlaHome') {
-      await setIcons();
-    }
+    await setIcons();
     paymentSettingModel.value = Constant.getPaymentSetting();
     await setTabr();
     
@@ -180,41 +178,38 @@ class HomeController extends GetxController with GetSingleTickerProviderStateMix
   setDepartureMarker(LatLng departure) {
     departureLatLong.value = departure;
 
-    if (Constant.homeScreenType != 'OlaHome') {
-      markers.remove("Departure");
+    markers.remove("Departure");
+    if (departureIcon != null) {
       markers['Departure'] = Marker(
         markerId: const MarkerId('Departure'),
         infoWindow: InfoWindow(title: "Departure".tr),
         position: departure,
         icon: departureIcon!,
       );
+    }
 
-      mapController?.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(target: LatLng(departure.latitude, departure.longitude), zoom: 14)));
+    mapController?.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(target: LatLng(departure.latitude, departure.longitude), zoom: 14)));
 
-      // _controller?.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(target: LatLng(departure.latitude, departure.longitude), zoom: 18)));
-      if (departureLatLong.value.latitude != 0 && destinationLatLong.value.latitude != 0) {
-        getDirections();
-        confirmWidgetVisible.value = true;
-        // conformationBottomSheet(context);
-      }
+    if (departureLatLong.value.latitude != 0 && destinationLatLong.value.latitude != 0) {
+      getDirections();
+      confirmWidgetVisible.value = true;
     }
   }
 
   setDestinationMarker(LatLng destination) {
     destinationLatLong.value = destination;
-    if (Constant.homeScreenType != 'OlaHome') {
+    if (destinationIcon != null) {
       markers['Destination'] = Marker(
         markerId: const MarkerId('Destination'),
         infoWindow: InfoWindow(title: "Destination".tr),
         position: destination,
         icon: destinationIcon!,
       );
+    }
 
-      if (departureLatLong.value.latitude != 0 && destinationLatLong.value.latitude != 0) {
-        getDirections();
-        confirmWidgetVisible.value = true;
-        // conformationBottomSheet(context);
-      }
+    if (departureLatLong.value.latitude != 0 && destinationLatLong.value.latitude != 0) {
+      getDirections();
+      confirmWidgetVisible.value = true;
     }
   }
 
@@ -240,45 +235,43 @@ class HomeController extends GetxController with GetSingleTickerProviderStateMix
   Rx<LatLng> departureLatLong = const LatLng(0.0, 0.0).obs;
   Rx<LatLng> destinationLatLong = const LatLng(0.0, 0.0).obs;
   getDirections() async {
-    if (Constant.homeScreenType != 'OlaHome') {
-      List<PolylineWayPoint> wayPointList = [];
-      for (var i = 0; i < multiStopList.length; i++) {
-        wayPointList.add(PolylineWayPoint(location: multiStopList[i].editingController.text));
-      }
-      List<LatLng> polylineCoordinates = [];
-
-      PolylineRequest requestData = PolylineRequest(
-        wayPoints: wayPointList,
-        optimizeWaypoints: true,
-        mode: TravelMode.driving,
-        origin: PointLatLng(departureLatLong.value.latitude, departureLatLong.value.longitude),
-        destination: PointLatLng(destinationLatLong.value.latitude, destinationLatLong.value.longitude),
-      );
-      PolylineResult result = await PolylinePoints().getRouteBetweenCoordinates(
-        googleApiKey: Constant.kGoogleApiKey.toString(),
-        request: requestData,
-      );
-
-      if (result.points.isNotEmpty) {
-        for (var point in result.points) {
-          polylineCoordinates.add(LatLng(point.latitude, point.longitude));
-        }
-      }
-      addPolyLine(polylineCoordinates);
-
-      // Call Distance Matrix API to populate distance and duration reactively
-      getDurationDistance(departureLatLong.value, destinationLatLong.value).then((value) {
-        if (value != null) {
-          if (Constant.distanceUnit == "KM") {
-            distance.value = ((value['rows'].first['elements'].first['distance']['value'] as num) / 1000.00).toDouble();
-          } else {
-            distance.value = ((value['rows'].first['elements'].first['distance']['value'] as num) / 1609.34).toDouble();
-          }
-          duration.value = value['rows'].first['elements'].first['duration']['text'].toString();
-          update();
-        }
-      });
+    List<PolylineWayPoint> wayPointList = [];
+    for (var i = 0; i < multiStopList.length; i++) {
+      wayPointList.add(PolylineWayPoint(location: multiStopList[i].editingController.text));
     }
+    List<LatLng> polylineCoordinates = [];
+
+    PolylineRequest requestData = PolylineRequest(
+      wayPoints: wayPointList,
+      optimizeWaypoints: true,
+      mode: TravelMode.driving,
+      origin: PointLatLng(departureLatLong.value.latitude, departureLatLong.value.longitude),
+      destination: PointLatLng(destinationLatLong.value.latitude, destinationLatLong.value.longitude),
+    );
+    PolylineResult result = await PolylinePoints().getRouteBetweenCoordinates(
+      googleApiKey: Constant.kGoogleApiKey.toString(),
+      request: requestData,
+    );
+
+    if (result.points.isNotEmpty) {
+      for (var point in result.points) {
+        polylineCoordinates.add(LatLng(point.latitude, point.longitude));
+      }
+    }
+    addPolyLine(polylineCoordinates);
+
+    // Call Distance Matrix API to populate distance and duration reactively
+    getDurationDistance(departureLatLong.value, destinationLatLong.value).then((value) {
+      if (value != null) {
+        if (Constant.distanceUnit == "KM") {
+          distance.value = ((value['rows'].first['elements'].first['distance']['value'] as num) / 1000.00).toDouble();
+        } else {
+          distance.value = ((value['rows'].first['elements'].first['distance']['value'] as num) / 1609.34).toDouble();
+        }
+        duration.value = value['rows'].first['elements'].first['duration']['text'].toString();
+        update();
+      }
+    });
   }
 
   RxMap<PolylineId, Polyline> polyLines = <PolylineId, Polyline>{}.obs;
@@ -454,37 +447,35 @@ class HomeController extends GetxController with GetSingleTickerProviderStateMix
               );
               driverLocationList.add(driverLoc);
 
-              if (Constant.homeScreenType != 'OlaHome') {
-                final LatLng target = LatLng(lat, lng);
-                if (!markers.containsKey(driverId)) {
-                  // First appearance — place immediately
+              final LatLng target = LatLng(lat, lng);
+              if (!markers.containsKey(driverId)) {
+                // First appearance — place immediately
+                if (taxiIcon != null) {
                   markers[driverId] = Marker(
                     markerId: MarkerId(driverId),
                     rotation: rot,
                     position: target,
                     icon: taxiIcon!,
                   );
-                  _previousDriverPositions[driverId] = target;
-                  update();
-                } else {
-                  // Subsequent updates — smooth interpolation
-                  _animateMarker(driverId, target, rot);
                 }
+                _previousDriverPositions[driverId] = target;
+                update();
+              } else {
+                // Subsequent updates — smooth interpolation
+                _animateMarker(driverId, target, rot);
               }
             }
           }
         });
 
         // Remove markers for drivers who went offline
-        if (Constant.homeScreenType != 'OlaHome') {
-          final activIds = driverLocationList.map((d) => d.driverId).toSet();
-          markers.removeWhere((key, _) =>
-              key != 'Departure' &&
-              key != 'Destination' &&
-              !key.startsWith('Stop') &&
-              !activIds.contains(key));
-          update();
-        }
+        final activIds = driverLocationList.map((d) => d.driverId).toSet();
+        markers.removeWhere((key, _) =>
+            key != 'Departure' &&
+            key != 'Destination' &&
+            !key.startsWith('Stop') &&
+            !activIds.contains(key));
+        update();
       } catch (e) {
         showLog("Error parsing RTDB drivers: $e");
       }

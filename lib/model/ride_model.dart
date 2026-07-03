@@ -140,26 +140,26 @@ class RideData {
         taxList!.add(TaxModel.fromJson(v));
       });
     }
-    id = json['id'].toString();
-    idUserApp = json['id_user_app'].toString();
-    departName = json['depart_name'].toString();
-    distanceUnit = json['distance_unit'].toString();
-    destinationName = json['destination_name'].toString();
-    latitudeDepart = json['latitude_depart'].toString();
-    longitudeDepart = json['longitude_depart'].toString();
-    latitudeArrivee = json['latitude_arrivee'].toString();
-    longitudeArrivee = json['longitude_arrivee'].toString();
-    numberPoeple = json['number_poeple'].toString();
-    place = json['place'].toString();
-    statut = json['statut'].toString();
-    idConducteur = json['id_conducteur'].toString();
-    creer = json['creer'].toString();
-    trajet = json['trajet'].toString();
-    tripObjective = json['trip_objective'].toString();
-    tripCategory = json['trip_category'].toString();
-    nom = json['nom'].toString();
-    prenom = json['prenom'].toString();
-    if (json['stops'] != null && json['stops'].isNotEmpty && json['stops'].toString() != "[]") {
+    id = json['id']?.toString();
+    idUserApp = json['id_user_app']?.toString();
+    departName = json['depart_name']?.toString();
+    distanceUnit = json['distance_unit']?.toString();
+    destinationName = json['destination_name']?.toString();
+    latitudeDepart = json['latitude_depart']?.toString();
+    longitudeDepart = json['longitude_depart']?.toString();
+    latitudeArrivee = json['latitude_arrivee']?.toString();
+    longitudeArrivee = json['longitude_arrivee']?.toString();
+    numberPoeple = json['number_poeple']?.toString();
+    place = json['place']?.toString();
+    statut = json['statut']?.toString();
+    idConducteur = json['id_conducteur']?.toString();
+    creer = json['creer']?.toString();
+    trajet = json['trajet']?.toString();
+    tripObjective = json['trip_objective']?.toString();
+    tripCategory = json['trip_category']?.toString();
+    nom = json['nom']?.toString();
+    prenom = json['prenom']?.toString();
+    if (json['stops'] != null && json['stops'].isNotEmpty && json['stops']?.toString() != "[]") {
       stops = <Stops>[];
       json['stops'].forEach((v) {
         stops!.add(Stops.fromJson(v));
@@ -167,35 +167,34 @@ class RideData {
     } else {
       stops = [];
     }
-    otp = json['otp'].toString();
-    distance = json['distance'].toString();
-    phone = json['phone'].toString();
-    nomConducteur = json['nomConducteur'].toString();
-    prenomConducteur = json['prenomConducteur'].toString();
-    driverPhone = json['driverPhone'].toString();
-    photoPath = json['photo_path'].toString();
-    dateRetour = json['date_retour'].toString();
-    heureRetour = json['heure_retour'].toString();
-    statutRound = json['statut_round'].toString();
-    montant = json['montant'].toString();
-    duree = json['duree'].toString();
-    statutPaiement = json['statut_paiement'].toString();
-    payment = json['payment'].toString();
-    paymentImage = json['payment_image'].toString();
-    idVehicule = json['idVehicule'].toString();
-    brand = json['brand'].toString();
-    model = json['model'].toString();
-    carMake = json['car_make'].toString();
-    milage = json['milage'].toString();
-    km = json['km'].toString();
-    color = json['color'].toString();
-    numberplate = json['numberplate'].toString();
-    passenger = json['passenger'].toString();
-    driverPhone = json['driver_phone'].toString();
-    moyenne = json['moyenne'].toString();
-    moyenneDriver = json['moyenne_driver'].toString();
+    otp = json['otp']?.toString();
+    distance = json['distance']?.toString();
+    phone = json['phone']?.toString();
+    nomConducteur = json['nomConducteur']?.toString();
+    prenomConducteur = json['prenomConducteur']?.toString();
+    driverPhone = (json['driverPhone'] ?? json['driver_phone'])?.toString();
+    photoPath = json['photo_path']?.toString();
+    dateRetour = json['date_retour']?.toString();
+    heureRetour = json['heure_retour']?.toString();
+    statutRound = json['statut_round']?.toString();
+    montant = json['montant']?.toString();
+    duree = json['duree']?.toString();
+    statutPaiement = json['statut_paiement']?.toString();
+    payment = json['payment']?.toString();
+    paymentImage = json['payment_image']?.toString();
+    idVehicule = json['idVehicule']?.toString();
+    brand = json['brand']?.toString();
+    model = json['model']?.toString();
+    carMake = json['car_make']?.toString();
+    milage = json['milage']?.toString();
+    km = json['km']?.toString();
+    color = json['color']?.toString();
+    numberplate = json['numberplate']?.toString();
+    passenger = json['passenger']?.toString();
+    moyenne = json['moyenne']?.toString();
+    moyenneDriver = json['moyenne_driver']?.toString();
     taxModel = taxList;
-    rideType = json['ride_type'].toString();
+    rideType = json['ride_type']?.toString();
   }
 
   Map<String, dynamic> toJson() {

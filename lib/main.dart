@@ -65,12 +65,6 @@ class FirebaseService {
         );
     }
 
-    static Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-        await Firebase.initializeApp(
-            options: DefaultFirebaseOptions.currentPlatform
-        );
-    }
-
     static Future<void> setupInteractedMessage(BuildContext context) async {
         await NotificationService.initialize(context);
         await FirebaseMessaging.instance.subscribeToTopic("cabme_customer");
@@ -219,6 +213,13 @@ class NotificationService {
     }
 }
 
+@pragma('vm:entry-point')
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+    await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform
+    );
+}
+
 class AppInitialization {
     static Future<void> initializeApp() async {
         WidgetsFlutterBinding.ensureInitialized();
@@ -250,7 +251,7 @@ class AppInitialization {
         if (!Platform.isIOS) {
             // Set background message handler
             FirebaseMessaging.onBackgroundMessage(
-                FirebaseService.firebaseMessagingBackgroundHandler
+                firebaseMessagingBackgroundHandler
             );
 
             // Android Maps configuration

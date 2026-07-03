@@ -8,6 +8,7 @@ import 'package:finway/controller/ride_details_controller.dart';
 import 'package:finway/model/ride_model.dart';
 import 'package:finway/model/ride_details_model.dart';
 import 'package:finway/page/chats_screen/conversation_screen.dart';
+import 'package:finway/page/completed_ride_screens/trip_history_screen.dart';
 import 'package:finway/themes/button_them.dart';
 import 'package:finway/themes/constant_colors.dart';
 import 'package:finway/themes/custom_alert_dialog.dart';
@@ -187,6 +188,55 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
         RideDetailsModel rideDetails = RideDetailsModel.fromJson(response.data);
         if (rideDetails.success == 'success' && rideDetails.rideDetailsdata != null) {
           var data = rideDetails.rideDetailsdata!;
+          String currentStatus = data.statut.toString();
+          
+          if (currentStatus == "completed") {
+            _driverLocationTimer?.cancel();
+            _driverLocationSubscription?.cancel();
+            RideData completedRideData = RideData(
+              id: data.id,
+              idUserApp: data.idUserApp,
+              departName: data.departName,
+              destinationName: data.destinationName,
+              latitudeDepart: data.latitudeDepart,
+              longitudeDepart: data.longitudeDepart,
+              latitudeArrivee: data.latitudeArrivee,
+              longitudeArrivee: data.longitudeArrivee,
+              place: data.place,
+              numberPoeple: data.numberPoeple,
+              distance: data.distance,
+              duree: data.duree,
+              montant: data.montant,
+              trajet: data.trajet,
+              statut: data.statut,
+              statutPaiement: data.statutPaiement,
+              idConducteur: data.idConducteur,
+              creer: data.creer,
+              dateRetour: data.dateRetour,
+              heureRetour: data.heureRetour,
+              statutRound: data.statutRound,
+              otp: data.otp,
+              nomConducteur: data.nomConducteur ?? "",
+              prenomConducteur: data.prenomConducteur ?? "",
+              photoPath: data.photoPath,
+              driverPhone: data.driverPhone,
+              moyenne: data.moyenne,
+              stops: data.stops,
+            );
+            Get.off(() => TripHistoryScreen(), arguments: {
+              "rideData": completedRideData
+            });
+            return;
+          }
+          
+          if (currentStatus == "rejected") {
+            _driverLocationTimer?.cancel();
+            _driverLocationSubscription?.cancel();
+            ShowToastDialog.showToast("Ride was cancelled.");
+            Get.back();
+            return;
+          }
+
           if (data.driverLatitude != null && data.driverLatitude!.isNotEmpty &&
               data.driverLongitude != null && data.driverLongitude!.isNotEmpty) {
             double dLat = double.parse(data.driverLatitude!);
@@ -202,6 +252,7 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
 
             if (mounted) {
               setState(() {
+                rideData!.statut = currentStatus;
                 departureLatLong = LatLng(dLat, dLng);
                 _markers[rideData!.id.toString()] = Marker(
                   markerId: MarkerId(rideData!.id.toString()),
@@ -902,8 +953,10 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
     List<LatLng> polylineCoordinates = [];
     PolylineResult result;
     List<PolylineWayPoint> wayPointList = [];
-    for (var i = 0; i < rideData!.stops!.length; i++) {
-      wayPointList.add(PolylineWayPoint(location: rideData!.stops![i].location!));
+    if (rideData!.stops != null) {
+      for (var i = 0; i < rideData!.stops!.length; i++) {
+        wayPointList.add(PolylineWayPoint(location: rideData!.stops![i].location!));
+      }
     }
 
     if (rideData!.statut == "confirmed") {
@@ -958,13 +1011,15 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
       icon: destinationIcon!,
     );
 
-    for (var i = 0; i < rideData!.stops!.length; i++) {
-      _markers['${rideData!.stops![i]}'] = Marker(
-        markerId: MarkerId('${rideData!.stops![i]}'),
-        infoWindow: InfoWindow(title: rideData!.stops![i].location!),
-        position: LatLng(double.parse(rideData!.stops![i].latitude!), double.parse(rideData!.stops![i].longitude!)),
-        icon: stopIcon!,
-      );
+    if (rideData!.stops != null) {
+      for (var i = 0; i < rideData!.stops!.length; i++) {
+        _markers['${rideData!.stops![i]}'] = Marker(
+          markerId: MarkerId('${rideData!.stops![i]}'),
+          infoWindow: InfoWindow(title: rideData!.stops![i].location!),
+          position: LatLng(double.parse(rideData!.stops![i].latitude!), double.parse(rideData!.stops![i].longitude!)),
+          icon: stopIcon!,
+        );
+      }
     }
 
     if (result.points.isNotEmpty) {

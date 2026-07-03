@@ -334,6 +334,25 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
     onSuccess();
   }
 
+  double calculateRidePrice(VehicleData category, double distanceVal) {
+    double prix = double.tryParse(category.prix ?? '0.0') ?? 0.0;
+    double deliveryChargesPerKm = double.tryParse(category.deliveryCharges ?? '0.0') ?? 0.0;
+    double minimumDeliveryCharges = double.tryParse(category.minimumDeliveryCharges ?? '0.0') ?? 0.0;
+    double minimumDeliveryChargesWithin = double.tryParse(category.minimumDeliveryChargesWithin ?? '0.0') ?? 0.0;
+
+    // Fallback if no delivery charges are set
+    if (deliveryChargesPerKm == 0.0 && minimumDeliveryCharges == 0.0 && minimumDeliveryChargesWithin == 0.0) {
+      double price = prix * (distanceVal > 0.0 ? distanceVal : 1.0);
+      return price < 1.0 ? prix : price;
+    }
+
+    if (distanceVal <= minimumDeliveryChargesWithin) {
+      return minimumDeliveryCharges;
+    } else {
+      return minimumDeliveryCharges + (distanceVal - minimumDeliveryChargesWithin) * deliveryChargesPerKm;
+    }
+  }
+
   Future<void> executeBooking() async {
     if (isBookingInProgress) return;
 
@@ -357,9 +376,8 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
       // Select the first available driver from searched vehicle
       final driver = nearbyDrivers!.data!.first;
 
-      // Price calculation
-      double tripPrice = double.tryParse(selectedVehicle!.prix ?? '0') ?? 0.0;
-      double totalCout = tripPrice * (homeCtrl.distance.value > 0.0 ? homeCtrl.distance.value : 1.0);
+      // Price calculation using standard delivery charges formula
+      double totalCout = calculateRidePrice(selectedVehicle!, homeCtrl.distance.value);
 
       // Resolve paymentMethodId
       String paymentMethodId = "";
@@ -904,10 +922,11 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
 
     double distanceVal = double.tryParse(controller.distance.value.toString()) ?? 0.0;
     
-    // Select a baseline or selected category price
-    double basePrice = double.tryParse(selectedVehicle?.prix ?? '0.0') ?? 0.0;
-    double tripPrice = basePrice * distanceVal;
-    if (tripPrice < 1.0) tripPrice = basePrice;
+    // Select a baseline or selected category price using standard delivery charges formula
+    double tripPrice = 0.0;
+    if (selectedVehicle != null) {
+      tripPrice = calculateRidePrice(selectedVehicle!, distanceVal);
+    }
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -1004,9 +1023,7 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
               final category = displayedCategories[index];
               final isSelected = selectedVehicle?.id == category.id;
               
-              double categoryBasePrice = double.tryParse(category.prix ?? '0.0') ?? 0.0;
-              double calculatedPrice = categoryBasePrice * (distanceVal > 0.0 ? distanceVal : 1.0);
-              if (calculatedPrice < 1.0) calculatedPrice = categoryBasePrice;
+              double calculatedPrice = calculateRidePrice(category, distanceVal);
 
               return InkWell(
                 onTap: () {
@@ -1050,16 +1067,13 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
                             Text(
                               category.libelle.toString(),
                               style: TextStyle(
-                                fontFamily: AppThemeData.semiBold,
-                                fontSize: 14,
-                                color: isDarkMode ? AppThemeData.grey900Dark : AppThemeData.grey900,
-                              ),
+                                  fontFamily: AppThemeData.semiBold,
+                                  fontSize: 14,
+                                  color: isDarkMode ? AppThemeData.grey900Dark : AppThemeData.grey900),
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              isLocationSelected
-                                  ? "${controller.duration.value} away"
-                                  : "Select route to see time".tr,
+                              isLocationSelected ? "${controller.duration.value} away" : "Select route to see time".tr,
                               style: TextStyle(
                                 fontFamily: AppThemeData.regular,
                                 fontSize: 11,
@@ -1069,6 +1083,17 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
                           ],
                         ),
                       ),
+                      if (isLocationSelected) ...[
+                        const SizedBox(width: 8),
+                        Text(
+                          "${controller.distance.value.toStringAsFixed(1)} ${Constant.distanceUnit ?? 'KM'}",
+                          style: TextStyle(
+                            fontFamily: AppThemeData.medium,
+                            fontSize: 13,
+                            color: isDarkMode ? AppThemeData.grey500Dark : AppThemeData.grey500,
+                          ),
+                        ),
+                      ],
                       const SizedBox(width: 8),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,

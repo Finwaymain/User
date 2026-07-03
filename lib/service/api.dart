@@ -14,11 +14,11 @@ class API {
   static const baseUrl = "https://api.fiinway.com/api/v1/"; // live
   static const apiKey = "base64:nTfofcBByTDenJQYlsRbH0JjeVFW5lWsIIyXtq8/9sU=";
 
-  static Map<String, String> authheader = {
+  static Map<String, String> get authheader => {
     HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
     'apikey': apiKey,
   };
-  static Map<String, String> header = {
+  static Map<String, String> get header => {
     HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
     'apikey': apiKey,
     'accesstoken': Preferences.getString(Preferences.accesstoken)

@@ -20,10 +20,12 @@ class SearchingDriverScreen extends StatefulWidget {
 class _SearchingDriverScreenState extends State<SearchingDriverScreen> with TickerProviderStateMixin {
   late AnimationController _pulseController;
   late AnimationController _carController;
+  late SearchingDriverController controller;
 
   @override
   void initState() {
     super.initState();
+    controller = Get.put(SearchingDriverController());
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
@@ -47,24 +49,19 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen> with Tick
     final themeChange = Provider.of<DarkThemeProvider>(context);
     final bool isDarkMode = themeChange.getThem();
 
-    return GetBuilder<SearchingDriverController>(
-      init: SearchingDriverController(),
-      builder: (controller) {
-        return Scaffold(
-          backgroundColor: isDarkMode ? AppThemeData.surface50Dark : AppThemeData.surface50,
-          body: SafeArea(
-            child: Obx(() {
-              if (controller.statut.value == "driver_rejected") {
-                return _buildNoDriverState(context, controller, isDarkMode);
-              }
-              if (controller.statut.value == "confirmed") {
-                return _buildSuccessState(context, controller, isDarkMode);
-              }
-              return _buildSearchingState(context, controller, isDarkMode);
-            }),
-          ),
-        );
-      },
+    return Scaffold(
+      backgroundColor: isDarkMode ? AppThemeData.surface50Dark : AppThemeData.surface50,
+      body: SafeArea(
+        child: Obx(() {
+          if (controller.statut.value == "driver_rejected") {
+            return _buildNoDriverState(context, controller, isDarkMode);
+          }
+          if (controller.statut.value == "confirmed") {
+            return _buildSuccessState(context, controller, isDarkMode);
+          }
+          return _buildSearchingState(context, controller, isDarkMode);
+        }),
+      ),
     );
   }
 

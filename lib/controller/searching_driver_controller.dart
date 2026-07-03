@@ -128,8 +128,14 @@ class SearchingDriverController extends GetxController {
                 dateRetour: details.rideDetailsdata!.dateRetour,
                 heureRetour: details.rideDetailsdata!.heureRetour,
                 statutRound: details.rideDetailsdata!.statutRound,
-                nomConducteur: "",
-                prenomConducteur: "",
+                // Driver info from ridedetails API
+                otp: details.rideDetailsdata!.otp,
+                nomConducteur: details.rideDetailsdata!.nomConducteur ?? "",
+                prenomConducteur: details.rideDetailsdata!.prenomConducteur ?? "",
+                photoPath: details.rideDetailsdata!.photoPath,
+                driverPhone: details.rideDetailsdata!.driverPhone,
+                moyenne: details.rideDetailsdata!.moyenne,
+                stops: details.rideDetailsdata!.stops,
               );
               handleRideStatusTransition(currentStatus, updatedRideData);
             }
