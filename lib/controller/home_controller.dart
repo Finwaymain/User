@@ -618,9 +618,12 @@ class HomeController extends GetxController with GetSingleTickerProviderStateMix
                   .map((d) => d.typeVehicule?.toLowerCase().trim())
                   .whereType<String>()
                   .toSet();
+              // Filter by availability AND deduplicate by category name (libelle)
+              // to prevent duplicate vehicle type entries in the UI list.
+              final seenNames = <String>{};
               categories.data = categories.data!.where((category) {
                 final categoryLibelle = category.libelle?.toLowerCase().trim() ?? '';
-                return availableTypes.contains(categoryLibelle);
+                return availableTypes.contains(categoryLibelle) && seenNames.add(categoryLibelle);
               }).toList();
             } else {
               categories.data = [];
@@ -629,10 +632,11 @@ class HomeController extends GetxController with GetSingleTickerProviderStateMix
         }
 
         if (categories.data == null || categories.data!.isEmpty) {
+          categories.data = [];
           update();
           ShowToastDialog.closeLoader();
           ShowToastDialog.showToast("No drivers available in your area.".tr);
-          return null;
+          return categories;
         }
 
         update();

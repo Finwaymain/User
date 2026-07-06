@@ -139,10 +139,21 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
     try {
       final homeCtrl = Get.find<HomeController>();
       final categories = await homeCtrl.getVehicleCategory();
-      if (categories != null && categories.data != null && categories.data!.isNotEmpty) {
-        if (mounted) {
-          setState(() {
-            vehicleCategoryModel = categories;
+      if (mounted) {
+        setState(() {
+          // Deduplicate by name/libelle — prevents same category name appearing multiple times
+          // when the backend/driver-filter produces repeated matches
+          if (categories != null && categories.data != null) {
+            final seenNames = <String>{};
+            categories.data = categories.data!
+                .where((cat) {
+                  final name = cat.libelle?.toLowerCase().trim() ?? '';
+                  return name.isNotEmpty && seenNames.add(name);
+                })
+                .toList();
+          }
+          vehicleCategoryModel = categories ?? VehicleCategoryModel(data: []);
+          if (categories != null && categories.data != null && categories.data!.isNotEmpty) {
             if (widget.initialVehicleCategory != null) {
               selectedVehicle = categories.data!.firstWhere(
                 (cat) => cat.libelle?.toLowerCase().contains(widget.initialVehicleCategory!.toLowerCase()) ?? false,
@@ -151,7 +162,11 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
             } else {
               selectedVehicle = categories.data!.first;
             }
-          });
+          } else {
+            selectedVehicle = null;
+          }
+        });
+        if (categories != null && categories.data != null && categories.data!.isNotEmpty) {
           fetchNearbyDrivers();
         }
       }
@@ -366,14 +381,15 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
     if (isBookingInProgress) return;
 
     final homeCtrl = Get.find<HomeController>();
-    
+
     if (selectedVehicle == null) {
       ShowToastDialog.showToast("Please select a vehicle category");
       return;
     }
 
-    if (nearbyDrivers == null || nearbyDrivers!.data == null || nearbyDrivers!.data!.isEmpty) {
-      ShowToastDialog.showToast("No drivers available for this vehicle type");
+    if (homeCtrl.departureLatLong.value.latitude == 0.0 ||
+        homeCtrl.destinationLatLong.value.latitude == 0.0) {
+      ShowToastDialog.showToast("Please set pickup and drop location");
       return;
     }
 
@@ -382,9 +398,6 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
     });
 
     try {
-      // Select the first available driver from searched vehicle
-      final driver = nearbyDrivers!.data!.first;
-
       // Price calculation using standard delivery charges formula
       double totalCout = calculateRidePrice(selectedVehicle!, homeCtrl.distance.value);
 
@@ -399,6 +412,10 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
         paymentMethodId = homeCtrl.paymentSettingModel.value.cash?.idPaymentMethod?.toString() ?? "1";
       }
 
+      // Pass id_conducteur = 0 so the backend automatically finds the nearest
+      // available driver for this vehicle type using its Haversine query.
+      // This avoids pre-selecting a driver on the client, which could pick
+      // a stale or unavailable driver.
       Map<String, dynamic> bodyParams = {
         'user_id': Preferences.getInt(Preferences.userId).toString(),
         'lat1': homeCtrl.departureLatLong.value.latitude.toString(),
@@ -409,7 +426,7 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
         'distance': homeCtrl.distance.value.toString(),
         'distance_unit': Constant.distanceUnit.toString(),
         'duree': homeCtrl.duration.toString(),
-        'id_conducteur': driver.id.toString(),
+        'id_conducteur': '0', // 0 = backend picks nearest driver automatically
         'id_payment': paymentMethodId,
         'id_type_vehicule': selectedVehicle!.id.toString(),
         'depart_name': homeCtrl.departureController.text,
@@ -1073,12 +1090,35 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              category.libelle.toString(),
-                              style: TextStyle(
-                                  fontFamily: AppThemeData.semiBold,
-                                  fontSize: 14,
-                                  color: isDarkMode ? AppThemeData.grey900Dark : AppThemeData.grey900),
+                            Row(
+                              children: [
+                                Text(
+                                  category.libelle.toString(),
+                                  style: TextStyle(
+                                      fontFamily: AppThemeData.semiBold,
+                                      fontSize: 14,
+                                      color: isDarkMode ? AppThemeData.grey900Dark : AppThemeData.grey900),
+                                ),
+                                // Show driver count badge if drivers are loaded for this category
+                                if (isSelected && nearbyDrivers != null && nearbyDrivers!.data != null && nearbyDrivers!.data!.isNotEmpty) ...[  
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: AppThemeData.primary200.withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      '${nearbyDrivers!.data!.length} nearby',
+                                      style: TextStyle(
+                                        fontFamily: AppThemeData.medium,
+                                        fontSize: 10,
+                                        color: AppThemeData.primary200,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
                             const SizedBox(height: 2),
                             Text(

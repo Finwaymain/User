@@ -487,10 +487,11 @@ class HomeOsmController extends GetxController with GetSingleTickerProviderState
         }
 
         if (categories.data == null || categories.data!.isEmpty) {
+          categories.data = [];
           update();
           ShowToastDialog.closeLoader();
           ShowToastDialog.showToast("No drivers available in your area.".tr);
-          return null;
+          return categories;
         }
 
         update();
