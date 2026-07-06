@@ -18,6 +18,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:location/location.dart';
 import 'package:provider/provider.dart';
+import 'package:finway/page/MainDashBoard/screen/main_dashboard.dart';
 import 'payment_selection_screen.dart';
 
 class TripHistoryScreen extends StatelessWidget {
@@ -769,8 +770,14 @@ class TripHistoryScreen extends StatelessWidget {
                                     //   }
                                     // });
                                     // } else {
-                                    Get.to(PaymentSelectionScreen(), arguments: {
+                                    Get.to(() => PaymentSelectionScreen(), arguments: {
                                       "rideData": controller.data.value,
+                                    })?.then((value) {
+                                      if (value != null && value == true) {
+                                        Get.offAll(() => const MainDashboard());
+                                      } else {
+                                        controller.getRideDetailsData(controller.data.value.id.toString());
+                                      }
                                     });
                                     // }
                                   })),
