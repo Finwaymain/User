@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:finway/utils/dark_theme_provider.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:geolocator/geolocator.dart';
 
 class WebViewScreen extends StatefulWidget {
   final String url;
@@ -91,9 +92,25 @@ class _WebViewScreenState extends State<WebViewScreen> {
       ..setBackgroundColor(const Color(0x00000000))
       ..addJavaScriptChannel(
         'AppBridge',
-        onMessageReceived: (JavaScriptMessage message) {
+        onMessageReceived: (JavaScriptMessage message) async {
           if (message.message == 'close') {
             Get.back();
+          } else if (message.message == 'getLocation') {
+            try {
+              LocationPermission permission = await Geolocator.checkPermission();
+              if (permission == LocationPermission.denied) {
+                permission = await Geolocator.requestPermission();
+              }
+              if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+                controller.runJavaScript("window.receiveLocationError('Location permissions are denied');");
+                return;
+              }
+              
+              Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+              controller.runJavaScript("window.receiveLocation(${position.latitude}, ${position.longitude});");
+            } catch (e) {
+              controller.runJavaScript("window.receiveLocationError('${e.toString()}');");
+            }
           }
         },
       )
