@@ -13,6 +13,7 @@ import 'package:finway/model/tax_model.dart';
 import 'package:finway/model/user_model.dart';
 import 'package:finway/service/api.dart';
 import 'package:finway/utils/Preferences.dart';
+import 'package:finway/themes/constant_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -35,6 +36,9 @@ class PaymentController extends GetxController {
   RxBool xendit = false.obs;
   RxBool orangePay = false.obs;
   RxBool midtrans = false.obs;
+  RxBool upi = false.obs;
+  RxBool isSimulatingUPI = false.obs;
+  RxString upiStepText = "".obs;
 
   @override
   void onInit() {
@@ -183,6 +187,8 @@ class PaymentController extends GetxController {
         mercadoPago.value = true;
       } else if (selectedRadioTile.value == "PayPal") {
         paypal.value = true;
+      } else if (selectedRadioTile.value == "UPI" || selectedRadioTile.value == "upi") {
+        upi.value = true;
       }
     }
     getAmount();
@@ -248,6 +254,7 @@ class PaymentController extends GetxController {
         subTotalAmount.value = double.parse(rideDetailsModel.rideDetailsdata!.montant.toString());
         tipAmount.value = double.parse(rideDetailsModel.rideDetailsdata!.tipAmount.toString());
         discountAmount.value = double.parse(rideDetailsModel.rideDetailsdata!.discount.toString());
+        taxAmount.value = 0.0;
         for (var i = 0; i < rideDetailsModel.rideDetailsdata!.taxModel!.length; i++) {
           if (rideDetailsModel.rideDetailsdata!.taxModel![i].statut! == 'yes') {
             if (rideDetailsModel.rideDetailsdata!.taxModel![i].type == "Fixed") {
@@ -257,6 +264,10 @@ class PaymentController extends GetxController {
             }
           }
         }
+        data.value.statutPaiement = rideDetailsModel.rideDetailsdata!.statutPaiement;
+        data.value.statut = rideDetailsModel.rideDetailsdata!.statut;
+        data.refresh();
+        update();
       } else if (response.statusCode == 200 && responseBody['success'] == "Failed") {
       } else {
         ShowToastDialog.showToast('Something want wrong. Please try again later');
@@ -452,5 +463,57 @@ class PaymentController extends GetxController {
     }
     ShowToastDialog.closeLoader();
     return null;
+  }
+
+  Future<void> simulateUPILaunch(VoidCallback onSuccess) async {
+    isSimulatingUPI.value = true;
+    upiStepText.value = "Connecting to UPI gateway...".tr;
+    await Future.delayed(const Duration(seconds: 1));
+    upiStepText.value = "Redirecting to installed BHIM UPI app...".tr;
+    await Future.delayed(const Duration(seconds: 1));
+    upiStepText.value = "Simulating transaction security handshake...".tr;
+    await Future.delayed(const Duration(seconds: 1));
+    isSimulatingUPI.value = false;
+    
+    // Show beautiful success dialog
+    await Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.check_circle_outline, color: Colors.green, size: 70),
+              const SizedBox(height: 20),
+              Text(
+                "Payment Successful".tr,
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                "Your UPI transaction was completed successfully.".tr,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppThemeData.primary200,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                onPressed: () {
+                  Get.back();
+                },
+                child: Text("OK".tr, style: const TextStyle(color: Colors.white)),
+              )
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+    
+    onSuccess();
   }
 }

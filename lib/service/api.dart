@@ -35,6 +35,8 @@ class API {
   static const updateUserNic = "${baseUrl}update-user-nic";
   static const uploadUserPhoto = "${baseUrl}user-photo";
   static const updateUserEmail = "${baseUrl}update-user-email";
+  static const updateUserAlternatePhone = "${baseUrl}user-alternate-phone";
+  static const userToggleMarketplace = "${baseUrl}user-toggle-marketplace";
   static const changePassword = "${baseUrl}update-user-mdp";
   static const updatePreName = "${baseUrl}user-pre-name";
   static const updateLastName = "${baseUrl}user-name";

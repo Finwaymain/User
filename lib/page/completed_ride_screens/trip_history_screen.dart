@@ -758,32 +758,9 @@ class TripHistoryScreen extends StatelessWidget {
                           if (controller.data.value.statut == "completed" || controller.data.value.statut == "rejected")
                             Row(
                               children: [
+
                                 Visibility(
-                                  visible:
-                                      controller.data.value.statut == "completed" && controller.data.value.statutPaiement != "yes" && controller.data.value.statut != "rejected",
-                                  child: Expanded(
-                                      child: ButtonThem.buildButton(context, title: "Pay Now".tr, onPress: () {
-                                    // if (controller.data.value.statutPaiement == "yes") {
-                                    // controller.feelAsSafe(data.id.toString()).then((value) {
-                                    //   if (value != null) {
-                                    // controller.getCompletedRide();
-                                    //   }
-                                    // });
-                                    // } else {
-                                    Get.to(() => PaymentSelectionScreen(), arguments: {
-                                      "rideData": controller.data.value,
-                                    })?.then((value) {
-                                      if (value != null && value == true) {
-                                        Get.offAll(() => const MainDashboard());
-                                      } else {
-                                        controller.getRideDetailsData(controller.data.value.id.toString());
-                                      }
-                                    });
-                                    // }
-                                  })),
-                                ),
-                                Visibility(
-                                  visible: (controller.data.value.statutPaiement == "yes") || (controller.data.value.statut == "rejected"),
+                                  visible: (controller.data.value.statut == "completed") || (controller.data.value.statut == "rejected"),
                                   child: Expanded(
                                     child: ButtonThem.buildButton(
                                       context,

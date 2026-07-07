@@ -599,6 +599,7 @@ class PaymentSelectionScreen extends StatelessWidget {
                                         controller.xendit = false.obs;
                                         controller.midtrans = false.obs;
                                         controller.orangePay = false.obs;
+                                        controller.upi = false.obs;
                                         controller.selectedRadioTile.value = value!;
                                         controller.paymentMethodId.value = controller.paymentSettingModel.value.cash!.idPaymentMethod.toString();
                                       },
@@ -631,206 +632,15 @@ class PaymentSelectionScreen extends StatelessWidget {
                                         controller.xendit = false.obs;
                                         controller.midtrans = false.obs;
                                         controller.orangePay = false.obs;
+                                        controller.upi = false.obs;
                                       },
                                     ),
                                     RadioButtonCustom(
-                                      image: "assets/icons/stripe.png",
-                                      name: 'Stripe',
+                                      image: "assets/icons/paytm_@3x.png",
+                                      name: "UPI",
                                       groupValue: controller.selectedRadioTile.value,
-                                      isEnabled: controller.paymentSettingModel.value.strip!.isEnabled == "true" ? true : false,
-                                      isSelected: controller.stripe.value,
-                                      onClick: (String? value) {
-                                        controller.stripe = true.obs;
-                                        controller.wallet = false.obs;
-                                        controller.cash = false.obs;
-                                        controller.razorPay = false.obs;
-
-                                        controller.paypal = false.obs;
-                                        controller.payStack = false.obs;
-                                        controller.flutterWave = false.obs;
-                                        controller.mercadoPago = false.obs;
-                                        controller.payFast = false.obs;
-                                        controller.xendit = false.obs;
-                                        controller.midtrans = false.obs;
-                                        controller.orangePay = false.obs;
-                                        controller.selectedRadioTile.value = value!;
-                                        controller.paymentMethodId.value = controller.paymentSettingModel.value.strip!.idPaymentMethod.toString();
-                                      },
-                                    ),
-                                    RadioButtonCustom(
-                                      isEnabled: controller.paymentSettingModel.value.payStack!.isEnabled == "true" ? true : false,
-                                      name: 'PayStack',
-                                      image: "assets/icons/paystack.png",
-                                      isSelected: controller.payStack.value,
-                                      groupValue: controller.selectedRadioTile.value,
-                                      onClick: (String? value) {
-                                        controller.stripe = false.obs;
-                                        controller.wallet = false.obs;
-                                        controller.cash = false.obs;
-                                        controller.razorPay = false.obs;
-
-                                        controller.paypal = false.obs;
-                                        controller.payStack = true.obs;
-                                        controller.flutterWave = false.obs;
-                                        controller.mercadoPago = false.obs;
-                                        controller.payFast = false.obs;
-                                        controller.xendit = false.obs;
-                                        controller.midtrans = false.obs;
-                                        controller.orangePay = false.obs;
-                                        controller.selectedRadioTile.value = value!;
-                                        controller.paymentMethodId.value = controller.paymentSettingModel.value.payStack!.idPaymentMethod.toString();
-                                      },
-                                    ),
-                                    RadioButtonCustom(
-                                      isEnabled: controller.paymentSettingModel.value.flutterWave!.isEnabled == "true" ? true : false,
-                                      name: 'FlutterWave',
-                                      image: "assets/icons/flutterwave.png",
-                                      isSelected: controller.flutterWave.value,
-                                      groupValue: controller.selectedRadioTile.value,
-                                      onClick: (String? value) {
-                                        controller.stripe = false.obs;
-                                        controller.wallet = false.obs;
-                                        controller.cash = false.obs;
-                                        controller.razorPay = false.obs;
-
-                                        controller.paypal = false.obs;
-                                        controller.payStack = false.obs;
-                                        controller.flutterWave = true.obs;
-                                        controller.mercadoPago = false.obs;
-                                        controller.payFast = false.obs;
-                                        controller.xendit = false.obs;
-                                        controller.midtrans = false.obs;
-                                        controller.orangePay = false.obs;
-                                        controller.selectedRadioTile.value = value!;
-                                        controller.paymentMethodId.value = controller.paymentSettingModel.value.flutterWave!.idPaymentMethod.toString();
-                                      },
-                                    ),
-                                    RadioButtonCustom(
-                                      isEnabled: controller.paymentSettingModel.value.razorpay!.isEnabled == "true" ? true : false,
-                                      name: 'RazorPay',
-                                      image: "assets/icons/razorpay_@3x.png",
-                                      isSelected: controller.razorPay.value,
-                                      groupValue: controller.selectedRadioTile.value,
-                                      onClick: (String? value) {
-                                        controller.stripe = false.obs;
-                                        controller.wallet = false.obs;
-                                        controller.cash = false.obs;
-                                        controller.razorPay = true.obs;
-
-                                        controller.paypal = false.obs;
-                                        controller.payStack = false.obs;
-                                        controller.flutterWave = false.obs;
-                                        controller.mercadoPago = false.obs;
-                                        controller.payFast = false.obs;
-                                        controller.xendit = false.obs;
-                                        controller.midtrans = false.obs;
-                                        controller.orangePay = false.obs;
-                                        controller.selectedRadioTile.value = value!;
-                                        controller.paymentMethodId.value = controller.paymentSettingModel.value.razorpay!.idPaymentMethod.toString();
-                                      },
-                                    ),
-                                    RadioButtonCustom(
-                                      isEnabled: controller.paymentSettingModel.value.payFast!.isEnabled == "true" ? true : false,
-                                      name: 'PayFast',
-                                      image: "assets/icons/payfast.png",
-                                      isSelected: controller.payFast.value,
-                                      groupValue: controller.selectedRadioTile.value,
-                                      onClick: (String? value) {
-                                        controller.stripe = false.obs;
-                                        controller.wallet = false.obs;
-                                        controller.cash = false.obs;
-                                        controller.razorPay = false.obs;
-
-                                        controller.paypal = false.obs;
-                                        controller.payStack = false.obs;
-                                        controller.flutterWave = false.obs;
-                                        controller.mercadoPago = false.obs;
-                                        controller.payFast = true.obs;
-                                        controller.xendit = false.obs;
-                                        controller.midtrans = false.obs;
-                                        controller.orangePay = false.obs;
-                                        controller.selectedRadioTile.value = value!;
-                                        controller.paymentMethodId.value = controller.paymentSettingModel.value.payFast!.idPaymentMethod.toString();
-                                      },
-                                    ),
-                                    RadioButtonCustom(
-                                      isEnabled: controller.paymentSettingModel.value.mercadopago!.isEnabled == "true" ? true : false,
-                                      name: 'MercadoPago',
-                                      image: "assets/icons/mercadopago.png",
-                                      isSelected: controller.mercadoPago.value,
-                                      groupValue: controller.selectedRadioTile.value,
-                                      onClick: (String? value) {
-                                        controller.stripe = false.obs;
-                                        controller.wallet = false.obs;
-                                        controller.cash = false.obs;
-                                        controller.razorPay = false.obs;
-
-                                        controller.paypal = false.obs;
-                                        controller.payStack = false.obs;
-                                        controller.flutterWave = false.obs;
-                                        controller.mercadoPago = true.obs;
-                                        controller.payFast = false.obs;
-                                        controller.xendit = false.obs;
-                                        controller.midtrans = false.obs;
-                                        controller.orangePay = false.obs;
-                                        controller.selectedRadioTile.value = value!;
-                                        controller.paymentMethodId.value = controller.paymentSettingModel.value.mercadopago!.idPaymentMethod.toString();
-                                      },
-                                    ),
-                                    RadioButtonCustom(
-                                      isEnabled: controller.paymentSettingModel.value.payPal!.isEnabled == "true" ? true : false,
-                                      name: 'PayPal',
-                                      image: "assets/icons/paypal_@3x.png",
-                                      isSelected: controller.paypal.value,
-                                      groupValue: controller.selectedRadioTile.value,
-                                      onClick: (String? value) {
-                                        controller.stripe = false.obs;
-                                        controller.wallet = false.obs;
-                                        controller.cash = false.obs;
-                                        controller.razorPay = false.obs;
-
-                                        controller.paypal = true.obs;
-                                        controller.payStack = false.obs;
-                                        controller.flutterWave = false.obs;
-                                        controller.mercadoPago = false.obs;
-                                        controller.payFast = false.obs;
-                                        controller.xendit = false.obs;
-                                        controller.midtrans = false.obs;
-                                        controller.orangePay = false.obs;
-                                        controller.selectedRadioTile.value = value!;
-                                        controller.paymentMethodId.value = controller.paymentSettingModel.value.payPal!.idPaymentMethod.toString();
-                                      },
-                                    ),
-                                    RadioButtonCustom(
-                                      isEnabled: controller.paymentSettingModel.value.xendit!.isEnabled == "true" ? true : false,
-                                      name: 'Xendit',
-                                      image: "assets/icons/xendit.png",
-                                      isSelected: controller.xendit.value,
-                                      groupValue: controller.selectedRadioTile.value,
-                                      onClick: (String? value) {
-                                        controller.stripe = false.obs;
-                                        controller.wallet = false.obs;
-                                        controller.cash = false.obs;
-                                        controller.razorPay = false.obs;
-
-                                        controller.paypal = false.obs;
-                                        controller.payStack = false.obs;
-                                        controller.flutterWave = false.obs;
-                                        controller.mercadoPago = false.obs;
-                                        controller.payFast = false.obs;
-                                        controller.xendit = true.obs;
-                                        controller.midtrans = false.obs;
-                                        controller.orangePay = false.obs;
-                                        controller.selectedRadioTile.value = value!;
-                                        controller.paymentMethodId.value = controller.paymentSettingModel.value.xendit!.idPaymentMethod.toString();
-                                      },
-                                    ),
-                                    RadioButtonCustom(
-                                      isEnabled: controller.paymentSettingModel.value.orangePay!.isEnabled == "true" ? true : false,
-                                      name: 'Orange Pay',
-                                      image: "assets/icons/orangeMoney.png",
-                                      isSelected: controller.orangePay.value,
-                                      groupValue: controller.selectedRadioTile.value,
+                                      isEnabled: true,
+                                      isSelected: controller.upi.value,
                                       onClick: (String? value) {
                                         controller.stripe = false.obs;
                                         controller.wallet = false.obs;
@@ -844,33 +654,10 @@ class PaymentSelectionScreen extends StatelessWidget {
                                         controller.payFast = false.obs;
                                         controller.xendit = false.obs;
                                         controller.midtrans = false.obs;
-                                        controller.orangePay = true.obs;
-                                        controller.selectedRadioTile.value = value!;
-                                        controller.paymentMethodId.value = controller.paymentSettingModel.value.orangePay!.idPaymentMethod.toString();
-                                      },
-                                    ),
-                                    RadioButtonCustom(
-                                      isEnabled: controller.paymentSettingModel.value.midtrans!.isEnabled == "true" ? true : false,
-                                      name: 'Midtrans',
-                                      image: "assets/icons/midtrans.png",
-                                      isSelected: controller.midtrans.value,
-                                      groupValue: controller.selectedRadioTile.value,
-                                      onClick: (String? value) {
-                                        controller.stripe = false.obs;
-                                        controller.wallet = false.obs;
-                                        controller.cash = false.obs;
-                                        controller.razorPay = false.obs;
-
-                                        controller.paypal = false.obs;
-                                        controller.payStack = false.obs;
-                                        controller.flutterWave = false.obs;
-                                        controller.mercadoPago = false.obs;
-                                        controller.payFast = false.obs;
-                                        controller.xendit = false.obs;
-                                        controller.midtrans = true.obs;
                                         controller.orangePay = false.obs;
+                                        controller.upi = true.obs;
                                         controller.selectedRadioTile.value = value!;
-                                        controller.paymentMethodId.value = controller.paymentSettingModel.value.midtrans!.idPaymentMethod.toString();
+                                        controller.paymentMethodId.value = controller.paymentSettingModel.value.cash!.idPaymentMethod.toString();
                                       },
                                     ),
                                   ],
@@ -886,7 +673,6 @@ class PaymentSelectionScreen extends StatelessWidget {
                         child: ButtonThem.buildButton(context, title: "Pay ${Constant().amountShow(amount: controller.getTotalAmount().toString())}".tr, onPress: () async {
                           if (controller.selectedRadioTile.value == "Wallet") {
                             if (double.parse(controller.walletAmount.toString()) >= controller.getTotalAmount()) {
-                              Get.back();
                               List taxList = [];
 
                               for (var v in Constant.taxList) {
@@ -909,81 +695,73 @@ class PaymentSelectionScreen extends StatelessWidget {
                                 if (value != null) {
                                   ShowToastDialog.showToast("Payment successfully completed");
                                   Get.back(result: true);
-                                  Get.back();
-                                } else {
-                                  ShowToastDialog.closeLoader();
                                 }
                               });
                             } else {
                               ShowToastDialog.showToast("Insufficient wallet balance");
                             }
                           } else if (controller.selectedRadioTile.value == "Cash") {
-                            Get.back();
                             List taxList = [];
 
-                            for (var v in Constant.taxList) {
-                              taxList.add(v.toJson());
-                            }
-                            Map<String, dynamic> bodyParams = {
-                              'id_ride': controller.data.value.id.toString(),
-                              'id_driver': controller.data.value.idConducteur.toString(),
-                              'id_user_app': controller.data.value.idUserApp.toString(),
-                              'amount': controller.subTotalAmount.value.toString(),
-                              'paymethod': controller.selectedRadioTile.value,
-                              'discount': controller.discountAmount.value.toString(),
-                              'tip': controller.tipAmount.value.toString(),
-                              'tax': taxList,
-                              'transaction_id': DateTime.now().microsecondsSinceEpoch.toString(),
-                              'commission': Preferences.getString(Preferences.admincommission),
-                              'payment_status': "success",
-                            };
-                            controller.cashPaymentRequest(bodyParams).then((value) {
-                              if (value != null) {
-                                ShowToastDialog.showToast("Payment successfully completed");
-                                Get.back(result: true);
-                                Get.back();
-                              } else {
-                                ShowToastDialog.closeLoader();
+                              for (var v in Constant.taxList) {
+                                taxList.add(v.toJson());
                               }
-                            });
-                          } else if (controller.selectedRadioTile.value == "Stripe") {
-                            showLoadingAlert(context);
-                            stripe1.Stripe.publishableKey = controller.paymentSettingModel.value.strip?.key ?? '';
-                            stripe1.Stripe.merchantIdentifier = 'Cabme';
-                            await stripe1.Stripe.instance.applySettings();
-                            stripeMakePayment(amount: controller.getTotalAmount().toString());
-                          } else if (controller.selectedRadioTile.value == "RazorPay") {
-                            showLoadingAlert(context);
-                            startRazorpayPayment(amount: controller.getTotalAmount().round().toString());
-                          } else if (controller.selectedRadioTile.value == "PayPal") {
-                            showLoadingAlert(context);
-                            paypalPaymentSheet(double.parse(controller.getTotalAmount().toString()).toString(), context);
-                          } else if (controller.selectedRadioTile.value == "PayStack") {
-                            showLoadingAlert(context);
-                            payStackPayment(context, controller.getTotalAmount().toStringAsFixed(2));
-                          } else if (controller.selectedRadioTile.value == "PayFast") {
-                            showLoadingAlert(context);
-                            payFastPayment(context, controller.getTotalAmount().toString());
-                          } else if (controller.selectedRadioTile.value == "FlutterWave") {
-                            showLoadingAlert(context);
-                            flutterWaveInitiatePayment(context: context, amount: controller.getTotalAmount().toString(), user: controller.userModel.value);
-                          } else if (controller.selectedRadioTile.value == "MercadoPago") {
-                            showLoadingAlert(context);
-                            mercadoPagoMakePayment(context: context, amount: controller.getTotalAmount().toString(), user: controller.userModel.value, controller: controller);
-                          } else if (controller.selectedRadioTile.value == "Xendit") {
-                            showLoadingAlert(context);
-                            xenditPayment(context, double.parse(controller.getTotalAmount().toString()), controller);
-                          } else if (controller.selectedRadioTile.value == "Orange Pay") {
-                            showLoadingAlert(context);
-                            orangeMakePayment(amount: controller.getTotalAmount().toStringAsFixed(2), context: context, controller: controller);
-                          } else if (controller.selectedRadioTile.value == "Midtrans") {
-                            showLoadingAlert(context);
-                            midtransMakePayment(amount: controller.getTotalAmount().toString(), context: context, controller: controller);
-                          }
-                        })),
+                              Map<String, dynamic> bodyParams = {
+                                'id_ride': controller.data.value.id.toString(),
+                                'id_driver': controller.data.value.idConducteur.toString(),
+                                'id_user_app': controller.data.value.idUserApp.toString(),
+                                'amount': controller.subTotalAmount.value.toString(),
+                                'paymethod': controller.selectedRadioTile.value,
+                                'discount': controller.discountAmount.value.toString(),
+                                'tip': controller.tipAmount.value.toString(),
+                                'tax': taxList,
+                                'transaction_id': DateTime.now().microsecondsSinceEpoch.toString(),
+                                'commission': Preferences.getString(Preferences.admincommission),
+                                'payment_status': "success",
+                              };
+                              controller.cashPaymentRequest(bodyParams).then((value) {
+                                if (value != null) {
+                                  ShowToastDialog.showToast("Payment successfully completed");
+                                  Get.back(result: true);
+                                }
+                              });
+                            } else if (controller.selectedRadioTile.value == "UPI") {
+                              controller.simulateUPILaunch(() {
+                                showLoadingAlert(context);
+                                transactionAPI();
+                              });
+                            }
+                          })),
                   ],
                 ),
               ),
+              Obx(() => controller.isSimulatingUPI.value
+                  ? Positioned.fill(
+                      child: Container(
+                        color: Colors.black.withValues(alpha: 0.7),
+                        child: Center(
+                          child: Card(
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            color: themeChange.getThem() ? AppThemeData.surface50Dark : Colors.white,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 30),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  CircularProgressIndicator(color: AppThemeData.primary200),
+                                  const SizedBox(height: 24),
+                                  Text(
+                                    controller.upiStepText.value,
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  : const SizedBox.shrink()),
             ],
           ),
         );
@@ -1394,12 +1172,10 @@ class PaymentSelectionScreen extends StatelessWidget {
 
   transactionAPI() {
     paymentController.transactionAmountRequest().then((value) {
+      Get.back(); // Always dismiss the showLoadingAlert dialog first
       if (value != null) {
         ShowToastDialog.showToast("Payment successfully completed".tr);
-        Get.back(result: true);
-        Get.back(result: true);
-      } else {
-        ShowToastDialog.closeLoader();
+        Get.back(result: true); // Pop screen and return true
       }
     });
   }

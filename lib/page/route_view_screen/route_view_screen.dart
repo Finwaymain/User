@@ -23,6 +23,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
+import 'package:finway/page/features/SmartValue/ScanAndTransfer/view/scanner_and_transfer_screen.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:provider/provider.dart';
@@ -286,7 +287,7 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
       if (rideData!.statut == "on ride" || rideData!.statut == 'confirmed') {
         _listenDriverLocation();
         _fetchDriverLocation();
-        _driverLocationTimer = Timer.periodic(const Duration(seconds: 15), (timer) {
+        _driverLocationTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
           _fetchDriverLocation();
         });
       } else {
@@ -731,6 +732,21 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
                           Expanded(
                             child: ElevatedButton.icon(
                               style: ElevatedButton.styleFrom(
+                                backgroundColor: AppThemeData.primary200,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              onPressed: () {
+                                Get.to(() => ScannerAndTransferScreen());
+                              },
+                              icon: const Icon(Icons.qr_code_scanner, color: Colors.white, size: 16),
+                              label: Text("Pay via Wallet".tr, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
                                 backgroundColor: AppThemeData.error200,
                                 padding: const EdgeInsets.symmetric(vertical: 14),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -753,8 +769,8 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
                                   }
                                 });
                               },
-                              icon: const Icon(Icons.warning_amber_rounded, color: Colors.white),
-                              label: Text("SOS - Report Safety".tr, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                              icon: const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 16),
+                              label: Text("SOS".tr, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
                             ),
                           ),
                         ] else if (rideData!.statut != "rejected") ...[

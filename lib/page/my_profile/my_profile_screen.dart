@@ -14,6 +14,7 @@ import 'package:finway/themes/responsive.dart';
 import 'package:finway/themes/text_field_them.dart';
 import 'package:finway/utils/Preferences.dart';
 import 'package:finway/utils/dark_theme_provider.dart';
+import 'package:finway/model/user_model.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -342,25 +343,67 @@ class MyProfileScreen extends StatelessWidget {
                                                   }
                                                 },
                                               ),
-                                              // TextFieldWidget(
-                                              //   prefix: IconButton(
-                                              //     onPressed: () {},
-                                              //     icon: SvgPicture.asset(
-                                              //       'assets/icons/ic_lock.svg',
-                                              //       colorFilter: ColorFilter.mode(
-                                              //         themeChange.getThem() ? AppThemeData.grey500Dark : AppThemeData.grey300Dark,
-                                              //         BlendMode.srcIn,
-                                              //       ),
-                                              //     ),
-                                              //   ),
-                                              //   hintText: 'password'.tr,
-                                              //   controller: myProfileController.currentPasswordController.value,
-                                              //   textInputType: TextInputType.text,
-                                              //   obscureText: false,
-                                              //   validators: (String? value) {
-                                              //     return null;
-                                              //   },
-                                              // ),
+                                              const SizedBox(height: 10),
+                                              Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: TextFieldWidget(
+                                                      prefix: IconButton(
+                                                        onPressed: () {},
+                                                        icon: Icon(
+                                                          Icons.phone_android,
+                                                          color: themeChange.getThem() ? AppThemeData.grey500Dark : AppThemeData.grey300Dark,
+                                                        ),
+                                                      ),
+                                                      hintText: 'Alternate Phone Number'.tr,
+                                                      controller: myProfileController.alternatePhoneController.value,
+                                                      textInputType: TextInputType.phone,
+                                                      validators: (String? value) {
+                                                        return null;
+                                                      },
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  ElevatedButton(
+                                                    onPressed: () {
+                                                      String phoneVal = myProfileController.alternatePhoneController.value.text.trim();
+                                                      if (phoneVal.isEmpty) {
+                                                        ShowToastDialog.showToast("Please enter alternate phone number".tr);
+                                                        return;
+                                                      }
+                                                      myProfileController.showOtpVerificationDialog(context, phoneVal);
+                                                    },
+                                                    style: ElevatedButton.styleFrom(
+                                                      backgroundColor: AppThemeData.primary200,
+                                                      foregroundColor: Colors.white,
+                                                    ),
+                                                    child: Text("Verify".tr),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 10),
+                                              Obx(() => SwitchListTile(
+                                                title: Text(
+                                                  'Marketplace Visibility'.tr,
+                                                  style: TextStyle(
+                                                    color: themeChange.getThem() ? Colors.white : Colors.black,
+                                                  ),
+                                                ),
+                                                subtitle: Text(
+                                                  myProfileController.marketplaceEnabled.value
+                                                      ? 'Marketplace is active'.tr
+                                                      : 'Marketplace is disabled'.tr,
+                                                  style: TextStyle(
+                                                    color: themeChange.getThem() ? Colors.white70 : Colors.black54,
+                                                    fontSize: 12,
+                                                  ),
+                                                ),
+                                                value: myProfileController.marketplaceEnabled.value,
+                                                activeColor: AppThemeData.primary200,
+                                                onChanged: (bool value) {
+                                                  myProfileController.toggleMarketplace(value);
+                                                },
+                                              )),
                                             ],
                                           ),
                                         ),
@@ -569,20 +612,20 @@ class MyProfileScreen extends StatelessWidget {
       if (image == null) return;
       Get.back();
       controller.imageData.value = image;
-      // controller.uploadPhoto(File(image.path)).then((value) {
-      //   if (value != null) {
-      //     if (value["success"] == "Success") {
-      //       UserModel userModel = Constant.getUserData();
-      //       userModel.data!.photoPath = value['data']['photo_path'];
-      //       Preferences.setString(Preferences.user, jsonEncode(userModel.toJson()));
-      //       controller.getUsrData();
-      //       dashboardController.getUsrData();
-      //       ShowToastDialog.showToast("Upload successfully!".tr);
-      //     } else {
-      //       ShowToastDialog.showToast(value['error']);
-      //     }
-      //   }
-      // });
+      controller.uploadPhoto(File(image.path)).then((value) {
+        if (value != null) {
+          if (value["success"] == "Success") {
+            UserModel userModel = Constant.getUserData();
+            userModel.data!.photoPath = value['data']['photo_path'];
+            Preferences.setString(Preferences.user, jsonEncode(userModel.toJson()));
+            controller.getUsrData();
+            dashboardController.getUsrData();
+            ShowToastDialog.showToast("Upload successfully!".tr);
+          } else {
+            ShowToastDialog.showToast(value['error']);
+          }
+        }
+      });
     } on PlatformException catch (e) {
       ShowToastDialog.showToast("${"Failed to Pick :".tr}\n $e");
     }

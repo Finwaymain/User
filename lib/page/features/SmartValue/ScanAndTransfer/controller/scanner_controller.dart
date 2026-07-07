@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:qr_code_scanner_plus/qr_code_scanner_plus.dart';
 import 'dart:async';
+import 'dart:convert';
 
 import '../../../../../constant/show_toast_dialog.dart';
 import '../../AmountEntryScreen/view/amount_entry_screen.dart';
@@ -92,6 +93,17 @@ class ScannerController extends GetxController
   // Navigate to amount entry with payment data
   Future<void> processToAmountEntry({bool isQRScanned = false}) async {
     String paymentData = isQRScanned ? scannedData.value : manualInput.value.trim();
+    String? amountValue;
+
+    try {
+      var decoded = jsonDecode(paymentData);
+      if (decoded is Map) {
+        paymentData = decoded['ac_no']?.toString() ?? paymentData;
+        amountValue = decoded['amount']?.toString();
+      }
+    } catch (e) {
+      // Not JSON, leave as is
+    }
 
     if (paymentData.isEmpty) {
       ShowToastDialog.showToast('Please enter a valid number or scan QR code');
@@ -102,8 +114,6 @@ class ScannerController extends GetxController
     // The API call will be handled in AmountEntryController
     Get.back(); // Go back from scanner screen
     Get.to(() => AmountEntryScreen(isQRPayment: true),
-        arguments: paymentData);
-
-
+        arguments: {'paymentData': paymentData, 'amount': amountValue});
   }
 }

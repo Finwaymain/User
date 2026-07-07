@@ -25,6 +25,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
+import 'package:finway/page/features/SmartValue/ScanAndTransfer/view/scanner_and_transfer_screen.dart';
 import 'package:location/location.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -243,7 +244,7 @@ class _RouteOsmViewScreenState extends State<RouteOsmViewScreen> {
       if (rideData!.statut == "on ride" || rideData!.statut == 'confirmed') {
         _listenDriverLocation();
         _fetchDriverLocation();
-        _driverLocationTimer = Timer.periodic(const Duration(seconds: 15), (timer) {
+        _driverLocationTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
           _fetchDriverLocation();
         });
       } else {
@@ -519,6 +520,23 @@ class _RouteOsmViewScreenState extends State<RouteOsmViewScreen> {
                                                   ),
                                                 ),
                                               )),
+                                        ),
+                                        Visibility(
+                                          visible: rideData!.statut == "on ride" ? true : false,
+                                          child: Padding(
+                                            padding: const EdgeInsets.only(left: 10),
+                                            child: ButtonThem.buildButton(
+                                              radius: 5,
+                                              txtSize: 12,
+                                              context,
+                                              title: 'Pay via Wallet'.tr,
+                                              btnHeight: 40,
+                                              btnWidthRatio: 0.3,
+                                              onPress: () async {
+                                                Get.to(() => ScannerAndTransferScreen());
+                                              },
+                                            ),
+                                          ),
                                         ),
                                         Visibility(
                                           visible: rideData!.statut == "on ride" ? true : false,

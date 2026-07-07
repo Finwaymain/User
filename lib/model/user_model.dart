@@ -87,6 +87,8 @@ class User {
     this.referralCode,
     this.referralBy,
     this.online,
+    this.alternatePhone,
+    this.marketplaceEnabled,
   });
 
   String? id;
@@ -149,6 +151,8 @@ class User {
   String? referralCode;
   String? referralBy;
   String? online;
+  String? alternatePhone;
+  String? marketplaceEnabled;
 
   factory User.fromJson(Map<String, dynamic> json) => User(
     id: json["id"]?.toString(),
@@ -210,6 +214,8 @@ class User {
     referralCode: json["referral_code"]?.toString(),
     referralBy: json["referral_by"]?.toString(),
     online: json["online"]?.toString(),
+    alternatePhone: json["alternate_phone"]?.toString(),
+    marketplaceEnabled: json["marketplace_enabled"]?.toString(),
   );
 
   Map<String, dynamic> toJson() => {
@@ -272,6 +278,8 @@ class User {
     "referral_code": referralCode,
     "referral_by": referralBy,
     "online": online,
+    "alternate_phone": alternatePhone,
+    "marketplace_enabled": marketplaceEnabled,
   };
 }
 

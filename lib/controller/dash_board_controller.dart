@@ -203,6 +203,9 @@ class DashBoardController extends GetxController {
         log("Error triggering in-app review: $e");
       }
     } else if (item.title == 'Log Out'.tr) {
+      ShowToastDialog.showLoader("Logging out...");
+      await updateFCMToken('');
+      ShowToastDialog.closeLoader();
       Preferences.clearKeyData(Preferences.isLogin);
       Preferences.clearKeyData(Preferences.user);
       Preferences.clearKeyData(Preferences.userId);

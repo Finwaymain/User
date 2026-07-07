@@ -1,3 +1,4 @@
+import "package:finway/page/web_view_screen/web_view_screen.dart";
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:finway/controller/home_osm_controller.dart';
@@ -496,7 +497,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                                 Get.to(() => const InProgressScreen(), transition: Transition.rightToLeftWithFade);
                               },
                             ),
-                            VerticalIconWithText(
+                             VerticalIconWithText(
                               icon: Icons.storefront_outlined,
                               text: 'Marketplace',
                               onTap: () {
@@ -504,7 +505,26 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                                   Get.to(() => const PhoneEntryScreen(), transition: Transition.rightToLeftWithFade);
                                   return;
                                 }
+                                bool isMarketplaceEnabled = (Constant.getUserData().data?.marketplaceEnabled == '1');
+                                if (!isMarketplaceEnabled) {
+                                  ShowToastDialog.showToast("Marketplace is disabled. Please enable it in your profile.".tr);
+                                  return;
+                                }
                                 Get.to(() => const MarketplaceHomeScreen(), transition: Transition.rightToLeftWithFade);
+                              },
+                            ),
+                            VerticalIconWithText(
+                              icon: Icons.more_horiz_outlined,
+                              text: 'More',
+                              onTap: () {
+                                if (!Preferences.getBoolean(Preferences.isLogin)) {
+                                  Get.to(() => const PhoneEntryScreen(), transition: Transition.rightToLeftWithFade);
+                                  return;
+                                }
+                                String token = Preferences.getString(Preferences.accesstoken);
+                                String userId = Preferences.getInt(Preferences.userId).toString();
+                                String finalUrl = 'https://api.fiinway.com/onboarding/more?accesstoken=$token&user_id=$userId';
+                                Get.to(() => WebViewScreen(url: finalUrl, title: 'More'));
                               },
                             ),
                           ],

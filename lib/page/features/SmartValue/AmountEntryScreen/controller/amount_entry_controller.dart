@@ -34,9 +34,19 @@ class AmountEntryController extends GetxController {
     });
 
     // Initialize with arguments
-    if (Get.arguments != null && Get.arguments is String) {
-      _paymentData = Get.arguments;
-      initializeWithPaymentData(_paymentData!);
+    if (Get.arguments != null) {
+      if (Get.arguments is Map) {
+        _paymentData = Get.arguments['paymentData'];
+        if (Get.arguments['amount'] != null) {
+          amountController.text = Get.arguments['amount'];
+          amount.value = amountController.text;
+        }
+      } else if (Get.arguments is String) {
+        _paymentData = Get.arguments;
+      }
+      if (_paymentData != null) {
+        initializeWithPaymentData(_paymentData!);
+      }
     } else {
       // If no arguments, stop loading
       isLoadingName.value = false;
