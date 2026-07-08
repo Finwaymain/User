@@ -423,7 +423,7 @@ class AccountDetails extends StatelessWidget {
                                                  ),
                                                  SizedBox(height: 2),
                                                  Text(
-                                                   "₹${controller.totalAmount}",
+                                                   "${controller.totalAmount}",
                                                    style: TextStyle(
                                                        color: Colors.white,
                                                        fontSize: amountSize,
@@ -697,9 +697,9 @@ class AccountDetails extends StatelessWidget {
                     _buildDetailItem("Valid From",
                         "${controller.expDays} Days", Icons.timer, isDark),
                     _buildDetailItem("Balance",
-                        "₹${controller.amount}", Icons.account_balance_wallet, isDark),
+                        "${controller.amount}", Icons.account_balance_wallet, isDark),
                     _buildDetailItem("Earned Amount",
-                        "₹${controller.earnAmount}", Icons.trending_up, isDark)
+                        "${controller.earnAmount}", Icons.trending_up, isDark)
                 ]
             )
         );

@@ -35,9 +35,10 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
-import '../../model/payment_setting_model.dart';
+import 'package:finway/model/payment_setting_model.dart';
 import '../wallet/MercadoPagoScreen.dart';
 import '../wallet/PayFastScreen.dart';
+import 'package:finway/page/features/SmartValue/AmountEntryScreen/view/amount_entry_screen.dart';
 import '../wallet/paystack_url_genrater.dart';
 
 class ParcelPaymentSelectionScreen extends StatelessWidget {
@@ -896,30 +897,35 @@ class ParcelPaymentSelectionScreen extends StatelessWidget {
                           if (controller.selectedRadioTile.value == "Wallet") {
                             if (double.parse(controller.walletAmount.toString()) >= controller.getTotalAmount()) {
                               Get.back();
-                              List taxList = [];
-
-                              Constant.taxList.forEach((v) {
-                                taxList.add(v.toJson());
-                              });
-                              Map<String, dynamic> bodyParams = {
-                                'id_driver': controller.data.value.idConducteur.toString(),
-                                'id_user_app': controller.data.value.idUserApp.toString(),
-                                'amount': controller.subTotalAmount.value.toString(),
-                                'paymethod': controller.selectedRadioTile.value,
-                                'discount': controller.discountAmount.value.toString(),
-                                'tip': controller.tipAmount.value.toString(),
-                                'tax': taxList,
-                                'transaction_id': DateTime.now().microsecondsSinceEpoch.toString(),
-                                'payment_status': "success",
-                                'id_parcel': controller.data.value.id,
-                              };
-                              controller.walletDebitAmountRequest(bodyParams).then((value) {
-                                if (value != null) {
-                                  ShowToastDialog.showToast("Payment successfully completed");
-                                  Get.back(result: true);
-                                  Get.back();
-                                } else {
-                                  ShowToastDialog.closeLoader();
+                              Get.to(() => const AmountEntryScreen(isQRPayment: true), arguments: {
+                                "paymentData": controller.data.value.idConducteur.toString(),
+                                "amount": controller.getTotalAmount().toString()
+                              })?.then((value) {
+                                if (value != null && value == true) {
+                                  List taxList = [];
+                                  Constant.taxList.forEach((v) {
+                                    taxList.add(v.toJson());
+                                  });
+                                  Map<String, dynamic> bodyParams = {
+                                    'id_parcel': controller.data.value.id.toString(),
+                                    'id_driver': controller.data.value.idConducteur.toString(),
+                                    'amount': controller.subTotalAmount.value.toString(),
+                                    'paymethod': controller.selectedRadioTile.value,
+                                    'discount': controller.discountAmount.value.toString(),
+                                    'tip': controller.tipAmount.value.toString(),
+                                    'tax': taxList,
+                                    'transaction_id': DateTime.now().microsecondsSinceEpoch.toString(),
+                                    'payment_status': "success",
+                                  };
+                                  controller.cashPaymentRequest(bodyParams).then((value) {
+                                    if (value != null) {
+                                      ShowToastDialog.showToast("Payment successfully completed");
+                                      Get.back(result: true);
+                                      Get.back();
+                                    } else {
+                                      ShowToastDialog.closeLoader();
+                                    }
+                                  });
                                 }
                               });
                             } else {

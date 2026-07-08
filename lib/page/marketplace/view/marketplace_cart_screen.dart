@@ -199,7 +199,7 @@ class MarketplaceCartScreen extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _summaryRow("Subtotal", "₹${controller.cartSubtotal.toStringAsFixed(2)}", isDark),
+                _summaryRow("Subtotal", "${controller.cartSubtotal.toStringAsFixed(2)}", isDark),
                 const SizedBox(height: 10),
                 _summaryRow("Delivery Charge", "Free", isDark, isGreen: true),
                 const SizedBox(height: 10),
@@ -212,7 +212,7 @@ class MarketplaceCartScreen extends StatelessWidget {
                   children: [
                     Text("Total Amount", style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 15, fontFamily: AppThemeData.bold)),
                     Text(
-                      "₹${controller.cartSubtotal.toStringAsFixed(2)}",
+                      "${controller.cartSubtotal.toStringAsFixed(2)}",
                       style: TextStyle(color: AppThemeData.primary200, fontSize: 22, fontFamily: AppThemeData.bold),
                     ),
                   ],

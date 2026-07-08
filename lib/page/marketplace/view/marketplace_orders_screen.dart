@@ -243,7 +243,7 @@ class _MarketplaceOrdersScreenState extends State<MarketplaceOrdersScreen> with 
                     ),
                   ),
                   Text(
-                    "₹$price",
+                    "$price",
                     style: TextStyle(color: AppThemeData.primary200, fontFamily: AppThemeData.bold, fontSize: 13),
                   ),
                 ],
@@ -257,7 +257,7 @@ class _MarketplaceOrdersScreenState extends State<MarketplaceOrdersScreen> with 
             children: [
               const Text("Total Paid", style: TextStyle(color: Colors.grey, fontSize: 13)),
               Text(
-                "₹$totalAmount",
+                "$totalAmount",
                 style: TextStyle(color: AppThemeData.primary200, fontFamily: AppThemeData.bold, fontSize: 16),
               ),
             ],
@@ -356,7 +356,7 @@ class _MarketplaceOrdersScreenState extends State<MarketplaceOrdersScreen> with 
                     ),
                   ),
                   Text(
-                    "₹$price",
+                    "$price",
                     style: TextStyle(color: AppThemeData.primary200, fontFamily: AppThemeData.bold, fontSize: 13),
                   ),
                 ],
@@ -412,7 +412,7 @@ class _MarketplaceOrdersScreenState extends State<MarketplaceOrdersScreen> with 
                 child: const Text("Update Status", style: TextStyle(color: Colors.white, fontSize: 12, fontFamily: AppThemeData.bold)),
               ),
               Text(
-                "Earnings: ₹$totalAmount",
+                "Earnings: $totalAmount",
                 style: TextStyle(color: AppThemeData.success300, fontFamily: AppThemeData.bold, fontSize: 14),
               ),
             ],

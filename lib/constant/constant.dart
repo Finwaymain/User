@@ -45,7 +45,7 @@ class Constant {
   static String? distanceUnit = "KM";
   static String? appVersion = "0.0";
   static String? decimal = "2";
-  static String? currency = "\$";
+  static String? currency = "";
   static String? driverRadius = "0";
   static bool symbolAtRight = false;
   static List<TaxModel> allTaxList = [];

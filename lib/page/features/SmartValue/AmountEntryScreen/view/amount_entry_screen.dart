@@ -365,7 +365,7 @@ class _AmountEntryScreenState extends State<AmountEntryScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              '₹',
+              '',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -451,7 +451,7 @@ class _AmountEntryScreenState extends State<AmountEntryScreen> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  '₹',
+                  '',
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
@@ -699,14 +699,14 @@ class AmountEntryScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // Amount Input Field with ₹ centered
+            // Amount Input Field with centered
             Container(
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    '₹',
+                    '',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -962,7 +962,7 @@ class AmountEntryScreen extends StatelessWidget {
 //
 //             const SizedBox(height: 20),
 //
-//             // Amount Input Field with ₹ centered
+//             // Amount Input Field with centered
 //             Container(
 //               child: Row(
 //                 mainAxisSize: MainAxisSize.min,
@@ -970,7 +970,7 @@ class AmountEntryScreen extends StatelessWidget {
 //                 mainAxisAlignment: MainAxisAlignment.center,
 //                 children: [
 //                   Text(
-//                     '₹',
+//                     '',
 //                     style: TextStyle(
 //                       fontSize: 24,
 //                       fontWeight: FontWeight.bold,

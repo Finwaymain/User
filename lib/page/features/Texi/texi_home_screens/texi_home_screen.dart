@@ -1200,7 +1200,7 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
                     const SizedBox(height: 2),
                     Text(
                       selectedPaymentMethod == "wallet"
-                          ? "Wallet Balance (₹ 1,250)".tr
+                          ? "Wallet Balance (1,250)".tr
                           : selectedPaymentMethod == "upi"
                               ? "UPI Payment (Mock)".tr
                               : "Cash Payment".tr,

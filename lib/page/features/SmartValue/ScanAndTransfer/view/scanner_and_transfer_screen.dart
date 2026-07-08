@@ -453,7 +453,7 @@ class PaymentResultScreen extends StatelessWidget {
 
                 // Amount
                 Text(
-                  '₹ $amount',
+                  '$amount',
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w600,

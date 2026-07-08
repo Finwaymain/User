@@ -80,14 +80,14 @@ class CardDetailsScreen extends StatelessWidget {
                                     Divider(height: 30),
                                     _buildInfoRow(
                                         'Total Limit',
-                                        '₹${purchasedCard.cardData.limit.toStringAsFixed(0)}',
+                                        '${purchasedCard.cardData.limit.toStringAsFixed(0)}',
                                         Icons.account_balance_wallet,
                                         gradientColors[0]
                                     ),
                                     Divider(height: 30),
                                     _buildInfoRow(
                                         'Available Balance',
-                                        '₹${purchasedCard.balance.toStringAsFixed(0)}',
+                                        '${purchasedCard.balance.toStringAsFixed(0)}',
                                         Icons.account_balance,
                                         Colors.green
                                     ),
@@ -231,7 +231,7 @@ class CardDetailsScreen extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                             Text(
-                                '₹${claim.approvedAmount.toStringAsFixed(0)}',
+                                '${claim.approvedAmount.toStringAsFixed(0)}',
                                 style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -394,7 +394,7 @@ class _ClaimFormScreenState extends State<ClaimFormScreen> {
 
             Get.snackbar(
                 'Success',
-                'Claim submitted successfully! ₹${claim.approvedAmount.toStringAsFixed(0)} added to your balance.',
+                'Claim submitted successfully! ${claim.approvedAmount.toStringAsFixed(0)} added to your balance.',
                 snackPosition: SnackPosition.BOTTOM,
                 backgroundColor: Colors.green,
                 colorText: Colors.white,
@@ -471,7 +471,7 @@ class _ClaimFormScreenState extends State<ClaimFormScreen> {
                                                     ),
                                                     SizedBox(height: 4),
                                                     Text(
-                                                        'Available: ₹${widget.purchasedCard.balance.toStringAsFixed(0)}',
+                                                        'Available: ${widget.purchasedCard.balance.toStringAsFixed(0)}',
                                                         style: TextStyle(
                                                             color: Colors.white.withValues(alpha: 0.9),
                                                             fontSize: 14
@@ -546,7 +546,7 @@ class _ClaimFormScreenState extends State<ClaimFormScreen> {
                                 keyboardType: TextInputType.number,
                                 decoration: InputDecoration(
                                     labelText: 'Claim Amount',
-                                    prefixText: '₹ ',
+                                    prefixText: '',
                                     border: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(12)
                                     ),
@@ -1205,7 +1205,7 @@ class _Card3DWidgetState extends State<Card3DWidget>
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                            '₹ ',
+                                            '',
                                             style: TextStyle(
                                                 color: Colors.white,
                                                 fontSize: 20,
@@ -1820,7 +1820,7 @@ class _Card3DWidgetState extends State<Card3DWidget>
 //                                                 crossAxisAlignment: CrossAxisAlignment.start,
 //                                                 children: [
 //                                                     Text(
-//                                                         '₹ ',
+//                                                         '',
 //                                                         style: TextStyle(
 //                                                             color: Colors.white,
 //                                                             fontSize: 20,
@@ -2282,7 +2282,7 @@ class CardItemWidget extends StatelessWidget {
                                                         Text(
                                                             isPurchased
                                                                 ? 'Already Purchased'
-                                                                : 'Purchase ₹${card.price.toStringAsFixed(0)}',
+                                                                : 'Purchase ${card.price.toStringAsFixed(0)}',
                                                             style: TextStyle(
                                                                 fontSize: 16,
                                                                 fontWeight: FontWeight.bold,
@@ -2369,11 +2369,11 @@ class PurchaseDialog extends StatelessWidget {
                                     _buildDetailRow('Card Type', card.type, false),
                                     Divider(height: 24),
                                     _buildDetailRow(
-                                        'Credit Limit', '₹${card.limit.toStringAsFixed(0)}', false),
+                                        'Credit Limit', '${card.limit.toStringAsFixed(0)}', false),
                                     Divider(height: 24),
                                     _buildDetailRow(
                                         'Price',
-                                        '₹${card.price.toStringAsFixed(0)}',
+                                        '${card.price.toStringAsFixed(0)}',
                                         true,
                                         color: gradientColors[0]
                                     )

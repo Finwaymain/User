@@ -72,7 +72,7 @@ class ParcelDetailsScreen extends StatelessWidget {
                         children: [
                           Row(
                             children: [
-                              if (controller.data.value.status.toString() == "completed")
+                              if (controller.data.value.status.toString() == "completed" || controller.data.value.status.toString() == "confirmed" || controller.data.value.status.toString() == "onride")
                                 Expanded(
                                     child: ButtonThem.buildButton(context,
                                         title: controller.data.value.paymentStatus == "yes" ? "paid".tr : "Pay Now".tr,

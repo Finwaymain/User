@@ -84,10 +84,10 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
   int selectedRideIndex = 1; // Default to "Mini"
 
   final List<Map<String, dynamic>> rideOptions = [
-    {"icon": "🛵", "title": "Bike", "eta": "3 min away", "price": "₹62"},
-    {"icon": "🚗", "title": "Mini", "eta": "5 min away", "price": "₹118"},
-    {"icon": "🚙", "title": "Sedan", "eta": "4 min away", "price": "₹164"},
-    {"icon": "🚐", "title": "XL", "eta": "6 min away", "price": "₹239"},
+    {"icon": "🛵", "title": "Bike", "eta": "3 min away", "price": "62"},
+    {"icon": "🚗", "title": "Mini", "eta": "5 min away", "price": "118"},
+    {"icon": "🚙", "title": "Sedan", "eta": "4 min away", "price": "164"},
+    {"icon": "🚐", "title": "XL", "eta": "6 min away", "price": "239"},
   ];
 
   @override
@@ -297,18 +297,18 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
             final newRideController = Get.put(NewRideController());
             String rideRouteText = "Connaught Place → Noida Sec 62";
             String rideSubText = "Demo • Ready for your first ride";
-            String ridePriceText = "₹342";
+            String ridePriceText = "342";
 
             if (newRideController.newRideList.isNotEmpty) {
               final ride = newRideController.newRideList.first;
               rideRouteText = "${ride.departName} → ${ride.destinationName}";
               rideSubText = "Active • ${ride.dateRetour ?? 'Today'}";
-              ridePriceText = "₹${ride.montant}";
+              ridePriceText = "${ride.montant}";
             } else if (newRideController.completedRideList.isNotEmpty) {
               final ride = newRideController.completedRideList.first;
               rideRouteText = "${ride.departName} → ${ride.destinationName}";
               rideSubText = "Completed • ${ride.dateRetour ?? 'Recently'}";
-              ridePriceText = "₹${ride.montant}";
+              ridePriceText = "${ride.montant}";
             }
 
             return WillPopScope(
@@ -1161,10 +1161,31 @@ class AddFundScreen extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.add_circle_outline_rounded,
-              color: Colors.white,
-              size: 24,
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                const Icon(
+                  Icons.account_balance_wallet_outlined,
+                  color: Colors.white,
+                  size: 24,
+                ),
+                Positioned(
+                  top: -4,
+                  right: -4,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.add,
+                      color: AppThemeData.primary200,
+                      size: 10,
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(width: 12),
             Text(

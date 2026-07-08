@@ -537,7 +537,7 @@ class _MarketplaceHomeScreenState extends State<MarketplaceHomeScreen> with Sing
 
   Widget _buildPremiumCard(bool isDark, Map<String, dynamic> product, int index) {
     final String title = (product['title'] ?? "Product").toString();
-    final String price = (product['price'] ?? "₹0.00").toString();
+    final String price = (product['price'] ?? "0.00").toString();
     final String condition = (product['condition'] ?? "New").toString();
     final String imageUrl = (product['image'] ?? "https://via.placeholder.com/300").toString();
     final String subtitle = (product['subtitle'] ?? "Marketplace").toString();

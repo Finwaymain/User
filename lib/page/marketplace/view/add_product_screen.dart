@@ -351,7 +351,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
         const SizedBox(height: 25),
         _inputField("What are you selling?", Icons.edit_note_rounded, isDark, controller: _titleController),
         const SizedBox(height: 15),
-        _inputField("Price (₹)", Icons.currency_rupee_rounded, isDark, controller: _priceController, keyboardType: TextInputType.number),
+        _inputField("Price", Icons.currency_rupee_rounded, isDark, controller: _priceController, keyboardType: TextInputType.number),
         const SizedBox(height: 15),
         _inputField("Stock Quantity", Icons.numbers_rounded, isDark, controller: _stockController, keyboardType: TextInputType.number),
         const SizedBox(height: 25),

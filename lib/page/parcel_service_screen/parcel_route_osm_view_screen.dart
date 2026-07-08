@@ -7,6 +7,7 @@ import 'package:finway/controller/dash_board_controller.dart';
 import 'package:finway/controller/parcel_details_controller.dart';
 import 'package:finway/model/parcel_model.dart';
 import 'package:finway/model/parcel_details_model.dart';
+import 'package:finway/page/parcel_service_screen/parcel_payment_selection_screen.dart';
 import 'package:finway/themes/button_them.dart';
 import 'package:finway/themes/constant_colors.dart';
 import 'package:finway/themes/custom_alert_dialog.dart';
@@ -369,20 +370,41 @@ class _ParcelRouteOsmViewScreenState extends State<ParcelRouteOsmViewScreen> {
                 ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: Visibility(
-                  visible: parcelData!.status == "rejected" || parcelData!.status == "canceled" || parcelData!.status == "onride" ? false : true,
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 10, left: 10),
-                    child: ButtonThem.buildButton(
-                      context,
-                      btnColor: AppThemeData.error200,
-                      title: 'Cancel Parcel'.tr,
-                      btnWidthRatio: 0.9,
-                      onPress: () async {
-                        buildShowBottomSheet(context, themeChange.getThem());
-                      },
+                child: Column(
+                  children: [
+                    Visibility(
+                      visible: parcelData!.status == "rejected" || parcelData!.status == "canceled" || parcelData!.status == "onride" ? false : true,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 10, left: 10, right: 10),
+                        child: ButtonThem.buildButton(
+                          context,
+                          btnColor: AppThemeData.error200,
+                          title: 'Cancel Parcel'.tr,
+                          btnWidthRatio: 0.9,
+                          onPress: () async {
+                            buildShowBottomSheet(context, themeChange.getThem());
+                          },
+                        ),
+                      ),
                     ),
-                  ),
+                    Visibility(
+                      visible: (parcelData!.status == "confirmed" || parcelData!.status == "onride" || parcelData!.status == "completed") && parcelData!.paymentStatus != "yes",
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 10, left: 10, right: 10),
+                        child: ButtonThem.buildButton(
+                          context,
+                          btnColor: AppThemeData.primary200,
+                          title: 'Pay Now'.tr,
+                          btnWidthRatio: 0.9,
+                          onPress: () async {
+                            Get.to(ParcelPaymentSelectionScreen(), arguments: {
+                              "parcelData": parcelData,
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               )
             ],
