@@ -186,6 +186,7 @@ class _PinEntryScreenState extends State<PinEntryScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: (controller.pin.value.length == 4 &&
+                      controller.isPinReady.value &&
                       !controller.isLoading.value)
                       ? () {
                     pinFocusNode.unfocus();

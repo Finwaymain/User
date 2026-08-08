@@ -11,7 +11,6 @@ import 'package:finway/utils/dark_theme_provider.dart';
 import 'lab_sample_selection_screen.dart';
 import 'service_category_detail_screen.dart';
 import 'service_category_tile.dart';
-import 'service_option_selection_screen.dart';
 import 'service_request_screen.dart';
 import 'service_style.dart';
 
@@ -124,7 +123,7 @@ class _AllServicesScreenState extends State<AllServicesScreen> {
     }
 
     if (isParentServiceCategory(rawName)) {
-      Get.to(() => ServiceOptionSelectionScreen(categoryName: rawName));
+      Get.to(() => ServiceCategoryDetailScreen(categoryId: category.id ?? 0, categoryName: rawName));
       return;
     }
 

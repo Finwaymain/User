@@ -24,6 +24,7 @@ class WalletController extends GetxController {
 
   RxDouble walletAmount = 0.0.obs;
   var walletList = <TransactionData>[].obs;
+  final historyDaysFilter = 30.obs;
   var paymentMethodList = <PaymentMethodData>[].obs;
 
   var isLoading = true.obs;
@@ -129,34 +130,26 @@ class WalletController extends GetxController {
     return null;
   }
 
+  Future<void> setHistoryDaysFilter(int days) async {
+    if (historyDaysFilter.value == days) return;
+    historyDaysFilter.value = days;
+    await getTransaction(showLoader: true);
+  }
+
   Future<dynamic> getTransaction({bool showLoader = true}) async {
     try {
       if (showLoader) {
         isLoading.value = true;
         ShowToastDialog.showLoader("Please wait");
       }
-      final response = await http.get(Uri.parse("${API.transaction}?id_user_app=${Preferences.getInt(Preferences.userId)}"), headers: API.header);
-      showLog("API :: URL :: ${API.transaction}?id_user_app=${Preferences.getInt(Preferences.userId)}");
-      showLog("API :: Request Header :: ${API.header.toString()}");
-      showLog("API :: responseStatus :: ${response.statusCode} ");
-      showLog("API :: responseBody :: ${response.body} ");
-      Map<String, dynamic> responseBody = json.decode(response.body);
-      devlo.log(response.body);
 
-      if (response.statusCode == 200 && responseBody['success'] == "success") {
-        isLoading.value = false;
-        TransactionModel model = TransactionModel.fromJson(responseBody);
-        walletList.value = model.data!;
+      final acNo = Constant.getUserData().data?.acNo;
+      final loaded = acNo != null && acNo.isNotEmpty
+          ? await _fetchSmartValueTransactionHistory(acNo, showLoader: showLoader)
+          : await _fetchLegacyTransactions(showLoader: showLoader);
 
-        if (showLoader) ShowToastDialog.closeLoader();
-      } else if (response.statusCode == 200 && responseBody['success'] == "Failed") {
-        isLoading.value = false;
-        if (showLoader) ShowToastDialog.closeLoader();
-      } else {
-        isLoading.value = false;
-        if (showLoader) ShowToastDialog.closeLoader();
-        ShowToastDialog.showToast('Something want wrong. Please try again later');
-        throw Exception('Failed to load album');
+      if (!loaded) {
+        walletList.clear();
       }
     } on TimeoutException catch (e) {
       isLoading.value = false;
@@ -171,10 +164,67 @@ class WalletController extends GetxController {
       if (showLoader) ShowToastDialog.closeLoader();
       ShowToastDialog.showToast(e.toString());
     } catch (e) {
+      isLoading.value = false;
       if (showLoader) ShowToastDialog.closeLoader();
       ShowToastDialog.showToast(e.toString());
     }
     return null;
+  }
+
+  Future<bool> _fetchSmartValueTransactionHistory(String acNo, {required bool showLoader}) async {
+    final response = await http.post(
+      Uri.parse(API.showTransactionHistory),
+      headers: API.header,
+      body: jsonEncode({
+        'ac_no': acNo,
+        'user_type': 'customer',
+        'days': historyDaysFilter.value,
+      }),
+    );
+    showLog("API :: URL :: ${API.showTransactionHistory}");
+    showLog("API :: Request Body :: ${jsonEncode({'ac_no': acNo, 'user_type': 'customer', 'days': historyDaysFilter.value})}");
+    showLog("API :: responseStatus :: ${response.statusCode} ");
+    showLog("API :: responseBody :: ${response.body} ");
+    final responseBody = json.decode(response.body);
+    devlo.log(response.body);
+
+    if (response.statusCode == 200 && responseBody['res'] == 'success' && responseBody['data'] is List) {
+      isLoading.value = false;
+      walletList.value = (responseBody['data'] as List)
+          .map((item) => TransactionData.fromJson(Map<String, dynamic>.from(item)))
+          .toList();
+      if (showLoader) ShowToastDialog.closeLoader();
+      return true;
+    }
+
+    return _fetchLegacyTransactions(showLoader: showLoader);
+  }
+
+  Future<bool> _fetchLegacyTransactions({required bool showLoader}) async {
+    final response = await http.get(
+      Uri.parse("${API.transaction}?id_user_app=${Preferences.getInt(Preferences.userId)}"),
+      headers: API.header,
+    );
+    showLog("API :: URL :: ${API.transaction}?id_user_app=${Preferences.getInt(Preferences.userId)}");
+    showLog("API :: responseStatus :: ${response.statusCode} ");
+    showLog("API :: responseBody :: ${response.body} ");
+    final responseBody = json.decode(response.body);
+
+    if (response.statusCode == 200 && responseBody['success'] == "success") {
+      isLoading.value = false;
+      final model = TransactionModel.fromJson(responseBody);
+      walletList.value = model.data ?? [];
+      if (showLoader) ShowToastDialog.closeLoader();
+      return true;
+    }
+
+    isLoading.value = false;
+    if (showLoader) ShowToastDialog.closeLoader();
+    if (response.statusCode == 200 && responseBody['success'] == "Failed") {
+      return false;
+    }
+    ShowToastDialog.showToast('Something want wrong. Please try again later');
+    return false;
   }
 
   RxDouble earnAmount = 0.0.obs;

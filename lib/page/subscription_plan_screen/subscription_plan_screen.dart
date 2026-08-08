@@ -626,6 +626,7 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
         : (plan.description != null && plan.description!.isNotEmpty
             ? [plan.description!]
             : ["Premium ride access", "Priority booking", "24/7 Customer support"]);
+    final double cashbackAmount = double.tryParse(plan.cashbackOnPurchase ?? '0') ?? 0;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -691,6 +692,58 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
             ),
           ),
           const SizedBox(height: 20),
+
+          if (cashbackAmount > 0) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF14532D) : AppThemeData.success50,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppThemeData.success300.withOpacity(0.35)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppThemeData.success300.withOpacity(0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.card_giftcard_rounded, color: AppThemeData.success300, size: 22),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Purchase Cashback Reward',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontFamily: AppThemeData.bold,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Get ${Constant().amountShow(amount: cashbackAmount.toString())} credited to your wallet instantly after you purchase this plan.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontFamily: AppThemeData.regular,
+                            color: isDark ? Colors.white70 : AppThemeData.grey500,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
 
           Text('Key Benefits & Advantages', style: TextStyle(fontSize: 16, fontFamily: AppThemeData.bold, color: isDark ? Colors.white : const Color(0xFF0F172A))),
           const SizedBox(height: 12),

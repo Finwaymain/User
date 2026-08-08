@@ -40,19 +40,56 @@ class TransactionData {
   String? paymentStatus;
   String? creer;
   String? modifier;
+  String? description;
+  String? txnId;
+  String? type;
+  String? date;
+  String? categoryTitle;
+  String? counterpartyName;
+  String? formattedDate;
+  String? statusLabel;
+  String? iconType;
 
-  TransactionData({this.id, this.amount, this.idUserApp, this.deductionType, this.rideId, this.paymentMethod, this.paymentStatus, this.creer, this.modifier});
+  TransactionData({
+    this.id,
+    this.amount,
+    this.idUserApp,
+    this.deductionType,
+    this.rideId,
+    this.paymentMethod,
+    this.paymentStatus,
+    this.creer,
+    this.modifier,
+    this.description,
+    this.txnId,
+    this.type,
+    this.date,
+    this.categoryTitle,
+    this.counterpartyName,
+    this.formattedDate,
+    this.statusLabel,
+    this.iconType,
+  });
 
   TransactionData.fromJson(Map<String, dynamic> json) {
-    id = json['id'].toString();
-    amount = json['amount'].toString();
-    idUserApp = json['id_user_app'].toString();
-    deductionType = json['deduction_type'].toString();
-    rideId = json['ride_id'].toString();
-    paymentMethod = json['payment_method'].toString();
-    paymentStatus = json['payment_status'].toString();
-    creer = json['creer'].toString();
-    modifier = json['modifier'].toString();
+    id = json['id']?.toString();
+    amount = json['amount']?.toString();
+    idUserApp = json['id_user_app']?.toString();
+    deductionType = json['deduction_type']?.toString();
+    rideId = json['ride_id']?.toString();
+    paymentMethod = json['payment_method']?.toString();
+    paymentStatus = json['payment_status']?.toString();
+    creer = json['creer']?.toString();
+    modifier = json['modifier']?.toString();
+    description = json['description']?.toString();
+    txnId = json['txn_id']?.toString();
+    type = json['type']?.toString();
+    date = json['date']?.toString();
+    categoryTitle = json['category_title']?.toString();
+    counterpartyName = json['counterparty_name']?.toString();
+    formattedDate = json['formatted_date']?.toString();
+    statusLabel = json['status_label']?.toString();
+    iconType = json['icon_type']?.toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -66,6 +103,15 @@ class TransactionData {
     data['payment_status'] = paymentStatus;
     data['creer'] = creer;
     data['modifier'] = modifier;
+    data['description'] = description;
+    data['txn_id'] = txnId;
+    data['type'] = type;
+    data['date'] = date;
+    data['category_title'] = categoryTitle;
+    data['counterparty_name'] = counterpartyName;
+    data['formatted_date'] = formattedDate;
+    data['status_label'] = statusLabel;
+    data['icon_type'] = iconType;
     return data;
   }
 }

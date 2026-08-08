@@ -44,47 +44,9 @@ class AccountDetails extends StatelessWidget {
                   fontFamily: AppThemeData.semiBold,
                 ),
               ),
-              const SizedBox(height: 6),
-              Text(
-                'Tap the card to flip and view more details',
-                style: TextStyle(
-                  color: isDark ? AppThemeData.grey400Dark : AppThemeData.grey500,
-                  fontSize: 13,
-                ),
-              ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
               WalletFlipCard(controller: controller),
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  Expanded(
-                    child: _actionButton(
-                      isDark: isDark,
-                      icon: Icons.flip_camera_android_rounded,
-                      label: 'Flip Card',
-                      filled: false,
-                      onTap: controller.flipCard,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _actionButton(
-                      isDark: isDark,
-                      icon: Icons.refresh_rounded,
-                      label: 'Refresh',
-                      filled: true,
-                      onTap: () {
-                        controller.resetCardState();
-                        final acNo = controller.accountNumber;
-                        if (acNo.isNotEmpty && acNo != 'N/A') {
-                          controller.getAccountDetails(acNo);
-                        }
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 18),
               WalletAccountDetailsPanel(controller: controller),
             ],
           ),

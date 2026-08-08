@@ -2,8 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
 import 'package:finway/constant/constant.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
@@ -11,23 +13,39 @@ import '../../../../../constant/logdata.dart';
 import '../../../../../constant/show_toast_dialog.dart';
 import '../../../../../service/api.dart';
 import '../../AccountDetails/model/account_details_model.dart';
-import '../../ScanAndTransfer/view/scanner_and_transfer_screen.dart';
+import '../view/payment_result_screen.dart';
 
 class PinEntryController extends GetxController {
     RxString pin = ''.obs;
     RxBool isLoading = false.obs;
+    RxBool isPinReady = false.obs;
     final int maxPinLength = 4;
-    String correctPin = '';
 
     Rx<AccountDetailsModel?> accountDetailsModel = Rx<AccountDetailsModel?>(null);
 
     @override
     void onInit() {
-        // TODO: implement onInit
         super.onInit();
-
-
+        pin.value = '';
+        isPinReady.value = false;
         getNameByAccountNumber("${Constant.getUserData().data?.acNo}");
+    }
+
+    bool _isValidMpin(String enteredPin) {
+        final storedMdp = accountDetailsModel.value?.data?.mdp;
+        if (storedMdp != null && storedMdp.isNotEmpty) {
+            final hashedPin = md5.convert(utf8.encode(enteredPin)).toString();
+            if (hashedPin == storedMdp) {
+                return true;
+            }
+        }
+
+        final storedMPin = accountDetailsModel.value?.data?.mPin;
+        if (storedMPin != null && storedMPin.isNotEmpty) {
+            return enteredPin == storedMPin;
+        }
+
+        return false;
     }
 
     Future<AccountDetailsModel?> getNameByAccountNumber(String accountNumber) async {
@@ -40,7 +58,7 @@ class PinEntryController extends GetxController {
           Uri.parse(API.accountDetails),
           headers: API.header,
           body: jsonEncode(bodyParams),
-        ).timeout(const Duration(seconds: 30)); // Add timeout
+        ).timeout(const Duration(seconds: 30));
 
         showLog("getNameByAccountNumber => API :: URL :: ${API.accountDetails}");
         showLog("getNameByAccountNumber => API :: Request Body :: ${jsonEncode(bodyParams)}");
@@ -54,9 +72,7 @@ class PinEntryController extends GetxController {
 
           if (model.res == 'success') {
             accountDetailsModel.value = model;
-            correctPin = "${model.data?.mPin}";
-            // IMPORTANT: Set loading false AFTER data is set
-            await Future.delayed(Duration(milliseconds: 100)); // Small delay for smooth transition
+            isPinReady.value = true;
             isLoading.value = false;
             return model;
           } else {
@@ -71,18 +87,22 @@ class PinEntryController extends GetxController {
           return null;
         }
       } on TimeoutException catch (e) {
+        isLoading.value = false;
         showLog("getNameByAccountNumber => TimeoutException :: $e");
         ShowToastDialog.showToast('Request timeout. Please try again.');
         return null;
       } on SocketException catch (e) {
+        isLoading.value = false;
         showLog("getNameByAccountNumber => SocketException :: $e");
         ShowToastDialog.showToast('Network error. Please check your connection.');
         return null;
       } on FormatException catch (e) {
+        isLoading.value = false;
         showLog("getNameByAccountNumber => FormatException :: $e");
         ShowToastDialog.showToast('Invalid response format.');
         return null;
       } catch (e) {
+        isLoading.value = false;
         showLog("getNameByAccountNumber => Exception :: $e");
         ShowToastDialog.showToast('Failed to fetch account details. Please try again.');
         return null;
@@ -107,6 +127,11 @@ class PinEntryController extends GetxController {
 
     Future<void> processPayment(
         String paymentData, String amount, bool isQRPayment) async {
+        if (!isPinReady.value) {
+            ShowToastDialog.showToast('Please wait while we verify your account.');
+            return;
+        }
+
         if (pin.value.length != maxPinLength) {
             Get.snackbar(
                 'Error',
@@ -119,9 +144,7 @@ class PinEntryController extends GetxController {
             return;
         }
 
-        // Validate PIN
-        if (pin.value != correctPin) {
-            // Clear PIN on wrong attempt
+        if (!_isValidMpin(pin.value)) {
             clearPin();
 
             Get.snackbar(
@@ -136,8 +159,8 @@ class PinEntryController extends GetxController {
             return;
         }
 
-        // PIN is correct, proceed with payment
         isLoading.value = true;
+        ShowToastDialog.showLoader("Processing payment...");
 
         try {
 
@@ -145,7 +168,8 @@ class PinEntryController extends GetxController {
                 "sender_ac_no":"${Constant.getUserData().data?.acNo}",
                 "receiver_ac_no":paymentData,
                 "amount":amount,
-                "sender_type":"customer"
+                "sender_type":"customer",
+                "mpin": pin.value,
             };
 
             final response = await http.post(
@@ -154,58 +178,79 @@ class PinEntryController extends GetxController {
                 body: jsonEncode(bodyParams)
             ).timeout(const Duration(seconds: 30));
 
-            showLog("getAccountDetails => API :: URL :: ${API.accountDetails}");
-            showLog("getAccountDetails => API :: Request Body :: ${jsonEncode(bodyParams)}");
-            showLog("getAccountDetails => API :: Headers :: ${API.header}");
-            showLog("getAccountDetails => API :: Response Status :: ${response.statusCode}");
-            showLog("getAccountDetails => API :: Response Body :: ${response.body}");
+            showLog("transferToWallet => API :: URL :: ${API.transferToWallet}");
+            showLog("transferToWallet => API :: Request Body :: ${jsonEncode(bodyParams)}");
+            showLog("transferToWallet => API :: Headers :: ${API.header}");
+            showLog("transferToWallet => API :: Response Status :: ${response.statusCode}");
+            showLog("transferToWallet => API :: Response Body :: ${response.body}");
 
             if (response.statusCode == 200) {
                 Map<String, dynamic> responseBody = json.decode(response.body);
-                // AccountDetailsModel model = AccountDetailsModel.fromJson(responseBody);
+                final isSuccess = responseBody.containsKey('res') && responseBody['res'] == 'success';
 
-                Get.to(() => PaymentResultScreen(
-                        paymentData: paymentData,
-                        amount: amount,
-                        isQRPayment: isQRPayment,
-                        isSuccess: responseBody.containsKey('res') && responseBody['res'] == 'success',
-                        transactionId:
-                        "TXN${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}"));
+                if (!isSuccess) {
+                    clearPin();
+                    ShowToastDialog.showToast(
+                        responseBody['msg']?.toString() ?? 'Transfer failed. Please try again.',
+                        isError: true,
+                    );
+                    return;
+                }
+
+                final responseData = responseBody['data'];
+                final txnId = responseData is Map
+                    ? responseData['txn_id']?.toString()
+                    : null;
+                final receiverName = responseData is Map
+                    ? responseData['receiver_name']?.toString()
+                    : null;
+
                 isLoading.value = false;
+                ShowToastDialog.closeLoader();
+                EasyLoading.dismiss();
+
+                Get.off(() => PaymentResultScreen(
+                      paymentData: paymentData,
+                      amount: amount,
+                      isQRPayment: isQRPayment,
+                      isSuccess: true,
+                      transactionId: (txnId != null && txnId.isNotEmpty)
+                          ? txnId
+                          : "TXN${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}",
+                      receiverName: receiverName,
+                    ));
+                return;
             }
             else {
-                isLoading.value = false;
                 ShowToastDialog.showToast('Server error. Please try again.');
                 return;
             }
         }
         on TimeoutException catch (e) {
-            isLoading.value = false;
-            showLog("getAccountDetails => TimeoutException :: $e");
+            showLog("transferToWallet => TimeoutException :: $e");
             ShowToastDialog.showToast('Request timeout. Please try again.');
             return;
         }
         on SocketException catch (e) {
-            isLoading.value = false;
-            showLog("getAccountDetails => SocketException :: $e");
+            showLog("transferToWallet => SocketException :: $e");
             ShowToastDialog.showToast('Network error. Please check your connection.');
             return;
         }
         on FormatException catch (e) {
-            isLoading.value = false;
-            showLog("getAccountDetails => FormatException :: $e");
+            showLog("transferToWallet => FormatException :: $e");
             ShowToastDialog.showToast('Invalid response format.');
             return;
         }
         catch (e) {
-            isLoading.value = false;
-            showLog("getAccountDetails => Exception :: $e");
-            ShowToastDialog.showToast('Failed to fetch account details. Please try again.');
+            showLog("transferToWallet => Exception :: $e");
+            ShowToastDialog.showToast('Failed to process payment. Please try again.');
             return;
         }
 
         finally {
             isLoading.value = false;
+            ShowToastDialog.closeLoader();
+            EasyLoading.dismiss();
         }
     }
 }

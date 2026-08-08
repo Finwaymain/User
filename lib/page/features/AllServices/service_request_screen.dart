@@ -15,14 +15,8 @@ import 'service_style.dart';
 class ServiceRequestScreen extends StatefulWidget {
   final String serviceName;
   final String categoryName;
-  final String? initialFrequency;
 
-  const ServiceRequestScreen({
-    super.key,
-    required this.serviceName,
-    required this.categoryName,
-    this.initialFrequency,
-  });
+  const ServiceRequestScreen({super.key, required this.serviceName, required this.categoryName});
 
   @override
   State<ServiceRequestScreen> createState() => _ServiceRequestScreenState();
@@ -40,7 +34,7 @@ class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
   double? _lng;
   String _addressType = 'Home';
   String _contactMethod = 'Online';
-  late String _bookingFrequency;
+  String _bookingFrequency = 'Hourly';
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
   bool _isSubmitting = false;
@@ -53,7 +47,6 @@ class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
   @override
   void initState() {
     super.initState();
-    _bookingFrequency = widget.initialFrequency ?? 'Hourly';
     _bookingMode = bookingModeFor(serviceName: widget.serviceName, categoryName: widget.categoryName);
     _requiresHomeVisit = _bookingMode == ServiceBookingMode.homeVisit;
   }

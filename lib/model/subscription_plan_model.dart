@@ -46,6 +46,7 @@ class SubscriptionPlanData {
   String? type;
   String? createdAt;
   String? updatedAt;
+  String? cashbackOnPurchase;
 
   SubscriptionPlanData(
       {this.id,
@@ -60,7 +61,8 @@ class SubscriptionPlanData {
         this.price,
         this.type,
         this.createdAt,
-        this.updatedAt});
+        this.updatedAt,
+        this.cashbackOnPurchase});
 
   SubscriptionPlanData.fromJson(Map<String, dynamic> json) {
     id = json['id']?.toString();
@@ -98,6 +100,7 @@ class SubscriptionPlanData {
     }
     price = json['price']?.toString();
     type = json['type']?.toString() ?? json['status']?.toString();
+    cashbackOnPurchase = json['cashback_on_purchase']?.toString();
     createdAt = json['created_at']?.toString();
     updatedAt = json['updated_at']?.toString();
   }
@@ -115,6 +118,7 @@ class SubscriptionPlanData {
     data['plan_points'] = planPoints;
     data['price'] = price;
     data['type'] = type;
+    data['cashback_on_purchase'] = cashbackOnPurchase;
     data['created_at'] = createdAt;
     data['updated_at'] = updatedAt;
     return data;

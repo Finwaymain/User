@@ -67,7 +67,7 @@ class _WalletMainContentState extends State<WalletMainContent> with SingleTicker
             unselectedLabelStyle: const TextStyle(fontFamily: AppThemeData.medium, fontSize: 14),
             tabs: const [
               Tab(text: 'Overview'),
-              Tab(text: 'Transactions'),
+              Tab(text: 'History'),
             ],
           ),
         ),
@@ -75,19 +75,22 @@ class _WalletMainContentState extends State<WalletMainContent> with SingleTicker
         Expanded(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: RefreshIndicator(
-              color: AppThemeData.primary200,
-              onRefresh: widget.onRefresh,
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  WalletOverviewTab(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                RefreshIndicator(
+                  color: AppThemeData.primary200,
+                  onRefresh: widget.onRefresh,
+                  child: WalletOverviewTab(
                     walletController: widget.walletController,
                     onTopUp: widget.onTopUp,
                   ),
-                  WalletTransactionsTab(controller: widget.walletController),
-                ],
-              ),
+                ),
+                WalletTransactionsTab(
+                  controller: widget.walletController,
+                  onRefresh: widget.onRefresh,
+                ),
+              ],
             ),
           ),
         ),
