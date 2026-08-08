@@ -48,6 +48,42 @@ String cleanServiceName(String? name) {
   return name.replaceAll(RegExp(r'[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]', unicode: true), '').trim();
 }
 
+bool isParentServiceCategory(String? rawName) {
+  if (rawName == null) return false;
+  final clean = cleanServiceName(rawName).trim().toLowerCase();
+  if (clean.isEmpty) return false;
+
+  const parentSet = {
+    'home services',
+    'repair & maintenance',
+    'ac & appliances',
+    'cleaning services',
+    'interior & renovation',
+    'outdoor services',
+    'security & safety',
+    'smart home services',
+    'water services',
+    'construction services',
+    'furniture services',
+    'pest control',
+    'shifting services',
+    'personal home assistance',
+    'pet services',
+    'laundry & textile',
+    'technology services',
+    'personal services',
+    'education services',
+    'healthcare services',
+    'doctor home visit',
+    'physiotherapy',
+    'nursing care',
+    'home tutor',
+    'home tutor services',
+  };
+
+  return parentSet.contains(clean);
+}
+
 String _cleanNameForLookup(String? name) => cleanServiceName(name);
 
 const List<Color> _stylePalette = [

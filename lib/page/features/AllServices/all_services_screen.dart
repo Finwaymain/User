@@ -120,10 +120,7 @@ class _AllServicesScreenState extends State<AllServicesScreen> {
       return;
     }
 
-    final isParent = AllServicesController.subCategoryCatalog.keys.any((key) =>
-        key.toLowerCase() == lower || lower.contains(key.toLowerCase()) || key.toLowerCase().contains(lower));
-
-    if (isParent || category.hasChildren) {
+    if (isParentServiceCategory(rawName)) {
       Get.to(() => ServiceCategoryDetailScreen(categoryId: category.id ?? 0, categoryName: rawName));
       return;
     }
