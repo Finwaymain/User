@@ -23,7 +23,7 @@ import 'package:finway/service/api.dart';
 import 'package:finway/themes/appbar_cust.dart';
 import 'package:finway/themes/button_them.dart';
 import 'package:finway/themes/constant_colors.dart';
-import 'package:finway/themes/responsive.dart';
+import 'package:finway/page/wallet/widgets/wallet_main_content.dart';
 import 'package:finway/themes/text_field_them.dart';
 import 'package:finway/utils/dark_theme_provider.dart';
 import 'package:flutter/cupertino.dart';
@@ -53,7 +53,7 @@ class WalletScreen extends StatelessWidget {
 
   Future<void> _refreshAPI() async {
     walletController.getAmount();
-    walletController.getTransaction();
+    walletController.getTransaction(showLoader: false);
     amountController.clear();
     setRef();
   }
@@ -61,144 +61,31 @@ class WalletScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeChange = Provider.of<DarkThemeProvider>(context);
-    return GetX<WalletController>(
-      init: WalletController(),
-      initState: (state) {
-        _refreshAPI();
-      },
-      builder: (controller) {
-        return Scaffold(
-          resizeToAvoidBottomInset: true,
-          appBar: CustomAppbar(
-            title: 'My Wallet',
-            bgColor: AppThemeData.primary200,
+    return Scaffold(
+      resizeToAvoidBottomInset: true,
+      appBar: CustomAppbar(
+        title: 'Smart Value',
+        bgColor: AppThemeData.primary200,
+      ),
+      body: Container(
+        color: themeChange.getThem() ? AppThemeData.surface50Dark : AppThemeData.surface50,
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: WalletMainContent(
+              walletController: walletController,
+              onTopUp: () {
+                if (!Preferences.getBoolean(Preferences.isLogin)) {
+                  Get.to(() => const PhoneEntryScreen());
+                } else {
+                  addToWalletAmount(context, themeChange.getThem());
+                }
+              },
+              onRefresh: _refreshAPI,
+            ),
           ),
-          body: Stack(
-            alignment: AlignmentDirectional.topStart,
-            children: [
-              Container(
-                color: AppThemeData.primary200,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Expanded(flex: 1, child: SizedBox()),
-                    Expanded(
-                      flex: 9,
-                      child: Container(
-                        color: themeChange.getThem() ? AppThemeData.surface50Dark : AppThemeData.surface50,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SafeArea(
-                child: RefreshIndicator(
-                  onRefresh: () => _refreshAPI(),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 20),
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          width: Responsive.width(100, context),
-                          height: 110,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [AppThemeData.secondary200, AppThemeData.warning200],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Wallet Amount',
-                                    style: TextStyle(
-                                      color: AppThemeData.grey900Dark,
-                                      fontSize: 14.0,
-                                      fontFamily: AppThemeData.regular,
-                                    ),
-                                  ),
-                                  Text(
-                                    Constant().amountShow(amount: walletController.walletAmount.toString()),
-                                    style: TextStyle(
-                                      color: AppThemeData.grey900,
-                                      fontSize: 36.0,
-                                      fontFamily: AppThemeData.semiBold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              InkWell(
-                                splashColor: Colors.transparent,
-                                onTap: () {
-                                  if (!Preferences.getBoolean(Preferences.isLogin)) {
-                                    Get.to(() => const PhoneEntryScreen());
-                                  } else {
-                                    addToWalletAmount(context, themeChange.getThem());
-                                  }
-                                },
-                                child: Container(
-                                  alignment: Alignment.center,
-                                  color: AppThemeData.surface50,
-                                  height: 45,
-                                  width: Responsive.width(25, context),
-                                  child: Text(
-                                    'Top up',
-                                    style: TextStyle(
-                                      color: AppThemeData.primary200,
-                                      fontSize: 14.0,
-                                      fontFamily: AppThemeData.medium,
-                                    ),
-                                  ),
-                                ),
-                              )
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 30),
-                        Text(
-                          'Transaction History',
-                          style: TextStyle(
-                            color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
-                            fontSize: 18.0,
-                            fontFamily: AppThemeData.semiBold,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Expanded(
-                          child: controller.isLoading.value
-                              ? SizedBox()
-                              : controller.walletList.isEmpty
-                                  ? Center(child: Constant.emptyView(context, "Transaction not found.", false))
-                                  : Container(
-                                      decoration: BoxDecoration(
-                                          border: Border.all(
-                                        color: themeChange.getThem() ? AppThemeData.grey300Dark : AppThemeData.grey300,
-                                      )),
-                                      child: ListView.builder(
-                                          itemCount: controller.walletList.length,
-                                          shrinkWrap: true,
-                                          itemBuilder: (context, index) {
-                                            return buildTransactionCard(context, controller.walletList[index]);
-                                          }),
-                                    ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+        ),
+      ),
     );
   }
 

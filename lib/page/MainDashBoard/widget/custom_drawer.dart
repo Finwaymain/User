@@ -7,9 +7,11 @@ import 'package:provider/provider.dart';
 import '../../../constant/constant.dart';
 import '../../../constant/image_constant.dart';
 import '../../../controller/dash_board_controller.dart';
+import '../../../controller/subscription_controller.dart';
 import '../../../utils/Preferences.dart';
 import '../../../utils/dark_theme_provider.dart';
 import '../../auth_screens/phone_entry_screen.dart';
+import '../../subscription_plan_screen/subscription_plan_screen.dart' as subs;
 
 class CustomDrawer extends StatelessWidget {
   const CustomDrawer({super.key});
@@ -19,7 +21,9 @@ class CustomDrawer extends StatelessWidget {
     final bool isLogin = Preferences.getBoolean(Preferences.isLogin) ?? false;
     final themeChange = Provider.of<DarkThemeProvider>(context);
     final dashBoardController = Get.put(DashBoardController());
-    dashBoardController.userModel = Constant.getUserData();
+    
+    // Force refresh user data when drawer opens
+    dashBoardController.getUsrData();
 
     var drawerOptions = <Widget>[];
     for (var i = 0; i < dashBoardController.drawerItems.length; i++) {
@@ -242,12 +246,13 @@ class CustomDrawer extends StatelessWidget {
                                     ? CachedNetworkImage(
                                         imageUrl: (dashBoardController
                                                     .userModel
+                                                    .value
                                                     ?.data
                                                     ?.photoPath
                                                     ?.isNotEmpty ??
                                                 false)
                                             ? dashBoardController
-                                                .userModel!.data!.photoPath!
+                                                .userModel.value!.data!.photoPath!
                                             : Constant.placeholderUrl,
                                         height: double.infinity,
                                         width: double.infinity,
@@ -284,7 +289,7 @@ class CustomDrawer extends StatelessWidget {
                             children: [
                               Text(
                                 isLogin
-                                    ? "${dashBoardController.userModel?.data?.prenom ?? ''} ${dashBoardController.userModel?.data?.nom ?? ''}"
+                                    ? "${dashBoardController.userModel.value?.data?.prenom ?? ''} ${dashBoardController.userModel.value?.data?.nom ?? ''}"
                                     : "Guest User",
                                 style: TextStyle(
                                   color: AppThemeData.surface50,
@@ -296,7 +301,7 @@ class CustomDrawer extends StatelessWidget {
                                 padding: const EdgeInsets.only(top: 4),
                                 child: Text(
                                   isLogin
-                                      ? "${(dashBoardController.userModel?.data?.phone ?? 'guest')}@${Constant.appName}.com"
+                                      ? "${(dashBoardController.userModel.value?.data?.phone ?? 'guest')}@${Constant.appName}.com"
                                           .toLowerCase()
                                       : "guest@${Constant.appName}.com"
                                           .toLowerCase(),
@@ -355,6 +360,86 @@ class CustomDrawer extends StatelessWidget {
                 ],
               ),
             ),
+
+            // Subscription Plan Card
+            GestureDetector(
+              onTap: () {
+                Get.back(); // close drawer
+                Get.delete<SubscriptionController>();
+                Get.to(() => const subs.SubscriptionPlanScreen(isbackButton: true));
+              },
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: themeChange.getThem() ? const Color(0xFF1E293B) : Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppThemeData.primary200, width: 1.5),
+                  boxShadow: [
+                    BoxShadow(color: AppThemeData.primary200.withValues(alpha: 0.12), blurRadius: 6, offset: const Offset(0, 2)),
+                  ],
+                ),
+                child: Obx(() => Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: (dashBoardController.userModel.value?.data?.consumerPlan?.image?.isNotEmpty == true)
+                          ? CachedNetworkImage(
+                              imageUrl: dashBoardController.userModel.value!.data!.consumerPlan!.image!,
+                              width: 36,
+                              height: 36,
+                              fit: BoxFit.cover,
+                              errorWidget: (context, url, error) => Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: AppThemeData.primary200.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(Icons.card_membership_rounded, color: AppThemeData.primary200, size: 24),
+                              ),
+                            )
+                          : Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: AppThemeData.primary200.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(Icons.card_membership_rounded, color: AppThemeData.primary200, size: 24),
+                            ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            dashBoardController.userModel.value?.data?.consumerPlan?.name ?? 'Standard Plan',
+                            style: TextStyle(
+                              color: themeChange.getThem() ? Colors.white : AppThemeData.grey900,
+                              fontSize: 14,
+                              fontFamily: AppThemeData.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'View membership & change plan',
+                            style: TextStyle(
+                              color: themeChange.getThem() ? AppThemeData.grey400Dark : AppThemeData.grey500,
+                              fontSize: 11,
+                              fontFamily: AppThemeData.regular,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.arrow_forward_ios_rounded, color: AppThemeData.primary200, size: 14),
+                  ],
+                )),
+              ),
+            ),
+
+            const Divider(height: 1),
+
             Column(children: drawerOptions),
           ],
         ),

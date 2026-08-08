@@ -128,7 +128,7 @@ class MainHomeController extends GetxController
     } else if (routeName == '/smartValue') {
       String token = Preferences.getString(Preferences.accesstoken);
       String userId = Preferences.getInt(Preferences.userId).toString();
-      String finalUrl = 'https://api.fiinway.com/onboarding/smartvalue?accesstoken=$token&user_id=$userId';
+      String finalUrl = 'https://fiinway-maini.onrender.com/onboarding/smartvalue?accesstoken=$token&user_id=$userId';
       Get.to(() => WebViewScreen(url: finalUrl, title: 'Smart Value'),
           transition: Transition.rightToLeftWithFade);
     } else if (index == 0) {

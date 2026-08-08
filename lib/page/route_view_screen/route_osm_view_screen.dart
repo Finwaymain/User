@@ -529,7 +529,7 @@ class _RouteOsmViewScreenState extends State<RouteOsmViewScreen> {
                                               radius: 5,
                                               txtSize: 12,
                                               context,
-                                              title: 'Pay via Wallet'.tr,
+                                              title: 'Pay via Smart Value'.tr,
                                               btnHeight: 40,
                                               btnWidthRatio: 0.3,
                                               onPress: () async {

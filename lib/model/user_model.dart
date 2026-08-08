@@ -1,3 +1,5 @@
+import 'subscription_plan_model.dart';
+
 class UserModel {
   UserModel({
     this.success,
@@ -89,6 +91,9 @@ class User {
     this.online,
     this.alternatePhone,
     this.marketplaceEnabled,
+    this.consumerPlanId,
+    this.consumerPlanExpiryDate,
+    this.consumerPlan,
   });
 
   String? id;
@@ -150,6 +155,9 @@ class User {
   String? adminCommission;
   String? referralCode;
   String? referralBy;
+  String? consumerPlanId;
+  String? consumerPlanExpiryDate;
+  SubscriptionPlanData? consumerPlan;
   String? online;
   String? alternatePhone;
   String? marketplaceEnabled;
@@ -216,6 +224,9 @@ class User {
     online: json["online"]?.toString(),
     alternatePhone: json["alternate_phone"]?.toString(),
     marketplaceEnabled: json["marketplace_enabled"]?.toString(),
+    consumerPlanId: json["consumer_plan_id"]?.toString(),
+    consumerPlanExpiryDate: json["consumer_plan_expiry_date"]?.toString(),
+    consumerPlan: json["consumer_plan"] != null ? SubscriptionPlanData.fromJson(json["consumer_plan"]) : null,
   );
 
   Map<String, dynamic> toJson() => {
@@ -280,6 +291,9 @@ class User {
     "online": online,
     "alternate_phone": alternatePhone,
     "marketplace_enabled": marketplaceEnabled,
+    "consumer_plan_id": consumerPlanId,
+    "consumer_plan_expiry_date": consumerPlanExpiryDate,
+    "consumer_plan": consumerPlan?.toJson(),
   };
 }
 

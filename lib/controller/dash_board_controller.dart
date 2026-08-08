@@ -30,6 +30,7 @@ import 'package:finway/constant/logdata.dart';
 class DashBoardController extends GetxController {
   RxInt selectedDrawerIndex = 0.obs;
   RxBool darkModel = false.obs;
+  Rx<UserModel?> userModel = Rx<UserModel?>(null);
 
   @override
   void onInit() {
@@ -42,15 +43,38 @@ class DashBoardController extends GetxController {
     themeProvider.darkTheme = (isDarkMode == true ? 0 : 1);
   }
 
-  UserModel? userModel;
-
   getUsrData() async {
-    userModel = Constant.getUserData();
-    await getDrawerItems();
-    await getTexiDrawerItems();
-    if (Preferences.getBoolean(Preferences.isLogin)) {
-      await updateToken();
-      await getPaymentSettingData();
+    userModel.value = Constant.getUserData();
+    getDrawerItems();
+    getTexiDrawerItems();
+    updateToken();
+    getPaymentSettingData();
+    // Fetch latest wallet balance
+    await getWalletBalance();
+  }
+
+  Future<void> getWalletBalance() async {
+    try {
+      final response = await http.get(
+        Uri.parse("${API.wallet}?id_user=${Preferences.getInt(Preferences.userId)}&user_cat=user_app"),
+        headers: API.header,
+      );
+      showLog("API :: URL :: ${API.wallet}?id_user=${Preferences.getInt(Preferences.userId)}&user_cat=user_app");
+      showLog("API :: responseStatus :: ${response.statusCode} ");
+      showLog("API :: responseBody :: ${response.body} ");
+      Map<String, dynamic> responseBody = json.decode(response.body);
+
+      if (response.statusCode == 200 && responseBody['success'] == "success") {
+        // Update wallet amount in user model
+        if (userModel.value != null && userModel.value!.data != null && responseBody['data'] != null) {
+          userModel.value!.data!.amount = responseBody['data']['amount']?.toString() ?? userModel.value!.data!.amount;
+          userModel.value!.data!.earnAmount = responseBody['data']['earn_amount']?.toString() ?? userModel.value!.data!.earnAmount;
+          // Save updated user data
+          await Preferences.setString(Preferences.user, jsonEncode(userModel.value));
+        }
+      }
+    } catch (e) {
+      showLog("Error in getWalletBalance: $e");
     }
   }
 
@@ -110,7 +134,7 @@ class DashBoardController extends GetxController {
         icon: 'assets/icons/ic_home.svg',
       ),
       DrawerItem(
-        title: 'Wallet'.tr,
+        title: 'Smart Value'.tr,
         description: 'Manage transactions, view balance and earnings',
         icon: 'assets/icons/ic_wallet.svg',
         section: 'Account & Payments'.tr,
@@ -173,13 +197,13 @@ class DashBoardController extends GetxController {
     Get.back();
     if (index >= drawerItems.length) return;
     var item = drawerItems[index];
-    if (item.title == 'Wallet'.tr || item.title == 'My Profile'.tr || item.title == 'Change Password'.tr || item.title == 'Refer a Friend'.tr) {
+    if (item.title == 'Wallet'.tr || item.title == 'Smart Value'.tr || item.title == 'My Profile'.tr || item.title == 'Change Password'.tr || item.title == 'Refer a Friend'.tr) {
       if (!isLogin) {
         Get.to(const PhoneEntryScreen());
         return;
       }
     }
-    if (item.title == 'Wallet'.tr) {
+    if (item.title == 'Wallet'.tr || item.title == 'Smart Value'.tr) {
       Get.to(WalletScreen());
     } else if (item.title == 'My Profile'.tr) {
       Get.to(MyProfileScreen());
@@ -232,8 +256,8 @@ class DashBoardController extends GetxController {
 
   Future<dynamic> updateFCMToken(String token) async {
     try {
-      Map<String, dynamic> bodyParams = {'user_id': Preferences.getInt(Preferences.userId), 'fcm_id': token, 'device_id': "", 'user_cat': userModel!.data!.userCat};
-      final response = await http.post(Uri.parse(API.updateToken), headers: API.header, body: jsonEncode(bodyParams));
+      Map<String, dynamic> bodyParams = {'user_id': Preferences.getInt(Preferences.userId), 'fcm_id': token, 'device_id': "", 'user_cat': userModel.value?.data?.userCat};
+      final response = await http.post(Uri.parse(API.updateToken), headers: API.header, body: jsonEncode(bodyParams)).timeout(const Duration(seconds: 10));
       showLog("API :: URL :: ${API.updateToken} ");
       showLog("API :: Request Body :: ${jsonEncode(bodyParams)} ");
       showLog("API :: Request Header :: ${API.header.toString()} ");
@@ -250,24 +274,24 @@ class DashBoardController extends GetxController {
         ShowToastDialog.showToast('An admin has deleted your account. You no longer have access.'.tr);
         Get.offAll(const PhoneEntryScreen());
       } else {
-        ShowToastDialog.showToast('Something want wrong. Please try again later');
+        // Silently fail - don't block UI
         throw Exception('Failed to load album');
       }
     } on TimeoutException catch (e) {
-      ShowToastDialog.showToast(e.message.toString());
+      // Silently fail - don't block UI
     } on SocketException catch (e) {
-      ShowToastDialog.showToast(e.message.toString());
+      // Silently fail - don't block UI
     } on Error catch (e) {
-      ShowToastDialog.showToast(e.toString());
+      // Silently fail - don't block UI
     } catch (e) {
-      ShowToastDialog.showToast(e.toString());
+      // Silently fail - don't block UI
     }
     return null;
   }
 
   Future<dynamic> getPaymentSettingData() async {
     try {
-      final response = await http.get(Uri.parse(API.paymentSetting), headers: API.header);
+      final response = await http.get(Uri.parse(API.paymentSetting), headers: API.header).timeout(const Duration(seconds: 10));
       showLog("API :: URL :: ${API.paymentSetting} ");
       showLog("API :: Request Header :: ${API.header.toString()} ");
       showLog("API :: responseStatus :: ${response.statusCode} ");
@@ -277,18 +301,17 @@ class DashBoardController extends GetxController {
         Preferences.setString(Preferences.paymentSetting, jsonEncode(responseBody));
       } else if (response.statusCode == 200 && responseBody['success'] == "Failed") {
       } else {
-        ShowToastDialog.showToast('Something want wrong. Please try again later');
+        // Silently fail - don't block UI
         throw Exception('Failed to load album');
       }
     } on TimeoutException {
-      // ShowToastDialog.showToast(e.message.toString());
+      // Silently fail - don't block UI
     } on SocketException {
-      // ShowToastDialog.showToast(e.message.toString());
+      // Silently fail - don't block UI
     } on Error {
-      // ShowToastDialog.showToast(e.toString());
+      // Silently fail - don't block UI
     } catch (e) {
-      ShowToastDialog.closeLoader();
-      ShowToastDialog.showToast(e.toString());
+      // Silently fail - don't block UI
     }
     return null;
   }

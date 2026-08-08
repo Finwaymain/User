@@ -11,7 +11,9 @@ class API {
 
   // static const baseUrl = "https://fiinway.nexttech.fun/api/v1/"; // live
   // static const apiKey = "base64:nTfofcBByTDenJQYlsRbH0JjeVFW5lWsIIyXtq8/9sU=";
-  static const baseUrl = "https://api.fiinway.com/api/v1/"; // live
+  // static const baseUrl = "https://api.fiinway.com/api/v1/"; // live
+  // static const baseUrl = "http://192.168.1.34:8000/api/v1/"; // local dev
+  static const baseUrl = "https://fiinway.online/api/v1/"; // Live VPS
   static const apiKey = "base64:nTfofcBByTDenJQYlsRbH0JjeVFW5lWsIIyXtq8/9sU=";
 
   static Map<String, String> get authheader => {
@@ -90,6 +92,8 @@ class API {
   static const privacyPolicy = "${baseUrl}privacy-policy";
   static const termsOfCondition = "${baseUrl}terms-of-condition";
   static const referralAmount = "${baseUrl}get-referral";
+  static const referralStats = "${baseUrl}referral/stats";
+  static const referralHistory = "${baseUrl}referral/history";
 
   //Parcel API
   static const getParcelCategory = "${baseUrl}get-parcel-category";
@@ -105,6 +109,8 @@ class API {
 
   // Smart Value
   static const accountDetails = "${baseUrl}get_profile/smart-value";
+  static const showWalletAmount = "${baseUrl}show_wallet_amount/smart-value";
+  static const showTransactionHistory = "${baseUrl}show_transaction_history/smart-value";
   static const getAddUser = "${baseUrl}showadduser/smart-value";
   static const addUser = "${baseUrl}adduser/smart-value";
   static const transferToWallet = "${baseUrl}transfer_to_wallet/smart-value";
@@ -142,4 +148,14 @@ class API {
   static const authResetMpin            = "${baseUrl}auth/reset-mpin";
   static const authRegisterSimple       = "${baseUrl}auth/register-simple";
   // ───────────────────────────────────────────────────────────────────────────
+
+  // All Services catalog ("More" section)
+  static const getServiceCategories = "${baseUrl}service-categories";
+  static const bookService = "${baseUrl}book-service";
+  static const serviceHistory = "${baseUrl}service-history";
+
+  // Subscription API Endpoints
+  static const getSubscriptionPlans = "${baseUrl}get-consumer-plans";
+  static const setSubscription = "${baseUrl}set-consumer-subscription";
+  static const getSubscriptionHistory = "${baseUrl}get-subscription-history";
 }

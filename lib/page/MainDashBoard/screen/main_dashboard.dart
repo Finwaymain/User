@@ -20,6 +20,7 @@ import '../../new_ride_screens/searching_driver_screen.dart';
 import '../../route_view_screen/route_view_screen.dart';
 import '../../route_view_screen/route_osm_view_screen.dart';
 import '../../home_screen/view/home_screen.dart';
+import '../../wallet/wallet_screen.dart';
 
 class MainDashboard extends StatefulWidget {
   const MainDashboard({super.key});
@@ -37,9 +38,6 @@ class _MainDashboardState extends State<MainDashboard> {
     InProgressScreen(),
     InProgressScreen(),
     InProgressScreen(),
-
-
-    // Center(child: Text("Search Screen")),
     // Center(child: Text("Fingerprint Screen")),
     // Center(child: Text("Travel Screen")),
     // Center(child: Text("Receipt Screen")),
@@ -60,7 +58,7 @@ class _MainDashboardState extends State<MainDashboard> {
       final response = await http.get(
         Uri.parse('${API.newRide}?id_user_app=$userId'),
         headers: API.header,
-      );
+      ).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final body = json.decode(response.body);
         if (body['success'] == 'success' && body['data'] != null) {
@@ -95,6 +93,10 @@ class _MainDashboardState extends State<MainDashboard> {
   }
 
   void _onTabSelected(int index) {
+    if (index == 4) {
+      Get.to(() => WalletScreen());
+      return;
+    }
     setState(() => currentIndex = index);
   }
 

@@ -35,54 +35,91 @@ import 'package:finway/controller/searching_driver_controller.dart';
 
 class FirebaseService {
   static Future<void> initialize() async {
-    await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform);
+    try {
+      await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform);
+    } catch (e) {
+      log('Firebase initialization error: $e');
+      // Continue even if Firebase fails to prevent app from hanging
+    }
 
-    await FirebaseAppCheck.instance.activate(
-        webProvider: ReCaptchaV3Provider('recaptcha-v3-site-key'),
-        androidProvider: AndroidProvider.playIntegrity,
-        appleProvider: AppleProvider.appAttest);
+    try {
+      await FirebaseAppCheck.instance.activate(
+          webProvider: ReCaptchaV3Provider('recaptcha-v3-site-key'),
+          androidProvider: AndroidProvider.debug, // Changed from playIntegrity to debug for better compatibility
+          appleProvider: AppleProvider.appAttest);
+    } catch (e) {
+      log('Firebase App Check activation error: $e');
+      // Continue even if App Check fails
+    }
   }
 
   static Future<void> setupMessaging() async {
-    await FirebaseMessaging.instance
-        .setForegroundNotificationPresentationOptions(
-            alert: true, badge: true, sound: true);
+    try {
+      await FirebaseMessaging.instance
+          .setForegroundNotificationPresentationOptions(
+              alert: true, badge: true, sound: true);
 
-    await FirebaseMessaging.instance.requestPermission(
-        alert: true,
-        announcement: false,
-        badge: true,
-        carPlay: false,
-        criticalAlert: false,
-        provisional: false,
-        sound: true);
+      await FirebaseMessaging.instance.requestPermission(
+          alert: true,
+          announcement: false,
+          badge: true,
+          carPlay: false,
+          criticalAlert: false,
+          provisional: false,
+          sound: true);
+    } catch (e) {
+      log('Firebase messaging setup error: $e');
+      // Continue even if messaging setup fails
+    }
   }
 
   static Future<void> setupInteractedMessage(BuildContext context) async {
-    await NotificationService.initialize(context);
-    await FirebaseMessaging.instance.subscribeToTopic("cabme_customer");
+    try {
+      await NotificationService.initialize(context);
+    } catch (e) {
+      log('Notification service initialization error: $e');
+    }
 
-    RemoteMessage? initialMessage =
-        await FirebaseMessaging.instance.getInitialMessage();
+    try {
+      await FirebaseMessaging.instance.subscribeToTopic("cabme_customer");
+    } catch (e) {
+      log('Firebase topic subscription error: $e');
+    }
+
+    RemoteMessage? initialMessage;
+    try {
+      initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+    } catch (e) {
+      log('Get initial message error: $e');
+    }
+    
     if (initialMessage != null) {
       await _handleNotificationTap(initialMessage);
     }
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      if (Get.isRegistered<SearchingDriverController>()) {
-        Get.find<SearchingDriverController>().handleFCMMessage(message);
-      }
-      if (message.notification != null) {
-        NotificationService.display(message);
+      try {
+        if (Get.isRegistered<SearchingDriverController>()) {
+          Get.find<SearchingDriverController>().handleFCMMessage(message);
+        }
+        if (message.notification != null) {
+          NotificationService.display(message);
+        }
+      } catch (e) {
+        log('Message handling error: $e');
       }
     });
 
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
-      if (Get.isRegistered<SearchingDriverController>()) {
-        Get.find<SearchingDriverController>().handleFCMMessage(message);
+      try {
+        if (Get.isRegistered<SearchingDriverController>()) {
+          Get.find<SearchingDriverController>().handleFCMMessage(message);
+        }
+        await _handleNotificationTap(message);
+      } catch (e) {
+        log('Message opened app handling error: $e');
       }
-      await _handleNotificationTap(message);
     });
   }
 
@@ -147,39 +184,43 @@ class NotificationService {
       _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
   static Future<void> initialize(BuildContext context) async {
-    AndroidNotificationChannel channel = const AndroidNotificationChannel(
-        'high_importance_channel', // id
-        'High Importance Notifications', // title
-        importance: Importance.high);
+    try {
+      AndroidNotificationChannel channel = const AndroidNotificationChannel(
+          'high_importance_channel', // id
+          'High Importance Notifications', // title
+          importance: Importance.high);
 
-    const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+      const AndroidInitializationSettings initializationSettingsAndroid =
+          AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    var iosInitializationSettings = const DarwinInitializationSettings();
+      var iosInitializationSettings = const DarwinInitializationSettings();
 
-    final InitializationSettings initializationSettings =
-        InitializationSettings(
-            android: initializationSettingsAndroid,
-            iOS: iosInitializationSettings);
+      final InitializationSettings initializationSettings =
+          InitializationSettings(
+              android: initializationSettingsAndroid,
+              iOS: iosInitializationSettings);
 
-    await _flutterLocalNotificationsPlugin.initialize(initializationSettings,
-        onDidReceiveNotificationResponse:
-            (NotificationResponse response) async {
-      if (response.payload != null && response.payload!.isNotEmpty) {
-        try {
-          Map<String, dynamic> data = jsonDecode(response.payload!);
-          RemoteMessage message = RemoteMessage(data: data);
-          await FirebaseService._handleNotificationTap(message);
-        } catch (e) {
-          log('Error handling local notification click: $e');
+      await _flutterLocalNotificationsPlugin.initialize(initializationSettings,
+          onDidReceiveNotificationResponse:
+              (NotificationResponse response) async {
+        if (response.payload != null && response.payload!.isNotEmpty) {
+          try {
+            Map<String, dynamic> data = jsonDecode(response.payload!);
+            RemoteMessage message = RemoteMessage(data: data);
+            await FirebaseService._handleNotificationTap(message);
+          } catch (e) {
+            log('Error handling local notification click: $e');
+          }
         }
-      }
-    });
+      });
 
-    await _flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(channel);
+      await _flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(channel);
+    } catch (e) {
+      log('Notification service initialization error: $e');
+    }
   }
 
   static void display(RemoteMessage message) async {
@@ -211,20 +252,56 @@ class AppInitialization {
   static Future<void> initializeApp() async {
     WidgetsFlutterBinding.ensureInitialized();
 
-    // Initialize Firebase
-    await FirebaseService.initialize();
+    // Initialize Firebase with timeout
+    try {
+      await FirebaseService.initialize().timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          log('Firebase initialization timeout - continuing without Firebase');
+        },
+      );
+    } catch (e) {
+      log('Firebase initialization error: $e');
+    }
 
     // Set preferred orientations
     await _setOrientations();
 
-    // Initialize preferences
-    await Preferences.initPref();
+    // Initialize preferences with timeout
+    try {
+      await Preferences.initPref().timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          log('Preferences initialization timeout');
+        },
+      );
+    } catch (e) {
+      log('Preferences initialization error: $e');
+    }
 
-    // Setup Firebase messaging
-    await FirebaseService.setupMessaging();
+    // Setup Firebase messaging with timeout
+    try {
+      await FirebaseService.setupMessaging().timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          log('Firebase messaging setup timeout');
+        },
+      );
+    } catch (e) {
+      log('Firebase messaging setup error: $e');
+    }
 
-    // Platform specific initialization
-    await _platformSpecificInit();
+    // Platform specific initialization with timeout
+    try {
+      await _platformSpecificInit().timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          log('Platform specific initialization timeout');
+        },
+      );
+    } catch (e) {
+      log('Platform specific initialization error: $e');
+    }
   }
 
   static Future<void> _setOrientations() async {
@@ -284,29 +361,25 @@ class InitialBinding extends Bindings {
 
 class AppRoutes {
   static Widget getInitialScreen() {
-    return GetBuilder(
-        init: SettingsController(),
-        builder: (controller) {
-          // Check if language is selected
-          if (Preferences.getString(Preferences.languageCodeKey)
-              .toString()
-              .isEmpty) {
-            Preferences.setString(Preferences.languageCodeKey, 'en');
-          }
+    // Check if language is selected
+    if (Preferences.getString(Preferences.languageCodeKey)
+        .toString()
+        .isEmpty) {
+      Preferences.setString(Preferences.languageCodeKey, 'en');
+    }
 
-          // Check if onboarding is finished
-          if (!Preferences.getBoolean(Preferences.isFinishOnBoardingKey)) {
-            return const OnBoardingScreen();
-          }
+    // Check if onboarding is finished
+    if (!Preferences.getBoolean(Preferences.isFinishOnBoardingKey)) {
+      return const OnBoardingScreen();
+    }
 
-          // Check if user is logged in
-          if (Preferences.getBoolean(Preferences.isLogin)) {
-            return MainDashboard();
-          }
+    // Check if user is logged in
+    if (Preferences.getBoolean(Preferences.isLogin)) {
+      return MainDashboard();
+    }
 
-          // Not logged in → new OTP auth flow (phone number first)
-          return const PhoneEntryScreen(mode: 'signup');
-        });
+    // Not logged in → new OTP auth flow (phone number first)
+    return const PhoneEntryScreen(mode: 'signup');
   }
 }
 
@@ -366,7 +439,15 @@ class _MyAppState extends State<MyApp> {
               fallbackLocale: LocalizationService.locale,
               translations: LocalizationService(),
               initialBinding: InitialBinding(),
-              builder: EasyLoading.init(),
+              builder: (context, child) {
+                final easyLoadingBuilder = EasyLoading.init();
+                final builtChild = easyLoadingBuilder(context, child);
+                return SafeArea(
+                  top: false,
+                  bottom: true,
+                  child: builtChild,
+                );
+              },
               home: AppRoutes.getInitialScreen());
         }));
   }

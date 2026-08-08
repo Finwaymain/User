@@ -1,10 +1,10 @@
-import "package:finway/page/web_view_screen/web_view_screen.dart";
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:finway/controller/home_osm_controller.dart';
 import 'package:finway/controller/home_controller.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:finway/page/features/Texi/texi_dash_board.dart';
+import 'package:finway/page/features/AllServices/all_services_screen.dart';
 import 'package:finway/page/search_location_screen.dart';
 import 'package:finway/controller/new_ride_controller.dart';
 import 'dart:io';
@@ -290,8 +290,8 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                 .toList();
 
             String greetingName = "Guest";
-            if (dashboardController.userModel != null && dashboardController.userModel!.data != null) {
-              greetingName = dashboardController.userModel!.data!.prenom ?? dashboardController.userModel!.data!.nom ?? "User";
+            if (dashboardController.userModel.value != null && dashboardController.userModel.value!.data != null) {
+              greetingName = dashboardController.userModel.value!.data!.prenom ?? dashboardController.userModel.value!.data!.nom ?? "User";
             }
 
             final newRideController = Get.put(NewRideController());
@@ -521,10 +521,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                                   Get.to(() => const PhoneEntryScreen(), transition: Transition.rightToLeftWithFade);
                                   return;
                                 }
-                                String token = Preferences.getString(Preferences.accesstoken);
-                                String userId = Preferences.getInt(Preferences.userId).toString();
-                                String finalUrl = 'https://api.fiinway.com/onboarding/more?accesstoken=$token&user_id=$userId';
-                                Get.to(() => WebViewScreen(url: finalUrl, title: 'More'));
+                                Get.to(() => const AllServicesScreen(), transition: Transition.rightToLeftWithFade);
                               },
                             ),
                           ],

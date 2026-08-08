@@ -12,8 +12,11 @@ class OnboardingModel {
   });
 
   factory OnboardingModel.fromJson(Map<String, dynamic> json) {
-    var list = json['data'] as List;
-    List<OnboardingData> dataList = list.map((i) => OnboardingData.fromJson(i)).toList();
+    List<OnboardingData> dataList = [];
+    if (json['data'] is List) {
+      var list = json['data'] as List;
+      dataList = list.map((i) => OnboardingData.fromJson(i)).toList();
+    }
 
     return OnboardingModel(
       success: json['success'],

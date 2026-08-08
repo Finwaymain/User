@@ -43,7 +43,7 @@ class PaymentSettingModel {
     myWallet = json['My Wallet'] != null ? Cash.fromJson(json['My Wallet']) : null;
     payStack = json['PayStack'] != null ? PayStack.fromJson(json['PayStack']) : null;
     flutterWave = json['FlutterWave'] != null ? FlutterWave.fromJson(json['FlutterWave']) : null;
-    razorpay = json['Razorpay'] != null ? RazorpayModel.fromJson(json['Razorpay']) : null;
+    razorpay = _parseRazorpay(json['Razorpay']);
     mercadopago = json['Mercadopago'] != null ? Mercadopago.fromJson(json['Mercadopago']) : null;
     payPal = json['PayPal'] != null ? PayPal.fromJson(json['PayPal']) : null;
     xendit = json['Xendit'] != null ? Xendit.fromJson(json['Xendit']) : null;
@@ -296,6 +296,8 @@ class RazorpayModel {
     libelle = json['libelle'].toString();
   }
 
+  bool get isConfigured => (key ?? '').isNotEmpty && key != 'null';
+
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['id'] = id;
@@ -307,6 +309,20 @@ class RazorpayModel {
     data['libelle'] = libelle;
     return data;
   }
+}
+
+RazorpayModel? _parseRazorpay(dynamic raw) {
+  if (raw == null) return null;
+  if (raw is List) {
+    if (raw.isEmpty) return null;
+    final first = raw.first;
+    if (first is Map<String, dynamic>) return RazorpayModel.fromJson(first);
+    if (first is Map) return RazorpayModel.fromJson(Map<String, dynamic>.from(first));
+    return null;
+  }
+  if (raw is Map<String, dynamic>) return RazorpayModel.fromJson(raw);
+  if (raw is Map) return RazorpayModel.fromJson(Map<String, dynamic>.from(raw));
+  return null;
 }
 
 class Mercadopago {

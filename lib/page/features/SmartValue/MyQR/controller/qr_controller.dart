@@ -1,14 +1,15 @@
 
 
 import 'dart:io';
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:gal/gal.dart';
 import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../../constant/constant.dart';
@@ -100,28 +101,53 @@ class QRController extends GetxController with GetTickerProviderStateMixin {
     });
   }
 
+  Future<Uint8List?> _captureQrPngBytes() async {
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    final boundary = qrKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+    if (boundary == null) {
+      _showErrorSnackbar('Unable to capture QR code');
+      return null;
+    }
+
+    if (boundary.debugNeedsPaint) {
+      await Future.delayed(const Duration(milliseconds: 50));
+    }
+
+    final image = await boundary.toImage(pixelRatio: 3.0);
+    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    final pngBytes = byteData?.buffer.asUint8List();
+
+    if (pngBytes == null) {
+      _showErrorSnackbar('Failed to generate QR image');
+      return null;
+    }
+
+    return pngBytes;
+  }
+
+  Future<bool> _ensureGalleryAccess() async {
+    if (await Gal.hasAccess(toAlbum: true)) {
+      return true;
+    }
+
+    final granted = await Gal.requestAccess(toAlbum: true);
+    if (granted) {
+      return true;
+    }
+
+    _showErrorSnackbar('Allow photo access to save QR code to gallery');
+    return false;
+  }
+
   // Share QR Code functionality
   Future<void> shareQR() async {
     try {
       isSharing.value = true;
       HapticFeedback.lightImpact();
 
-      // Wait a frame to ensure UI is updated
-      await Future.delayed(const Duration(milliseconds: 100));
-
-      // Capture QR widget as image
-      final boundary = qrKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
-      if (boundary == null) {
-        _showErrorSnackbar('Unable to capture QR code');
-        return;
-      }
-
-      final image = await boundary.toImage(pixelRatio: 3.0);
-      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      final pngBytes = byteData?.buffer.asUint8List();
-
+      final pngBytes = await _captureQrPngBytes();
       if (pngBytes == null) {
-        _showErrorSnackbar('Failed to generate QR image');
         return;
       }
 
@@ -138,7 +164,7 @@ class QRController extends GetxController with GetTickerProviderStateMixin {
       }
 
       // Share the file
-      final result = await Share.shareXFiles(
+      await Share.shareXFiles(
         [XFile(file.path)],
         text: 'Scan this QR code to connect with me!',
         subject: 'My QR Code',
@@ -182,104 +208,48 @@ class QRController extends GetxController with GetTickerProviderStateMixin {
   }
 
 
-  // Replace your saveQR() method with this simpler version
   Future<void> saveQR() async {
     try {
       isSaving.value = true;
       HapticFeedback.lightImpact();
 
-      await Future.delayed(const Duration(milliseconds: 100));
-
-      // Capture QR widget as image
-      final boundary = qrKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
-      if (boundary == null) {
-        _showErrorSnackbar('Unable to capture QR code');
-        return;
-      }
-
-      final image = await boundary.toImage(pixelRatio: 3.0);
-      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      final pngBytes = byteData?.buffer.asUint8List();
-
+      final pngBytes = await _captureQrPngBytes();
       if (pngBytes == null) {
-        _showErrorSnackbar('Failed to generate QR image');
         return;
       }
 
-      // Request permission first
-      final hasPermission = await _requestBasicStoragePermission();
-      if (!hasPermission) {
-        _showErrorSnackbar('Storage permission required to save QR code');
+      if (!await _ensureGalleryAccess()) {
         return;
       }
 
-      // Save to Downloads folder (Android) or Documents (iOS)
-      Directory? directory;
-      String folderName = '';
+      final fileName = 'Fiinway_QR_${DateTime.now().millisecondsSinceEpoch}';
+      await Gal.putImageBytes(pngBytes, name: fileName);
 
-      if (Platform.isAndroid) {
-        // Try to save to Downloads folder
-        directory = Directory('/storage/emulated/0/Download');
-        folderName = 'Downloads';
-
-        // If Downloads doesn't exist or is not accessible, use app directory
-        if (!await directory.exists()) {
-          directory = await getExternalStorageDirectory();
-          folderName = 'App Storage';
-        }
-      } else {
-        // iOS - use Documents directory
-        directory = await getApplicationDocumentsDirectory();
-        folderName = 'Documents';
-      }
-
-      if (directory == null) {
-        _showErrorSnackbar('Unable to access storage directory');
-        return;
-      }
-
-      // Create QR_Codes subfolder
-      final qrCodesDir = Directory('${directory.path}/QR_Codes');
-      await qrCodesDir.create(recursive: true);
-
-      // Save file
-      final fileName = 'QR_Code_${DateTime.now().millisecondsSinceEpoch}.png';
-      final file = File('${qrCodesDir.path}/$fileName');
-
-      await file.writeAsBytes(pngBytes);
-
-      // Verify file was saved
-      if (await file.exists()) {
-        final fileSize = await file.length();
-        _showSuccessSnackbar(
-            'QR saved successfully!\n'
-                'Location: $folderName/QR_Codes/\n'
-                'Size: ${(fileSize / 1024).toStringAsFixed(1)} KB'
-        );
-      } else {
-        _showErrorSnackbar('Failed to save QR code');
-      }
-
+      _showSuccessSnackbar(
+        Platform.isIOS ? 'QR code saved to Photos' : 'QR code saved to gallery',
+      );
+    } on GalException catch (e) {
+      print('Save error: $e');
+      _showErrorSnackbar(_galleryErrorMessage(e));
     } catch (e) {
       print('Save error: $e');
-      _showErrorSnackbar('Error saving QR: ${e.toString()}');
+      _showErrorSnackbar('Failed to save QR code. Please try again.');
     } finally {
       isSaving.value = false;
     }
   }
 
-// Simplified permission request
-  Future<bool> _requestBasicStoragePermission() async {
-    if (Platform.isAndroid) {
-      try {
-        final status = await Permission.storage.request();
-        return status.isGranted;
-      } catch (e) {
-        print('Permission error: $e');
-        return false;
-      }
+  String _galleryErrorMessage(GalException e) {
+    switch (e.type) {
+      case GalExceptionType.accessDenied:
+        return 'Photo access denied. Enable it in settings to save QR code.';
+      case GalExceptionType.notEnoughSpace:
+        return 'Not enough storage space to save QR code.';
+      case GalExceptionType.notSupportedFormat:
+        return 'Unsupported image format while saving QR code.';
+      case GalExceptionType.unexpected:
+        return 'Could not save QR code. Please try again.';
     }
-    return true; // iOS doesn't need permission for app documents
   }
 
 

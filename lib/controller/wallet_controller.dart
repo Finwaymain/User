@@ -55,7 +55,23 @@ class WalletController extends GetxController {
     }
     selectedRadioTile = "".obs;
     paymentSettingModel.value = Constant.getPaymentSetting();
+    refreshPaymentSettings();
     super.onInit();
+  }
+
+  Future<void> refreshPaymentSettings() async {
+    try {
+      final response = await http
+          .get(Uri.parse(API.paymentSetting), headers: API.header)
+          .timeout(const Duration(seconds: 15));
+      if (response.statusCode == 200) {
+        final body = json.decode(response.body);
+        if (body['success'] == 'success') {
+          Preferences.setString(Preferences.paymentSetting, jsonEncode(body));
+          paymentSettingModel.value = PaymentSettingModel.fromJson(body);
+        }
+      }
+    } catch (_) {}
   }
 
   setFlutterwaveRef() {
@@ -113,10 +129,12 @@ class WalletController extends GetxController {
     return null;
   }
 
-  Future<dynamic> getTransaction() async {
+  Future<dynamic> getTransaction({bool showLoader = true}) async {
     try {
-      isLoading.value = true;
-      ShowToastDialog.showLoader("Please wait");
+      if (showLoader) {
+        isLoading.value = true;
+        ShowToastDialog.showLoader("Please wait");
+      }
       final response = await http.get(Uri.parse("${API.transaction}?id_user_app=${Preferences.getInt(Preferences.userId)}"), headers: API.header);
       showLog("API :: URL :: ${API.transaction}?id_user_app=${Preferences.getInt(Preferences.userId)}");
       showLog("API :: Request Header :: ${API.header.toString()}");
@@ -130,33 +148,70 @@ class WalletController extends GetxController {
         TransactionModel model = TransactionModel.fromJson(responseBody);
         walletList.value = model.data!;
 
-        ShowToastDialog.closeLoader();
+        if (showLoader) ShowToastDialog.closeLoader();
       } else if (response.statusCode == 200 && responseBody['success'] == "Failed") {
         isLoading.value = false;
-        ShowToastDialog.closeLoader();
+        if (showLoader) ShowToastDialog.closeLoader();
       } else {
         isLoading.value = false;
-        ShowToastDialog.closeLoader();
+        if (showLoader) ShowToastDialog.closeLoader();
         ShowToastDialog.showToast('Something want wrong. Please try again later');
         throw Exception('Failed to load album');
       }
     } on TimeoutException catch (e) {
       isLoading.value = false;
-      ShowToastDialog.closeLoader();
+      if (showLoader) ShowToastDialog.closeLoader();
       ShowToastDialog.showToast(e.message.toString());
     } on SocketException catch (e) {
       isLoading.value = false;
-      ShowToastDialog.closeLoader();
+      if (showLoader) ShowToastDialog.closeLoader();
       ShowToastDialog.showToast(e.message.toString());
     } on Error catch (e) {
       isLoading.value = false;
-      ShowToastDialog.closeLoader();
+      if (showLoader) ShowToastDialog.closeLoader();
       ShowToastDialog.showToast(e.toString());
     } catch (e) {
-      ShowToastDialog.closeLoader();
+      if (showLoader) ShowToastDialog.closeLoader();
       ShowToastDialog.showToast(e.toString());
     }
     return null;
+  }
+
+  RxDouble earnAmount = 0.0.obs;
+
+  void _applyCachedWalletAmounts() {
+    userModel.value = Constant.getUserData();
+    walletAmount.value = double.tryParse(userModel.value.data?.amount ?? '0') ?? 0;
+    earnAmount.value = double.tryParse(userModel.value.data?.earnAmount ?? '0') ?? 0;
+  }
+
+  Future<void> _trySmartValueWalletFallback() async {
+    final acNo = Constant.getUserData().data?.acNo;
+    if (acNo == null || acNo.isEmpty) {
+      _applyCachedWalletAmounts();
+      return;
+    }
+
+    try {
+      final response = await http.post(
+        Uri.parse(API.showWalletAmount),
+        headers: API.header,
+        body: jsonEncode({'ac_no': acNo}),
+      );
+      showLog("getAmount fallback :: ${response.body}");
+      if (response.statusCode == 200) {
+        final body = json.decode(response.body);
+        if (body['res'] == 'success' && body['data'] != null) {
+          walletAmount.value = double.tryParse(body['data']['amount']?.toString() ?? '0') ?? 0;
+          earnAmount.value = double.tryParse(body['data']['earn_amount']?.toString() ?? '0') ?? 0;
+          return;
+        }
+      }
+    } catch (e) {
+      showLog("getAmount fallback error :: $e");
+    }
+
+    _applyCachedWalletAmounts();
   }
 
   Rx<UserModel> userModel = UserModel().obs;
@@ -173,20 +228,28 @@ class WalletController extends GetxController {
         userModel.value = Constant.getUserData();
         print("getAmount :: ${userModel.value.toJson()}");
         walletAmount.value = responseBody['data']['amount'] != null ? double.parse(responseBody['data']['amount'].toString()) : 0;
-      } else if (response.statusCode == 200 && responseBody['success'] == "failed") {
+        final earned = responseBody['data']['earn_amount'] ?? userModel.value.data?.earnAmount;
+        earnAmount.value = earned != null ? double.tryParse(earned.toString()) ?? 0 : 0;
+      } else if (response.statusCode == 200 &&
+          (responseBody['success'] == "failed" || responseBody['success'] == "Failed")) {
+        await _trySmartValueWalletFallback();
       } else {
-        ShowToastDialog.showToast('Something want wrong. Please try again later');
-        throw Exception('Failed to load album');
+        await _trySmartValueWalletFallback();
+        showLog("getAmount :: unexpected response :: ${response.body}");
       }
     } on TimeoutException catch (e) {
+      _applyCachedWalletAmounts();
       ShowToastDialog.showToast(e.message.toString());
     } on SocketException catch (e) {
+      _applyCachedWalletAmounts();
       ShowToastDialog.showToast(e.message.toString());
     } on Error catch (e) {
+      _applyCachedWalletAmounts();
       ShowToastDialog.showToast(e.toString());
     } catch (e) {
+      _applyCachedWalletAmounts();
       ShowToastDialog.closeLoader();
-      ShowToastDialog.showToast(e.toString());
+      showLog("getAmount :: $e");
     }
     return null;
   }
@@ -211,6 +274,9 @@ class WalletController extends GetxController {
 
       if (response.statusCode == 200 && responseBody['success'] == "success") {
         ShowToastDialog.closeLoader();
+        // Refresh wallet data after successful transaction
+        await getAmount();
+        await getTransaction(showLoader: false);
         return responseBody;
       } else if (response.statusCode == 200 && responseBody['success'] == "failed") {
         ShowToastDialog.closeLoader();
@@ -237,6 +303,13 @@ class WalletController extends GetxController {
 
   ///razorPay
   Future<CreateRazorPayOrderModel?> createOrderRazorPay({required int amount, bool isTopup = false}) async {
+    await refreshPaymentSettings();
+    final razorpay = paymentSettingModel.value.razorpay;
+    if (razorpay == null || !razorpay.isConfigured) {
+      ShowToastDialog.showToast("Razorpay is not configured. Please contact admin.".tr);
+      return null;
+    }
+
     final String orderId = "${Preferences.getInt(Preferences.userId)}_${DateTime.now().microsecondsSinceEpoch}";
 
     const url = "${API.baseUrl}payments/razorpay/createorder";

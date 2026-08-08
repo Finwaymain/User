@@ -52,7 +52,7 @@ class CustomBottomNavBar extends StatelessWidget {
                 _navItem(Icons.search_rounded, 'Search', 1, isDark),
                 const SizedBox(width: 60),
                 _navItem(Icons.card_travel_rounded, 'Trips', 3, isDark),
-                _navItem(Icons.receipt_long_rounded, 'Activity', 4, isDark),
+                _navItem(Icons.account_balance_wallet_rounded, 'Wallet', 4, isDark),
               ],
             ),
           ),

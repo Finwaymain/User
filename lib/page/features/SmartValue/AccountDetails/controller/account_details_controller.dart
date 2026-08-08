@@ -14,6 +14,10 @@ import '../../../../../service/api.dart';
 import '../model/account_details_model.dart';
 
 class AccountDetailsController extends GetxController with GetTickerProviderStateMixin {
+  AccountDetailsController({this.popOnError = true});
+
+  final bool popOnError;
+
   // Observable variables
   var isFront = true.obs;
   var isLoading = false.obs;
@@ -24,6 +28,14 @@ class AccountDetailsController extends GetxController with GetTickerProviderStat
   late AnimationController shimmerController;
   late Animation<double> flipAnimation;
   late Animation<double> shimmerAnimation;
+
+  void resetCardState() {
+    isFront.value = true;
+    if (flipController.isAnimating) {
+      flipController.stop();
+    }
+    flipController.value = 0;
+  }
 
   @override
   void onInit() {
@@ -47,11 +59,16 @@ class AccountDetailsController extends GetxController with GetTickerProviderStat
       CurvedAnimation(parent: shimmerController, curve: Curves.easeInOut),
     );
 
-    // Set loading true before API call
-    isLoading.value = true;
+    resetCardState();
+    _applyCachedProfile();
+    isLoading.value = accountDetailsModel.value == null;
 
-    // Load account details when controller initializes
-    getAccountDetails("${Constant.getUserData().data?.acNo}");
+    final acNo = Constant.getUserData().data?.acNo;
+    if (acNo != null && acNo.isNotEmpty) {
+      getAccountDetails(acNo);
+    } else {
+      isLoading.value = false;
+    }
   }
 
 
@@ -64,21 +81,27 @@ class AccountDetailsController extends GetxController with GetTickerProviderStat
     isFront.value = !isFront.value;
   }
 
-  // Get data from model for display
-  String get digitalPocket => accountDetailsModel.value?.data?.acNo ?? '000000000';
+  String get digitalPocket => _profile()?.acNo ?? '000000000';
 
-  String get holderName => accountDetailsModel.value?.data?.getFullName() ?? "N/A";
+  String get holderName {
+    final name = _profile()?.getFullName() ?? '';
+    if (name.isNotEmpty) return name;
 
-  String get mobile => accountDetailsModel.value?.data?.phone ?? "N/A";
+    final user = Constant.getUserData().data;
+    final fallback = '${user?.prenom ?? ''} ${user?.nom ?? ''}'.trim();
+    return fallback.isNotEmpty ? fallback : 'N/A';
+  }
 
-  String get accountNumber => accountDetailsModel.value?.data?.acNo ?? "N/A";
+  String get mobile => _profile()?.phone ?? "N/A";
 
-  String get expDays => accountDetailsModel.value?.data?.getDaysToStart()?.toString() ?? "0";
+  String get accountNumber => _profile()?.acNo ?? "N/A";
 
-  String get expDate => accountDetailsModel.value?.data?.getFormattedStartDate() ?? "00/00";
+  String get expDays => _profile()?.getDaysToStart()?.toString() ?? "0";
+
+  String get expDate => _profile()?.getFormattedStartDate() ?? "00/00";
 
   String get accountType {
-    final status = accountDetailsModel.value?.data?.statut;
+    final status = _profile()?.statut;
     return status == "yes" ? "Active Account" : "Inactive Account";
   }
 
@@ -86,14 +109,63 @@ class AccountDetailsController extends GetxController with GetTickerProviderStat
 
   String get bank => "Smart Value";
 
-  String get cvv => accountDetailsModel.value?.data?.mPin ?? "00/00";
+  String get cvv => _profile()?.mPin ?? "00/00";
 
-  String get amount => accountDetailsModel.value?.data?.amount ?? "0.00";
+  String get amount => _profile()?.amount ?? "0.00";
 
-  String get earnAmount => accountDetailsModel.value?.data?.earnAmount ?? "0.00";
+  String get earnAmount => _profile()?.earnAmount ?? "0.00";
+
+  AccountData? _profile() {
+    if (accountDetailsModel.value?.data != null) {
+      return accountDetailsModel.value!.data;
+    }
+    final user = Constant.getUserData().data;
+    if (user == null) return null;
+    return AccountData.fromJson({
+      'id': user.id,
+      'ac_no': user.acNo,
+      'nom': user.nom,
+      'prenom': user.prenom,
+      'holder_name': '${user.prenom ?? ''} ${user.nom ?? ''}'.trim(),
+      'phone': user.phone,
+      'm_pin': user.mPin,
+      'statut': user.statut,
+      'amount': user.amount,
+      'earn_amount': user.earnAmount,
+      'start_date': user.startDate,
+    });
+  }
+
+  void _applyCachedProfile() {
+    final user = Constant.getUserData().data;
+    if (user == null) return;
+
+    accountDetailsModel.value = AccountDetailsModel(
+      res: 'success',
+      msg: 'Cached profile',
+      data: AccountData.fromJson({
+        'id': user.id,
+        'ac_no': user.acNo,
+        'nom': user.nom,
+        'prenom': user.prenom,
+        'holder_name': '${user.prenom ?? ''} ${user.nom ?? ''}'.trim(),
+        'phone': user.phone,
+        'm_pin': user.mPin,
+        'statut': user.statut,
+        'amount': user.amount,
+        'earn_amount': user.earnAmount,
+        'start_date': user.startDate,
+      }),
+    );
+  }
 
 
   Future<AccountDetailsModel?> getAccountDetails(String accountNumber) async {
+    final showBlockingLoader = accountDetailsModel.value == null;
+    if (showBlockingLoader) {
+      isLoading.value = true;
+    }
+
     try {
       Map bodyParams = {
         "ac_no": accountNumber
@@ -122,36 +194,46 @@ class AccountDetailsController extends GetxController with GetTickerProviderStat
           isLoading.value = false;
           return model;
         } else {
+          _applyCachedProfile();
           isLoading.value = false;
-          Get.back();
-          ShowToastDialog.showToast(model.msg ?? 'Account not found', isError: true);
-          return null;
+          if (popOnError) {
+            Get.back();
+            ShowToastDialog.showToast(model.msg ?? 'Account not found', isError: true);
+          }
+          return accountDetailsModel.value;
         }
       } else {
+        _applyCachedProfile();
         isLoading.value = false;
-        ShowToastDialog.showToast('Server error. Please try again.');
-        return null;
+        if (popOnError) {
+          ShowToastDialog.showToast('Server error. Please try again.');
+        }
+        return accountDetailsModel.value;
       }
     } on TimeoutException catch (e) {
+      _applyCachedProfile();
       isLoading.value = false;
       showLog("getAccountDetails => TimeoutException :: $e");
-      ShowToastDialog.showToast('Request timeout. Please try again.');
-      return null;
+      if (popOnError) ShowToastDialog.showToast('Request timeout. Please try again.');
+      return accountDetailsModel.value;
     } on SocketException catch (e) {
+      _applyCachedProfile();
       isLoading.value = false;
       showLog("getAccountDetails => SocketException :: $e");
-      ShowToastDialog.showToast('Network error. Please check your connection.');
-      return null;
+      if (popOnError) ShowToastDialog.showToast('Network error. Please check your connection.');
+      return accountDetailsModel.value;
     } on FormatException catch (e) {
+      _applyCachedProfile();
       isLoading.value = false;
       showLog("getAccountDetails => FormatException :: $e");
-      ShowToastDialog.showToast('Invalid response format.');
-      return null;
+      if (popOnError) ShowToastDialog.showToast('Invalid response format.');
+      return accountDetailsModel.value;
     } catch (e) {
+      _applyCachedProfile();
       isLoading.value = false;
       showLog("getAccountDetails => Exception :: $e");
-      ShowToastDialog.showToast('Failed to fetch account details. Please try again.');
-      return null;
+      if (popOnError) ShowToastDialog.showToast('Failed to fetch account details. Please try again.');
+      return accountDetailsModel.value;
     }
   }
 

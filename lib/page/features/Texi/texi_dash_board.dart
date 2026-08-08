@@ -12,6 +12,7 @@ import 'package:finway/utils/Preferences.dart';
 import '../../../constant/image_constant.dart';
 import 'texi_home_screens/texi_home_osm_screen.dart';
 import 'texi_home_screens/texi_home_screen.dart';
+import 'texi_home_screens/logistics_delivery_screen.dart';
 
 import 'package:finway/page/parcel_service_screen/parcel_category_screen.dart';
 import 'package:finway/page/auth_screens/phone_entry_screen.dart';
@@ -36,6 +37,8 @@ class _TexiDashboardState extends State<TexiDashboard> {
 
     if (serviceName == "Parcel & Delivery Support") {
       Get.to(() => const ParcelCategoryScreen(), transition: Transition.rightToLeftWithFade);
+    } else if (serviceName == "Logistics") {
+      Get.to(() => const LogisticsDeliveryScreen(), transition: Transition.rightToLeftWithFade);
     } else {
       // Navigate to TexiHomeScreen or TexiHomeOSMScreen with chosen category
       if (Constant.selectedMapType == 'osm') {
@@ -593,9 +596,9 @@ buildAppDrawer(BuildContext context, DashBoardController controller) {
                 onTap: () {},
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(80.0),
-                  child: isLogin && controller.userModel?.data?.photoPath?.isNotEmpty == true
+                  child: isLogin && controller.userModel.value?.data?.photoPath?.isNotEmpty == true
                       ? CachedNetworkImage(
-                          imageUrl: controller.userModel!.data!.photoPath!,
+                          imageUrl: controller.userModel.value!.data!.photoPath!,
                           height: 120,
                           width: 120,
                           fit: BoxFit.cover,
@@ -628,8 +631,8 @@ buildAppDrawer(BuildContext context, DashBoardController controller) {
             Padding(
               padding: const EdgeInsets.only(top: 20),
               child: Text(
-                isLogin && controller.userModel?.data != null
-                    ? "${controller.userModel!.data!.prenom} ${controller.userModel!.data!.nom}"
+                isLogin && controller.userModel.value?.data != null
+                    ? "${controller.userModel.value!.data!.prenom} ${controller.userModel.value!.data!.nom}"
                     : "Guest User",
                 style: TextStyle(
                   color: themeChange.getThem()
@@ -643,8 +646,8 @@ buildAppDrawer(BuildContext context, DashBoardController controller) {
             Padding(
               padding: const EdgeInsets.only(top: 4),
               child: Text(
-                isLogin && controller.userModel?.data != null
-                    ? '${controller.userModel!.data!.email}'
+                isLogin && controller.userModel.value?.data != null
+                    ? '${controller.userModel.value!.data!.email}'
                     : 'guest@${Constant.appName}.tr',
                 style: TextStyle(
                   color: themeChange.getThem()

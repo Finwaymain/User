@@ -120,96 +120,109 @@ class AccountData {
 
     String? driverOnRide;
 
+    static int? _asInt(dynamic value) {
+        if (value == null) return null;
+        if (value is int) return value;
+        if (value is double) return value.toInt();
+        return int.tryParse(value.toString());
+    }
+
+    static String? _asString(dynamic value) {
+        if (value == null) return null;
+        if (value is Map || value is List) return null;
+        return value.toString();
+    }
+
     AccountData.fromJson(Map<String, dynamic> json) {
-        id = json['id'];
-        mPin = json['m_pin'];
-        acNo = json['ac_no'];
+        id = _asInt(json['id']);
+        mPin = _asString(json['m_pin']);
+        acNo = _asString(json['ac_no']);
 
-        startDate = json['start_date'];
-        endDate = json['end_date'];
-        startDate2 = json['start_date2'];
-        endDate2 = json['end_date2'];
-        startDate3 = json['start_date3'];
-        endDate3 = json['end_date3'];
-        startDate4 = json['start_date4'];
-        endDate4 = json['end_date4'];
+        startDate = _asString(json['start_date']);
+        endDate = _asString(json['end_date']);
+        startDate2 = _asString(json['start_date2']);
+        endDate2 = _asString(json['end_date2']);
+        startDate3 = _asString(json['start_date3']);
+        endDate3 = _asString(json['end_date3']);
+        startDate4 = _asString(json['start_date4']);
+        endDate4 = _asString(json['end_date4']);
 
-        perSender = json['per_sender'];
-        perReceiver = json['per_receiver'];
-        percentage = json['percentage'];
-        senderDesc = json['sender_desc'];
-        receiverDesc = json['receiver_desc'];
-        description2nd = json['description_2nd'];
-        description3rd = json['description_3rd'];
-        per3rd = json['per_3rd'];
-        amount3rd = json['amount_3rd'];
-        amount4th = json['amount_4th'];
-        description4th = json['description_4th'];
+        perSender = _asString(json['per_sender']);
+        perReceiver = _asString(json['per_receiver']);
+        percentage = _asString(json['percentage']);
+        senderDesc = _asString(json['sender_desc']);
+        receiverDesc = _asString(json['receiver_desc']);
+        description2nd = _asString(json['description_2nd']);
+        description3rd = _asString(json['description_3rd']);
+        per3rd = _asString(json['per_3rd']);
+        amount3rd = _asString(json['amount_3rd']);
+        amount4th = _asString(json['amount_4th']);
+        description4th = _asString(json['description_4th']);
 
-        kycStatus = json['kyc_status'];
-        nom = json['nom'];
-        prenom = json['prenom'];
-        cnib = json['cnib'];
-        email = json['email'];
-        phone = json['phone'];
-        mdp = json['mdp'];
+        kycStatus = _asString(json['kyc_status']);
+        nom = _asString(json['nom']);
+        prenom = _asString(json['prenom']);
+        cnib = _asString(json['cnib']);
+        email = _asString(json['email']);
+        phone = _asString(json['phone']);
+        mdp = _asString(json['mdp']);
 
-        latitude = json['latitude'];
-        longitude = json['longitude'];
+        latitude = _asString(json['latitude']);
+        longitude = _asString(json['longitude']);
 
-        statut = json['statut'];
-        statutVehicule = json['statut_vehicule'];
-        statusCarImage = json['status_car_image'];
-        online = json['online'];
+        statut = _asString(json['statut']);
+        statutVehicule = _asString(json['statut_vehicule']);
+        statusCarImage = _asString(json['status_car_image']);
+        online = _asString(json['online']);
 
-        loginType = json['login_type'];
-        photo = json['photo'];
-        photoPath = json['photo_path'];
-        photoNic = json['photo_nic'];
-        photoNicPath = json['photo_nic_path'];
+        loginType = _asString(json['login_type']);
+        photo = _asString(json['photo']);
+        photoPath = _asString(json['photo_path']);
+        photoNic = _asString(json['photo_nic']);
+        photoNicPath = _asString(json['photo_nic_path']);
 
-        photoLicence = json['photo_licence'];
-        photoLicencePath = json['photo_licence_path'];
-        photoCarServiceBook = json['photo_car_service_book'];
-        photoCarServiceBookPath = json['photo_car_service_book_path'];
-        photoRoadWorthy = json['photo_road_worthy'];
-        photoRoadWorthyPath = json['photo_road_worthy_path'];
+        photoLicence = _asString(json['photo_licence']);
+        photoLicencePath = _asString(json['photo_licence_path']);
+        photoCarServiceBook = _asString(json['photo_car_service_book']);
+        photoCarServiceBookPath = _asString(json['photo_car_service_book_path']);
+        photoRoadWorthy = _asString(json['photo_road_worthy']);
+        photoRoadWorthyPath = _asString(json['photo_road_worthy_path']);
 
-        tonotify = json['tonotify'];
-        deviceId = json['device_id'];
-        fcmId = json['fcm_id'];
+        tonotify = _asString(json['tonotify']);
+        deviceId = _asString(json['device_id']);
+        fcmId = _asString(json['fcm_id']);
 
-        address = json['address'];
-        bankName = json['bank_name'];
-        branchName = json['branch_name'];
-        holderName = json['holder_name'];
-        accountNo = json['account_no'];
-        otherInfo = json['other_info'];
-        ifscCode = json['ifsc_code'];
+        address = _asString(json['address']);
+        bankName = _asString(json['bank_name']);
+        branchName = _asString(json['branch_name']);
+        holderName = _asString(json['holder_name']);
+        accountNo = _asString(json['account_no']);
+        otherInfo = _asString(json['other_info']);
+        ifscCode = _asString(json['ifsc_code']);
 
-        creer = json['creer'];
-        modifier = json['modifier'];
-        updatedAt = json['updated_at'];
+        creer = _asString(json['creer']);
+        modifier = _asString(json['modifier']);
+        updatedAt = _asString(json['updated_at']);
 
-        amount = json['amount'];
-        earnAmount = json['earn_amount'];
+        amount = _asString(json['amount']);
+        earnAmount = _asString(json['earn_amount']);
 
-        resetPasswordOtp = json['reset_password_otp'];
-        resetPasswordOtpModifier = json['reset_password_otp_modifier'];
+        resetPasswordOtp = _asString(json['reset_password_otp']);
+        resetPasswordOtpModifier = _asString(json['reset_password_otp_modifier']);
 
-        deletedAt = json['deleted_at'];
+        deletedAt = _asString(json['deleted_at']);
 
-        isVerified = json['is_verified'];
-        parcelDelivery = json['parcel_delivery'];
-        zoneId = json['zone_id'];
+        isVerified = _asInt(json['is_verified']);
+        parcelDelivery = _asString(json['parcel_delivery']);
+        zoneId = _asString(json['zone_id']);
 
-        subscriptionPlanId = json['subscriptionPlanId'];
-        subscriptionExpiryDate = json['subscriptionExpiryDate'];
-        subscriptionTotalOrders = json['subscriptionTotalOrders'];
-        subscriptionPlan = json['subscription_plan'];
-        adminCommission = json['adminCommission'];
+        subscriptionPlanId = _asString(json['subscriptionPlanId'] ?? json['subscription_plan_id']);
+        subscriptionExpiryDate = _asString(json['subscriptionExpiryDate'] ?? json['subscription_expiry_date']);
+        subscriptionTotalOrders = _asString(json['subscriptionTotalOrders']);
+        subscriptionPlan = _asString(json['subscription_plan']);
+        adminCommission = _asString(json['adminCommission'] ?? json['admin_commission']);
 
-        driverOnRide = json['driver_on_ride'];
+        driverOnRide = _asString(json['driver_on_ride']);
     }
 
     Map<String, dynamic> toJson() {
@@ -314,7 +327,12 @@ class AccountData {
 
         return data;
     }
-    String getFullName() { return '${prenom ?? ''} ${nom ?? ''}'.trim();
+    String getFullName() {
+        final fromNames = '${prenom ?? ''} ${nom ?? ''}'.trim();
+        if (fromNames.isNotEmpty) return fromNames;
+        final holder = holderName?.trim();
+        if (holder != null && holder.isNotEmpty) return holder;
+        return '';
     }
     int? getDaysToStart() {if (startDate == null) return null;
         try { final expiry = DateTime.parse(startDate!);
