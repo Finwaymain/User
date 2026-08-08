@@ -70,14 +70,27 @@ class _ServiceCategoryDetailScreenState extends State<ServiceCategoryDetailScree
   }
 
   void _onTapChild(ServiceCategoryData child) {
-    final name = (child.libelle ?? '').toLowerCase();
-    if (name.contains('lab sample') || name.contains('lab collection')) {
+    final rawName = child.libelle ?? '';
+    final cleanName = cleanServiceName(rawName);
+    final lower = cleanName.toLowerCase();
+
+    if (lower.contains('lab sample') || lower.contains('lab collection')) {
       Get.to(() => LabSampleSelectionScreen(categoryName: cleanServiceName(widget.categoryName)));
-    } else if (child.hasChildren || (child.id != null && child.id! > 0)) {
-      Get.to(() => ServiceCategoryDetailScreen(categoryId: child.id!, categoryName: child.libelle ?? ''));
-    } else {
-      Get.to(() => ServiceRequestScreen(serviceName: child.libelle ?? '', categoryName: cleanServiceName(widget.categoryName)));
+      return;
     }
+
+    final isParent = AllServicesController.subCategoryCatalog.keys.any((key) =>
+        key.toLowerCase() == lower || lower.contains(key.toLowerCase()) || key.toLowerCase().contains(lower));
+
+    if (isParent || child.hasChildren) {
+      Get.to(() => ServiceCategoryDetailScreen(categoryId: child.id ?? 0, categoryName: rawName));
+      return;
+    }
+
+    Get.to(() => ServiceRequestScreen(
+          serviceName: rawName,
+          categoryName: cleanServiceName(widget.categoryName),
+        ));
   }
 
   @override

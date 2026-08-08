@@ -111,18 +111,25 @@ class _AllServicesScreenState extends State<AllServicesScreen> {
   }
 
   void _onTapCategory(ServiceCategoryData category) {
-    final id = category.id;
-    final name = (category.libelle ?? '').toLowerCase();
-    if (name.contains('lab sample') || name.contains('lab collection')) {
+    final rawName = category.libelle ?? '';
+    final cleanName = cleanServiceName(rawName);
+    final lower = cleanName.toLowerCase();
+
+    if (lower.contains('lab sample') || lower.contains('lab collection')) {
       Get.to(() => LabSampleSelectionScreen(categoryName: _parentCategoryName(category)));
       return;
     }
-    if (category.hasChildren || (id != null && id > 0)) {
-      Get.to(() => ServiceCategoryDetailScreen(categoryId: id!, categoryName: category.libelle ?? ''));
+
+    final isParent = AllServicesController.subCategoryCatalog.keys.any((key) =>
+        key.toLowerCase() == lower || lower.contains(key.toLowerCase()) || key.toLowerCase().contains(lower));
+
+    if (isParent || category.hasChildren) {
+      Get.to(() => ServiceCategoryDetailScreen(categoryId: category.id ?? 0, categoryName: rawName));
       return;
     }
+
     Get.to(() => ServiceRequestScreen(
-          serviceName: category.libelle ?? '',
+          serviceName: rawName,
           categoryName: _parentCategoryName(category),
         ));
   }
