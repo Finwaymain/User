@@ -290,6 +290,7 @@ class _LabSampleSelectionScreenState extends State<LabSampleSelectionScreen> {
                     context,
                     title: "Proceed to Booking".tr,
                     btnColor: AppThemeData.primary200,
+                    txtColor: Colors.white,
                     radius: 10,
                     onPress: _proceedToBooking,
                   ),
