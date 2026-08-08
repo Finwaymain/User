@@ -6,6 +6,7 @@ import 'package:finway/controller/all_services_controller.dart';
 import 'package:finway/model/service_category_model.dart';
 import 'package:finway/themes/constant_colors.dart';
 import 'package:finway/utils/dark_theme_provider.dart';
+import 'lab_sample_selection_screen.dart';
 import 'service_category_icon.dart';
 import 'service_category_tile.dart';
 import 'service_request_screen.dart';
@@ -69,7 +70,10 @@ class _ServiceCategoryDetailScreenState extends State<ServiceCategoryDetailScree
   }
 
   void _onTapChild(ServiceCategoryData child) {
-    if (child.hasChildren) {
+    final name = (child.libelle ?? '').toLowerCase();
+    if (name.contains('lab sample') || name.contains('lab collection')) {
+      Get.to(() => LabSampleSelectionScreen(categoryName: cleanServiceName(widget.categoryName)));
+    } else if (child.hasChildren || (child.id != null && child.id! > 0)) {
       Get.to(() => ServiceCategoryDetailScreen(categoryId: child.id!, categoryName: child.libelle ?? ''));
     } else {
       Get.to(() => ServiceRequestScreen(serviceName: child.libelle ?? '', categoryName: cleanServiceName(widget.categoryName)));

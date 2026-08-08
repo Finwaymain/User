@@ -34,9 +34,15 @@ class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
   double? _lng;
   String _addressType = 'Home';
   String _contactMethod = 'Online';
+  String _bookingFrequency = 'Hourly';
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
   bool _isSubmitting = false;
+
+  bool get _supportsFrequencySelection {
+    final combined = "${widget.serviceName} ${widget.categoryName}".toLowerCase();
+    return RegExp(r'\btutor\b|\btuition\b|\bnurs\b|\bphysio\b|\belderly\b|\bpatient care\b|\bmaid\b|\bcook\b|\bdriver\b|\bbabysitter\b|\bteacher\b').hasMatch(combined);
+  }
 
   @override
   void initState() {
@@ -93,6 +99,10 @@ class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
     final dateStr = "${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}";
     final timeStr = _selectedTime != null ? _selectedTime!.format(context) : '';
 
+    final fullDescription = _supportsFrequencySelection
+        ? "[Plan: ${_bookingFrequency}]\n" + _descriptionController.text
+        : _descriptionController.text;
+
     final success = await _controller.bookService({
       'user_id': _controller.currentUserId?.toString() ?? '',
       'service_name': widget.serviceName,
@@ -101,7 +111,8 @@ class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
       'lng': _requiresHomeVisit ? _lng.toString() : '',
       'date': dateStr,
       'time': timeStr,
-      'description': _descriptionController.text,
+      'description': fullDescription,
+      'booking_frequency': _bookingFrequency,
       'booking_mode': _requiresHomeVisit ? 'home_visit' : 'remote',
     });
 
@@ -235,6 +246,25 @@ class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
                     label: Text(method.tr),
                     selected: selected,
                     onSelected: (_) => setState(() => _contactMethod = method),
+                    selectedColor: style.color.withValues(alpha: 0.15),
+                    labelStyle: TextStyle(color: selected ? style.color : Colors.grey, fontFamily: AppThemeData.medium, fontSize: 12),
+                  );
+                }).toList(),
+              ),
+            ],
+            if (_supportsFrequencySelection) ...[
+              const SizedBox(height: 20),
+              _sectionTitle("Booking Plan / Duration".tr, isDarkMode),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: ['Hourly', 'Daily', 'Monthly', 'Yearly / Course'].map((freq) {
+                  final selected = _bookingFrequency == freq;
+                  return ChoiceChip(
+                    label: Text(freq.tr),
+                    selected: selected,
+                    onSelected: (_) => setState(() => _bookingFrequency = freq),
                     selectedColor: style.color.withValues(alpha: 0.15),
                     labelStyle: TextStyle(color: selected ? style.color : Colors.grey, fontFamily: AppThemeData.medium, fontSize: 12),
                   );
