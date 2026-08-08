@@ -30,50 +30,54 @@ class ServiceCategoryTile extends StatelessWidget {
     final hasSubtitle = subtitle != null && subtitle!.isNotEmpty;
     final resolvedIconSize = hasSubtitle ? (iconSize * 0.85).clamp(44.0, iconSize) : iconSize;
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        mainAxisSize: MainAxisSize.max,
-        children: [
-          ServiceCategoryIcon(
-            label: label,
-            imageUrl: imageUrl,
-            size: resolvedIconSize,
-            parentStyle: parentStyle,
-          ),
-          const SizedBox(height: 6),
-          Flexible(
-            child: Text(
-              cleanServiceName(label).tr,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontFamily: AppThemeData.medium,
-                fontSize: 11,
-                height: 1.15,
-                color: isDarkMode ? AppThemeData.grey900Dark : AppThemeData.grey900,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            ServiceCategoryIcon(
+              label: label,
+              imageUrl: imageUrl,
+              size: resolvedIconSize,
+              parentStyle: parentStyle,
+            ),
+            const SizedBox(height: 6),
+            Flexible(
+              child: Text(
+                cleanServiceName(label).tr,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: AppThemeData.medium,
+                  fontSize: 11,
+                  height: 1.15,
+                  color: isDarkMode ? AppThemeData.grey900Dark : AppThemeData.grey900,
+                ),
               ),
             ),
-          ),
-          if (hasSubtitle) ...[
-            const SizedBox(height: 2),
-            Text(
-              subtitle!,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontFamily: AppThemeData.regular,
-                fontSize: 8,
-                height: 1.1,
-                color: AppThemeData.grey500,
+            if (hasSubtitle) ...[
+              const SizedBox(height: 2),
+              Text(
+                subtitle!,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: AppThemeData.regular,
+                  fontSize: 8,
+                  height: 1.1,
+                  color: AppThemeData.grey500,
+                ),
               ),
-            ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

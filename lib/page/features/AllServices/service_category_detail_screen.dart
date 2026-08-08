@@ -61,6 +61,8 @@ class _ServiceCategoryDetailScreenState extends State<ServiceCategoryDetailScree
   @override
   void initState() {
     super.initState();
+    _children = _controller.fallbackSubCategories(widget.categoryName);
+    _isLoading = _children.isEmpty;
     _load();
   }
 

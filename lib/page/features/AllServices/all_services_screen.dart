@@ -49,6 +49,8 @@ class _AllServicesScreenState extends State<AllServicesScreen> {
   @override
   void initState() {
     super.initState();
+    _categories = _controller.fallbackHomeCategories();
+    _isLoading = _categories.isEmpty;
     _load();
   }
 
