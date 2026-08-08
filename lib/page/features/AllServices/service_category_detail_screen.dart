@@ -65,7 +65,7 @@ class _ServiceCategoryDetailScreenState extends State<ServiceCategoryDetailScree
   }
 
   Future<void> _load() async {
-    final data = await _controller.fetchCategories(parentId: widget.categoryId);
+    final data = await _controller.fetchCategories(parentId: widget.categoryId, categoryName: widget.categoryName);
     if (mounted) setState(() { _children = data; _isLoading = false; });
   }
 
