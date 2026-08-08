@@ -8,6 +8,7 @@ import 'package:finway/controller/all_services_controller.dart';
 import 'package:finway/model/service_category_model.dart';
 import 'package:finway/themes/constant_colors.dart';
 import 'package:finway/utils/dark_theme_provider.dart';
+import 'lab_sample_selection_screen.dart';
 import 'service_category_detail_screen.dart';
 import 'service_category_tile.dart';
 import 'service_request_screen.dart';
@@ -111,8 +112,13 @@ class _AllServicesScreenState extends State<AllServicesScreen> {
 
   void _onTapCategory(ServiceCategoryData category) {
     final id = category.id;
-    if (category.hasChildren && id != null && id > 0) {
-      Get.to(() => ServiceCategoryDetailScreen(categoryId: id, categoryName: category.libelle ?? ''));
+    final name = (category.libelle ?? '').toLowerCase();
+    if (name.contains('lab sample') || name.contains('lab collection')) {
+      Get.to(() => LabSampleSelectionScreen(categoryName: _parentCategoryName(category)));
+      return;
+    }
+    if (category.hasChildren || (id != null && id > 0)) {
+      Get.to(() => ServiceCategoryDetailScreen(categoryId: id!, categoryName: category.libelle ?? ''));
       return;
     }
     Get.to(() => ServiceRequestScreen(
