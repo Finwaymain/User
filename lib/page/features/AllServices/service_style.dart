@@ -48,6 +48,38 @@ String cleanServiceName(String? name) {
   return name.replaceAll(RegExp(r'[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]', unicode: true), '').trim();
 }
 
+/// Parses multi-select lab / service summaries into individual service names.
+List<String> parseSelectedServiceNames(String? raw) {
+  if (raw == null || raw.trim().isEmpty) return [];
+
+  final names = <String>[];
+  final seen = <String>{};
+
+  void addName(String value) {
+    final clean = cleanServiceName(value).trim();
+    if (clean.isEmpty) return;
+    final key = clean.toLowerCase();
+    if (seen.add(key)) names.add(clean);
+  }
+
+  for (final line in raw.split(RegExp(r'\r?\n'))) {
+    var text = line.trim();
+    if (text.isEmpty) continue;
+    text = text.replaceFirst(RegExp(r'^[-•*]\s*'), '');
+    text = text.replaceFirst(RegExp(r'^Selected\s+.+?\(\d+\):\s*', caseSensitive: false), '');
+    text = text.trim();
+    if (text.isEmpty) continue;
+    if (RegExp(r'^Selected\s+.+?\(\d+\):\s*$', caseSensitive: false).hasMatch(text)) continue;
+    addName(text);
+  }
+
+  if (names.isEmpty) {
+    addName(raw.replaceFirst(RegExp(r'^Selected\s+.+?\(\d+\):\s*', caseSensitive: false), ''));
+  }
+
+  return names;
+}
+
 bool isParentServiceCategory(String? rawName) {
   if (rawName == null) return false;
   final clean = cleanServiceName(rawName).trim().toLowerCase();

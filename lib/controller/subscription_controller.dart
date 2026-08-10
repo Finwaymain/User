@@ -5,6 +5,7 @@ import 'package:finway/constant/constant.dart';
 import 'package:finway/constant/logdata.dart';
 import 'package:finway/constant/show_toast_dialog.dart';
 import 'package:finway/controller/dash_board_controller.dart';
+import 'package:finway/controller/wallet_controller.dart';
 import 'package:finway/model/payment_setting_model.dart';
 import 'package:finway/model/razorpay_gen_orderid_model.dart';
 import 'package:finway/model/subscription_plan_model.dart';
@@ -21,6 +22,7 @@ class SubscriptionController extends GetxController {
   RxList<SubscriptionPlanData> subscriptionPlanList = <SubscriptionPlanData>[].obs;
   Rx<SubscriptionPlanData> selectedSubscriptionPlan = SubscriptionPlanData().obs;
   RxBool isLoading = true.obs;
+  RxString loadError = ''.obs;
   RxDouble totalAmount = 0.0.obs;
   Rx<UserModel> userModel = UserModel().obs;
 
@@ -41,12 +43,15 @@ class SubscriptionController extends GetxController {
 
   @override
   void onInit() {
-    getInitData();
     super.onInit();
+    refreshAll();
   }
 
   RxString ref = ''.obs;
-  Future<void> getInitData() async {
+
+  Future<void> refreshAll() async {
+    isLoading.value = true;
+    loadError.value = '';
     await getUsrData();
     await getPaymentSettingData();
     await getSubscription();
@@ -58,7 +63,6 @@ class SubscriptionController extends GetxController {
         await Stripe.instance.applySettings();
       } catch (e) {
         showLog("Stripe initialization error: $e");
-        // Continue without Stripe - other payment methods will still work
       }
     }
   }
@@ -82,52 +86,70 @@ class SubscriptionController extends GetxController {
     try {
       final response = await http.get(Uri.parse(API.paymentSetting), headers: API.header).timeout(const Duration(seconds: 10));
       showLog("API :: URL :: ${API.paymentSetting} ");
-      showLog("API :: Request Header :: ${API.header.toString()} ");
       showLog("API :: responseStatus :: ${response.statusCode} ");
-      showLog("API :: responseBody :: ${response.body} ");
       Map<String, dynamic> responseBody = json.decode(response.body);
       if (response.statusCode == 200 && responseBody['success'] == "success") {
         await Preferences.setString(Preferences.paymentSetting, jsonEncode(responseBody));
         paymentSettingModel.value = Constant.getPaymentSetting();
       }
     } catch (e) {
-      // Silently fail - don't block UI
+      paymentSettingModel.value = Constant.getPaymentSetting();
     }
     return null;
   }
 
   Future<bool> completeSubscription({bool redirect = false}) async {
+    final planId = selectedSubscriptionPlan.value.id;
+    final userId = userModel.value.data?.id;
+
+    if (planId == null || planId.isEmpty) {
+      ShowToastDialog.showToast('Please select a subscription plan');
+      return false;
+    }
+    if (userId == null || userId.isEmpty) {
+      ShowToastDialog.showToast('Please login to purchase a plan');
+      return false;
+    }
+    if (selectedRadioTile.value.isEmpty) {
+      ShowToastDialog.showToast('Please select a payment method');
+      return false;
+    }
+
     try {
       ShowToastDialog.showLoader("Please wait");
-      Map<String, String> bodyParams = {
-        "planId": selectedSubscriptionPlan.value.id.toString(),
-        "userId": userModel.value.data!.id.toString(),
-        "paymentType": selectedRadioTile.value
+      final bodyParams = {
+        "planId": planId,
+        "userId": userId,
+        "paymentType": selectedRadioTile.value,
       };
-      final response = await http.post(Uri.parse(API.setSubscription), headers: API.header, body: jsonEncode(bodyParams)).timeout(const Duration(seconds: 30));
+      final response = await http
+          .post(Uri.parse(API.setSubscription), headers: API.header, body: jsonEncode(bodyParams))
+          .timeout(const Duration(seconds: 30));
       showLog("API :: URL :: ${API.setSubscription} ");
       showLog("API :: Request Body :: ${jsonEncode(bodyParams)} ");
       showLog("API :: responseStatus :: ${response.statusCode} ");
       showLog("API :: responseBody :: ${response.body} ");
 
-      Map<String, dynamic> responseBody = json.decode(response.body);
+      final rawBody = response.body.trim();
+      if (rawBody.isEmpty || rawBody.startsWith('<!DOCTYPE') || rawBody.startsWith('<html')) {
+        ShowToastDialog.closeLoader();
+        ShowToastDialog.showToast('Server error while activating plan. Please try again.');
+        return false;
+      }
+
+      final responseBody = json.decode(rawBody);
       if (response.statusCode == 200 && responseBody['success'] == "success") {
-        userModel.value.data?.consumerPlan = selectedSubscriptionPlan.value;
-        userModel.value.data?.consumerPlanId = selectedSubscriptionPlan.value.id;
-        await Preferences.setString(Preferences.user, jsonEncode(userModel.value));
-        
-        // Refresh dashboard controller user data
-        if (Get.isRegistered<DashBoardController>()) {
-          await Get.find<DashBoardController>().getUsrData();
-        }
-        
+        await _applySubscriptionSuccess(responseBody);
         ShowToastDialog.closeLoader();
         ShowToastDialog.showToast(responseBody['message'] ?? 'Subscription plan updated successfully!');
         return true;
       } else {
         ShowToastDialog.closeLoader();
-        ShowToastDialog.showToast(responseBody['error'] ?? 'Something went wrong. Please try again later');
+        ShowToastDialog.showToast(responseBody['message'] ?? responseBody['error'] ?? 'Something went wrong. Please try again later');
       }
+    } on TimeoutException {
+      ShowToastDialog.closeLoader();
+      ShowToastDialog.showToast('Request timed out. Please try again.');
     } catch (e) {
       ShowToastDialog.closeLoader();
       ShowToastDialog.showToast(e.toString());
@@ -135,49 +157,104 @@ class SubscriptionController extends GetxController {
     return false;
   }
 
+  Future<void> _applySubscriptionSuccess(Map<String, dynamic> responseBody) async {
+    final plan = selectedSubscriptionPlan.value;
+    final user = userModel.value.data;
+    if (user == null) return;
+
+    user.consumerPlanId = plan.id;
+    user.consumerPlan = plan;
+
+    final data = responseBody['data'];
+    if (data is Map<String, dynamic>) {
+      user.consumerPlanId = data['consumer_plan_id']?.toString() ?? plan.id;
+      user.consumerPlanExpiryDate = data['consumer_plan_expiry_date']?.toString();
+      if (data['amount'] != null) {
+        user.amount = data['amount']?.toString();
+      }
+      if (data['consumer_plan'] is Map<String, dynamic>) {
+        user.consumerPlan = SubscriptionPlanData.fromJson(Map<String, dynamic>.from(data['consumer_plan']));
+        selectedSubscriptionPlan.value = user.consumerPlan!;
+      }
+    } else {
+      final days = int.tryParse(plan.expiryDay ?? '') ?? 365;
+      user.consumerPlanExpiryDate = DateTime.now().add(Duration(days: days)).toIso8601String();
+    }
+
+    userModel.refresh();
+    await Preferences.setString(Preferences.user, jsonEncode(userModel.value));
+
+    if (Get.isRegistered<DashBoardController>()) {
+      await Get.find<DashBoardController>().getUsrData();
+    }
+    if (Get.isRegistered<WalletController>()) {
+      final walletController = Get.find<WalletController>();
+      await walletController.getAmount();
+      await walletController.getTransaction(showLoader: false);
+    }
+  }
+
   Future<dynamic> getSubscription() async {
+    isLoading.value = true;
+    loadError.value = '';
+
     try {
       showLog("API :: URL :: ${API.getSubscriptionPlans}");
-      final response = await http.get(Uri.parse(API.getSubscriptionPlans), headers: API.header).timeout(const Duration(seconds: 10));
+      final response = await http.get(Uri.parse(API.getSubscriptionPlans), headers: API.header).timeout(const Duration(seconds: 15));
       showLog("API :: Response Status :: ${response.statusCode}");
       showLog("API :: Response Body :: ${response.body}");
-      
-      Map<String, dynamic> responseBody = json.decode(response.body);
-      if (response.statusCode == 200 && responseBody['success'] == "success") {
-        isLoading.value = false;
-        SubscriptionPlanModel model = SubscriptionPlanModel.fromJson(responseBody);
-        showLog("API :: Model Data Count :: ${model.data?.length ?? 0}");
-        if (model.data?.isNotEmpty == true) {
-          List<SubscriptionPlanData> subscriptionPlanData = model.data!;
-          subscriptionPlanData.sort((a, b) {
-            final aPlace = int.tryParse(a.place ?? '') ?? 0;
-            final bPlace = int.tryParse(b.place ?? '') ?? 0;
-            return aPlace.compareTo(bPlace);
-          });
-          
-          subscriptionPlanList.clear();
-          subscriptionPlanList.addAll(subscriptionPlanData);
-          showLog("API :: Subscription Plan List Count :: ${subscriptionPlanList.length}");
 
-          if (userModel.value.data?.consumerPlanId != null && userModel.value.data?.id != null) {
-            for (int i = 0; i < subscriptionPlanList.length; i++) {
-              if (subscriptionPlanList[i].id == userModel.value.data!.consumerPlanId) {
-                selectedSubscriptionPlan.value = subscriptionPlanList[i];
-              }
-            }
-          } else {
-            selectedSubscriptionPlan.value = model.data!.first;
-          }
+      final responseBody = json.decode(response.body);
+      if (response.statusCode == 200 && responseBody['success'] == "success" && responseBody['data'] is List) {
+        final model = SubscriptionPlanModel.fromJson(responseBody);
+        final plans = model.data ?? [];
+
+        if (plans.isEmpty) {
+          subscriptionPlanList.clear();
+          loadError.value = 'No subscription plans available right now.';
+        } else {
+          plans.sort((a, b) {
+            final aOrder = int.tryParse(a.place ?? '') ?? 0;
+            final bOrder = int.tryParse(b.place ?? '') ?? 0;
+            return aOrder.compareTo(bOrder);
+          });
+
+          subscriptionPlanList.assignAll(plans);
+          _syncSelectedPlanWithUser();
         }
       } else {
-        isLoading.value = false;
-        showLog("API :: Error :: ${responseBody['error'] ?? 'Unknown error'}");
+        subscriptionPlanList.clear();
+        loadError.value = responseBody['error']?.toString() ?? responseBody['message']?.toString() ?? 'Unable to load plans';
+        showLog("API :: Error :: ${loadError.value}");
       }
+    } on TimeoutException {
+      subscriptionPlanList.clear();
+      loadError.value = 'Connection timed out. Pull to refresh and try again.';
     } catch (e) {
-      isLoading.value = false;
+      subscriptionPlanList.clear();
+      loadError.value = 'Unable to load subscription plans';
       showLog("API :: Exception :: $e");
+    } finally {
+      isLoading.value = false;
     }
     return null;
+  }
+
+  void _syncSelectedPlanWithUser() {
+    if (subscriptionPlanList.isEmpty) return;
+
+    final activePlanId = userModel.value.data?.consumerPlanId?.toString();
+    if (activePlanId != null && activePlanId.isNotEmpty) {
+      final activePlan = subscriptionPlanList.firstWhereOrNull((plan) => plan.id?.toString() == activePlanId);
+      if (activePlan != null) {
+        selectedSubscriptionPlan.value = activePlan;
+        totalAmount.value = double.tryParse(activePlan.price ?? '0') ?? 0;
+        return;
+      }
+    }
+
+    selectedSubscriptionPlan.value = subscriptionPlanList.first;
+    totalAmount.value = double.tryParse(subscriptionPlanList.first.price ?? '0') ?? 0;
   }
 
   Future<dynamic> payStackURLGen({required String amount, required secretKey}) async {
@@ -216,10 +293,6 @@ class SubscriptionController extends GetxController {
 
       var response = await http.post(Uri.parse('https://api.stripe.com/v1/payment_intents'),
           body: body, headers: {'Authorization': 'Bearer $stripeSecret', 'Content-Type': 'application/x-www-form-urlencoded'});
-      showLog("API :: URL :: https://api.stripe.com/v1/payment_intents");
-      showLog("API :: Request Body :: ${jsonEncode(body)} ");
-      showLog("API :: responseStatus :: ${response.statusCode} ");
-      showLog("API :: responseBody :: ${response.body} ");
       return jsonDecode(response.body);
     } catch (e) {
       print("=====$e");
@@ -247,21 +320,6 @@ class SubscriptionController extends GetxController {
           "isSandBoxEnabled": paymentSettingModel.value.razorpay!.isSandboxEnabled,
         },
       );
-      showLog("API :: URL :: $url");
-      showLog("API :: Request Body :: ${jsonEncode({
-            "amount": (amount * 100).toString(),
-            "receipt_id": orderId,
-            "currency": "INR",
-            "razorpaykey": paymentSettingModel.value.razorpay!.key,
-            "razorPaySecret": paymentSettingModel.value.razorpay!.secretKey,
-            "isSandBoxEnabled": paymentSettingModel.value.razorpay!.isSandboxEnabled,
-          })} ");
-      showLog("API :: Request Header :: ${{
-        'apikey': API.apiKey,
-        'accesstoken': Preferences.getString(Preferences.accesstoken),
-      }.toString()} ");
-      showLog("API :: responseStatus :: ${response.statusCode} ");
-      showLog("API :: responseBody :: ${response.body} ");
       final responseBody = json.decode(response.body);
 
       if (response.statusCode == 200 && responseBody['id'] != null) {

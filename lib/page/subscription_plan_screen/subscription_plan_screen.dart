@@ -31,7 +31,7 @@ class SubscriptionPlanScreen extends StatefulWidget {
 }
 
 class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
-  final SubscriptionController controller = Get.put(SubscriptionController());
+  late final SubscriptionController controller;
   final Razorpay razorPayController = Razorpay();
 
   // View Navigation Modes
@@ -44,8 +44,18 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
   @override
   void initState() {
     super.initState();
+    if (Get.isRegistered<SubscriptionController>()) {
+      controller = Get.find<SubscriptionController>();
+    } else {
+      controller = Get.put(SubscriptionController());
+    }
     viewMode = 'dashboard';
-    controller.getInitData();
+    razorPayController.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+    razorPayController.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWaller);
+    razorPayController.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.refreshAll();
+    });
   }
 
   @override
@@ -90,8 +100,7 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
     final isDark = themeChange.getThem();
 
     return GetX<SubscriptionController>(
-      init: SubscriptionController(),
-      builder: (controller) {
+      builder: (ctrl) {
         return WillPopScope(
           onWillPop: () async {
             if (viewMode != 'dashboard') {
@@ -131,7 +140,7 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
             body: SafeArea(
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 250),
-                child: _buildCurrentView(isDark, controller),
+                child: _buildCurrentView(isDark, ctrl),
               ),
             ),
           ),
@@ -478,9 +487,22 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
                   ? Center(
                       child: Padding(
                         padding: const EdgeInsets.all(32),
-                        child: Text(
-                          "No subscription plans available right now.".tr,
-                          style: TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontSize: 14),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              controller.loadError.value.isNotEmpty
+                                  ? controller.loadError.value
+                                  : "No subscription plans available right now.".tr,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontSize: 14),
+                            ),
+                            const SizedBox(height: 16),
+                            OutlinedButton(
+                              onPressed: controller.refreshAll,
+                              child: Text('Retry'.tr),
+                            ),
+                          ],
                         ),
                       ),
                     )
@@ -967,7 +989,7 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
   }
 
   // Payment Options Bottom Sheet
-  Future<dynamic> paymentDialog(BuildContext context, SubscriptionController controller, bool isDarkMode) {
+  Future<dynamic> paymentDialog(BuildContext context, SubscriptionController paymentController, bool isDarkMode) {
     return showModalBottomSheet(
       elevation: 5,
       useRootNavigator: true,
@@ -976,118 +998,115 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
       context: context,
       backgroundColor: isDarkMode ? AppThemeData.surface50Dark : AppThemeData.surface50,
       builder: (context) {
-        return GetX<SubscriptionController>(
-          init: SubscriptionController(),
-          initState: (controller) {
-            razorPayController.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
-            razorPayController.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWaller);
-            razorPayController.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
-          },
-          builder: (controller) {
-            return SizedBox(
-              height: Get.height / 1.15,
-              child: SingleChildScrollView(
-                child: InkWell(
-                  onTap: () => FocusScope.of(context).unfocus(),
-                  child: Column(
-                    children: [
-                      Center(
-                        child: Container(
-                          margin: const EdgeInsets.symmetric(vertical: 10),
-                          height: 8,
-                          width: 75,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(100),
-                            color: isDarkMode ? AppThemeData.grey300Dark : AppThemeData.grey300,
-                          ),
+        return Obx(() {
+          return SizedBox(
+            height: Get.height / 1.15,
+            child: SingleChildScrollView(
+              child: InkWell(
+                onTap: () => FocusScope.of(context).unfocus(),
+                child: Column(
+                  children: [
+                    Center(
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(vertical: 10),
+                        height: 8,
+                        width: 75,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(100),
+                          color: isDarkMode ? AppThemeData.grey300Dark : AppThemeData.grey300,
                         ),
                       ),
-                      Row(
-                        children: [
-                          IconButton(
-                            onPressed: () => Get.back(),
-                            icon: Transform(
-                              alignment: Alignment.center,
-                              transform: Directionality.of(context).name == 'rtl' ? Matrix4.rotationY(3.14159) : Matrix4.identity(),
-                              child: SvgPicture.asset(
-                                'assets/icons/ic_left.svg',
-                                width: 18,
-                                height: 18,
-                                colorFilter: ColorFilter.mode(
-                                  isDarkMode ? AppThemeData.grey50 : AppThemeData.grey900,
-                                  BlendMode.srcIn,
-                                ),
+                    ),
+                    Row(
+                      children: [
+                        IconButton(
+                          onPressed: () => Get.back(),
+                          icon: Transform(
+                            alignment: Alignment.center,
+                            transform: Directionality.of(context).name == 'rtl' ? Matrix4.rotationY(3.14159) : Matrix4.identity(),
+                            child: SvgPicture.asset(
+                              'assets/icons/ic_left.svg',
+                              width: 18,
+                              height: 18,
+                              colorFilter: ColorFilter.mode(
+                                isDarkMode ? AppThemeData.grey50 : AppThemeData.grey900,
+                                BlendMode.srcIn,
                               ),
                             ),
                           ),
-                          Text(
-                            "Select Payment Method".tr,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontFamily: AppThemeData.bold,
-                              color: isDarkMode ? AppThemeData.grey50 : AppThemeData.grey900,
+                        ),
+                        Text(
+                          "Select Payment Method".tr,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontFamily: AppThemeData.bold,
+                            color: isDarkMode ? AppThemeData.grey50 : AppThemeData.grey900,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        children: [
+                          buildPaymentOption(
+                            title: "Razorpay",
+                            value: "razorpay",
+                            controller: paymentController,
+                            isDarkMode: isDarkMode,
+                          ),
+                          buildPaymentOption(
+                            title: "Wallet",
+                            value: "wallet",
+                            controller: paymentController,
+                            isDarkMode: isDarkMode,
+                          ),
+                          buildPaymentOption(
+                            title: "Stripe",
+                            value: "stripe",
+                            controller: paymentController,
+                            isDarkMode: isDarkMode,
+                          ),
+                          const SizedBox(height: 20),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 48,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppThemeData.primary200,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              onPressed: paymentController.selectedRadioTile.value.isEmpty
+                                  ? null
+                                  : () async {
+                                      final method = paymentController.selectedRadioTile.value;
+                                      Get.back();
+                                      if (method == 'razorpay') {
+                                        razorpayPayment(paymentController);
+                                        return;
+                                      }
+                                      final success = await paymentController.completeSubscription();
+                                      if (!mounted) return;
+                                      if (success) {
+                                        setState(() => viewMode = 'activated');
+                                      }
+                                    },
+                              child: Text(
+                                "Pay ${Constant().amountShow(amount: paymentController.totalAmount.value.toString())}".tr,
+                                style: const TextStyle(fontSize: 16, fontFamily: AppThemeData.bold, color: Colors.white),
+                              ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 10),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Column(
-                          children: [
-                            buildPaymentOption(
-                              title: "Razorpay",
-                              value: "razorpay",
-                              controller: controller,
-                              isDarkMode: isDarkMode,
-                            ),
-                            buildPaymentOption(
-                              title: "Wallet",
-                              value: "wallet",
-                              controller: controller,
-                              isDarkMode: isDarkMode,
-                            ),
-                            buildPaymentOption(
-                              title: "Stripe",
-                              value: "stripe",
-                              controller: controller,
-                              isDarkMode: isDarkMode,
-                            ),
-                            const SizedBox(height: 20),
-                            SizedBox(
-                              width: double.infinity,
-                              height: 48,
-                              child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppThemeData.primary200,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                ),
-                                onPressed: () async {
-                                  if (controller.selectedRadioTile.value == 'razorpay') {
-                                    Get.back();
-                                    razorpayPayment(controller);
-                                  } else {
-                                    Get.back();
-                                    await controller.completeSubscription();
-                                    setState(() => viewMode = 'activated');
-                                  }
-                                },
-                                child: Text(
-                                  "Pay ${Constant().amountShow(amount: controller.totalAmount.value.toString())}".tr,
-                                  style: const TextStyle(fontSize: 16, fontFamily: AppThemeData.bold, color: Colors.white),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-            );
-          },
-        );
+            ),
+          );
+        });
       },
     );
   }
@@ -1146,8 +1165,11 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
 
   void _handlePaymentSuccess(PaymentSuccessResponse response) async {
     ShowToastDialog.showToast("Payment Successful!");
-    await controller.completeSubscription();
-    setState(() => viewMode = 'activated');
+    final success = await controller.completeSubscription();
+    if (!mounted) return;
+    if (success) {
+      setState(() => viewMode = 'activated');
+    }
   }
 
   void _handlePaymentError(PaymentFailureResponse response) {

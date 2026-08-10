@@ -153,6 +153,10 @@ class API {
   static const getServiceCategories = "${baseUrl}service-categories";
   static const bookService = "${baseUrl}book-service";
   static const serviceHistory = "${baseUrl}service-history";
+  static const serviceBookingDetail = "${baseUrl}service-booking/";
+  static const servicePriceEstimate = "${baseUrl}service-price-estimate";
+  static const payServiceBooking = "${baseUrl}service-booking/pay";
+  static const cancelServiceBooking = "${baseUrl}service-booking/cancel";
 
   // Subscription API Endpoints
   static const getSubscriptionPlans = "${baseUrl}get-consumer-plans";

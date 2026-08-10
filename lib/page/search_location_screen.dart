@@ -6,6 +6,7 @@ import 'package:finway/themes/constant_colors.dart';
 import 'package:finway/themes/responsive.dart';
 import 'package:finway/themes/text_field_them.dart';
 import 'package:finway/utils/dark_theme_provider.dart';
+import 'package:finway/utils/location_picker_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
@@ -77,10 +78,60 @@ class AddressSearchScreen extends StatelessWidget {
                                     controller.debouncer(() => controller.fetchAddress(v));
                                     return null;
                                   },
-                                  suffix: IconButton(onPressed: () {}, icon: SvgPicture.asset('assets/icons/ic_direction.svg')),
-                                  prefix: IconButton(onPressed: () {}, icon: SvgPicture.asset('assets/icons/ic_location.svg')),
+                                  suffix: IconButton(
+                                    onPressed: () async {
+                                      final picked = await LocationPickerHelper.fetchCurrentLocation();
+                                      if (picked != null) {
+                                        Get.back(result: picked.toSearchInfo());
+                                      }
+                                    },
+                                    icon: SvgPicture.asset('assets/icons/ic_direction.svg'),
+                                  ),
+                                  prefix: IconButton(
+                                    onPressed: () async {
+                                      final picked = await LocationPickerHelper.fetchCurrentLocation();
+                                      if (picked != null) {
+                                        Get.back(result: picked.toSearchInfo());
+                                      }
+                                    },
+                                    icon: SvgPicture.asset('assets/icons/ic_location.svg'),
+                                  ),
                                   hintText: 'Enter address or location'.tr,
                                   controller: controller.searchTxtController.value,
+                                ),
+                                const SizedBox(height: 12),
+                                InkWell(
+                                  onTap: () async {
+                                    final picked = await LocationPickerHelper.fetchCurrentLocation();
+                                    if (picked != null) {
+                                      Get.back(result: picked.toSearchInfo());
+                                    }
+                                  },
+                                  child: Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                    decoration: BoxDecoration(
+                                      color: AppThemeData.primary200.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(color: AppThemeData.primary200.withValues(alpha: 0.25)),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.my_location_rounded, color: AppThemeData.primary200, size: 20),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: Text(
+                                            'Use my current location (GPS)'.tr,
+                                            style: TextStyle(
+                                              fontFamily: AppThemeData.semiBold,
+                                              fontSize: 13,
+                                              color: isDarkMode ? AppThemeData.grey900Dark : AppThemeData.grey900,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
                                 const SizedBox(height: 20),
                                 if (controller.suggestionsList.isEmpty && controller.isSearch.value == false)

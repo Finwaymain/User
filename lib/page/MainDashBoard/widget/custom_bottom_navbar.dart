@@ -51,7 +51,7 @@ class CustomBottomNavBar extends StatelessWidget {
                 _navItem(Icons.home_rounded, 'Home', 0, isDark),
                 _navItem(Icons.search_rounded, 'Search', 1, isDark),
                 const SizedBox(width: 60),
-                _navItem(Icons.card_travel_rounded, 'Trips', 3, isDark),
+                _navItem(Icons.home_repair_service_outlined, 'Services', 3, isDark),
                 _navItem(Icons.account_balance_wallet_rounded, 'Wallet', 4, isDark),
               ],
             ),

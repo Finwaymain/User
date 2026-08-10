@@ -21,6 +21,8 @@ import '../../route_view_screen/route_view_screen.dart';
 import '../../route_view_screen/route_osm_view_screen.dart';
 import '../../home_screen/view/home_screen.dart';
 import '../../wallet/wallet_screen.dart';
+import '../../features/AllServices/service_history_screen.dart';
+import '../../../controller/service_history_controller.dart';
 
 class MainDashboard extends StatefulWidget {
   const MainDashboard({super.key});
@@ -36,11 +38,8 @@ class _MainDashboardState extends State<MainDashboard> {
     MainHomeScreen(),
     InProgressScreen(),
     InProgressScreen(),
+    const ServiceHistoryScreen(showScaffold: false),
     InProgressScreen(),
-    InProgressScreen(),
-    // Center(child: Text("Fingerprint Screen")),
-    // Center(child: Text("Travel Screen")),
-    // Center(child: Text("Receipt Screen")),
   ];
 
   @override
@@ -48,7 +47,15 @@ class _MainDashboardState extends State<MainDashboard> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkActiveRideAndRedirect();
+      _refreshServiceHistory();
     });
+  }
+
+  void _refreshServiceHistory() {
+    const tag = 'service_history_false';
+    if (Get.isRegistered<ServiceHistoryController>(tag: tag)) {
+      Get.find<ServiceHistoryController>(tag: tag).fetchHistory();
+    }
   }
 
   Future<void> _checkActiveRideAndRedirect() async {
@@ -96,6 +103,12 @@ class _MainDashboardState extends State<MainDashboard> {
     if (index == 4) {
       Get.to(() => WalletScreen());
       return;
+    }
+    if (index == 3) {
+      final tag = 'service_history_false';
+      if (Get.isRegistered<ServiceHistoryController>(tag: tag)) {
+        Get.find<ServiceHistoryController>(tag: tag).fetchHistory();
+      }
     }
     setState(() => currentIndex = index);
   }

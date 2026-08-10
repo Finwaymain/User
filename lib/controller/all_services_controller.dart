@@ -7,6 +7,7 @@ import 'package:finway/model/service_category_model.dart';
 import 'package:finway/page/features/AllServices/service_style.dart';
 import 'package:finway/service/api.dart';
 import 'package:finway/utils/Preferences.dart';
+import 'package:finway/page/features/AllServices/service_option_selection_screen.dart';
 
 class AllServicesController extends GetxController {
   /// Exact Home Services grid shown on "More" (matches product mockup).
@@ -71,7 +72,7 @@ class AllServicesController extends GetxController {
       'Elderly Care Nursing',
       'Post-Surgery Nursing Care',
     ],
-    'Home Tutor Services': [
+    'Home Tutor': [
       'School Tuition (Class 1-12)',
       'Mathematics & Science Tutor',
       'Physics & Chemistry Tutor',
@@ -79,11 +80,9 @@ class AllServicesController extends GetxController {
       'JEE / NEET Competitive Exam Tutor',
       'English & Foreign Language Tutor',
       'Computer & Coding Tutor',
-      'Music & Dance Tutor',
-      'Yoga & Fitness Trainer',
     ],
     'Education Services': [
-      'Home Tutor Services',
+      'Home Tutor',
       'Music Teacher',
       'Dance Teacher',
       'Yoga Trainer',
@@ -161,35 +160,66 @@ class AllServicesController extends GetxController {
     });
   }
 
-  List<ServiceCategoryData> fallbackSubCategories(String categoryName) {
-    final cleanName = cleanServiceName(categoryName);
-    final list = subCategoryCatalog[cleanName] ?? [];
-    if (list.isEmpty) {
-      for (final key in subCategoryCatalog.keys) {
-        if (key.toLowerCase().contains(cleanName.toLowerCase()) || cleanName.toLowerCase().contains(key.toLowerCase())) {
-          final foundList = subCategoryCatalog[key]!;
-          return List.generate(foundList.length, (i) {
-            final name = foundList[i];
-            return ServiceCategoryData(
-              id: -(i + 100),
-              libelle: name,
-              image: 'icon:${name}',
-              hasChildren: isParentServiceCategory(name),
-            );
-          });
-        }
+  static const Map<String, String> _catalogAliases = {
+    'home tutor services': 'Home Tutor',
+    'physiotherapist': 'Physiotherapy',
+  };
+
+  String _catalogKeyFor(String categoryName) {
+    final clean = cleanServiceName(categoryName);
+    if (subCategoryCatalog.containsKey(clean)) return clean;
+    final alias = _catalogAliases[clean.toLowerCase()];
+    if (alias != null) return alias;
+    for (final key in subCategoryCatalog.keys) {
+      final keyLower = key.toLowerCase();
+      final cleanLower = clean.toLowerCase();
+      if (keyLower.contains(cleanLower) || cleanLower.contains(keyLower)) {
+        return key;
       }
-      return [];
     }
+    return clean;
+  }
+
+  List<ServiceCategoryData> fallbackSubCategories(String categoryName) {
+    final catalogKey = _catalogKeyFor(categoryName);
+    final list = subCategoryCatalog[catalogKey] ?? [];
+    if (list.isEmpty) return [];
     return List.generate(list.length, (i) {
       final name = list[i];
       return ServiceCategoryData(
         id: -(i + 100),
         libelle: name,
-        image: 'icon:${name}',
+        image: 'icon:$name',
         hasChildren: isParentServiceCategory(name),
       );
     });
+  }
+
+  bool _isValidSelectionList(List<ServiceCategoryData> items, String categoryName) {
+    if (items.isEmpty) return false;
+    final clean = cleanServiceName(categoryName).toLowerCase();
+    if (items.length == 1) {
+      final only = cleanServiceName(items.first.libelle).toLowerCase();
+      if (only == clean || only.contains(clean) || clean.contains(only)) return false;
+    }
+    return true;
+  }
+
+  /// Loads selectable options (tutor types, doctor types, lab tests, etc.).
+  Future<List<ServiceCategoryData>> fetchSelectionOptions({
+    int? categoryId,
+    required String categoryName,
+  }) async {
+    final fallback = fallbackSubCategories(categoryName);
+    try {
+      if (categoryId != null && categoryId > 0) {
+        final byParent = await fetchCategories(parentId: categoryId, categoryName: categoryName);
+        if (_isValidSelectionList(byParent, categoryName)) return byParent;
+      }
+      return fallback;
+    } catch (_) {
+      return fallback;
+    }
   }
 
   Future<List<ServiceCategoryData>> fetchCategories({int? parentId, String? categoryName}) async {
@@ -209,6 +239,9 @@ class AllServicesController extends GetxController {
         if (list.isNotEmpty) {
           if (parentId == null && categoryName == null) {
             return _onlyHomeCatalog(list);
+          }
+          if (categoryName != null && parentId == null && !_isValidSelectionList(list, categoryName)) {
+            return fallback;
           }
           return list;
         }
@@ -255,19 +288,38 @@ class AllServicesController extends GetxController {
 
   Future<bool> bookService(Map<String, dynamic> bodyParams) async {
     try {
+      final userId = Preferences.getInt(Preferences.userId);
+      if (userId == 0) {
+        ShowToastDialog.showToast("Please login to book a service".tr);
+        return false;
+      }
+
+      bodyParams['user_id'] = userId.toString();
+      final headers = Map<String, String>.from(API.header);
+      headers['id_user'] = userId.toString();
+
       ShowToastDialog.showLoader("Submitting request...".tr);
-      final response = await http.post(
-        Uri.parse(API.bookService),
-        headers: API.header,
-        body: json.encode(bodyParams),
-      );
+      final response = await http
+          .post(
+            Uri.parse(API.bookService),
+            headers: headers,
+            body: json.encode(bodyParams),
+          )
+          .timeout(const Duration(seconds: 30));
       ShowToastDialog.closeLoader();
-      final body = json.decode(response.body);
+
+      final raw = response.body.trim();
+      if (raw.isEmpty || raw.startsWith('<!DOCTYPE') || raw.startsWith('<html')) {
+        ShowToastDialog.showToast('Server error while booking service'.tr);
+        return false;
+      }
+
+      final body = json.decode(raw);
       if (response.statusCode == 200 && body['success'] == 'success') {
-        ShowToastDialog.showToast("Service request submitted successfully".tr);
+        ShowToastDialog.showToast(body['message']?.toString() ?? "Service request submitted successfully".tr);
         return true;
       }
-      ShowToastDialog.showToast(body['message']?.toString() ?? "Failed to submit request".tr);
+      ShowToastDialog.showToast(body['message']?.toString() ?? body['error']?.toString() ?? "Failed to submit request".tr);
       return false;
     } catch (e) {
       ShowToastDialog.closeLoader();
@@ -277,4 +329,69 @@ class AllServicesController extends GetxController {
   }
 
   int? get currentUserId => Preferences.getInt(Preferences.userId);
+
+  List<ServiceOptionItem> labTestOptions() {
+    return const [
+      ServiceOptionItem(
+        id: 'cbc',
+        title: 'Complete Blood Count (CBC)',
+        description: 'Checks overall health, infection & anemia indicators',
+        icon: '🩸',
+      ),
+      ServiceOptionItem(
+        id: 'sugar_hba1c',
+        title: 'Blood Sugar & HbA1c',
+        description: 'Fasting, PP sugar and 3-month average blood glucose',
+        icon: '🍬',
+      ),
+      ServiceOptionItem(
+        id: 'thyroid',
+        title: 'Thyroid Profile (T3, T4, TSH)',
+        description: 'Evaluates thyroid hormone levels and metabolism',
+        icon: '🦋',
+      ),
+      ServiceOptionItem(
+        id: 'lipid',
+        title: 'Lipid Profile (Heart Risk)',
+        description: 'Cholesterol, HDL, LDL, and Triglycerides check',
+        icon: '❤️',
+      ),
+      ServiceOptionItem(
+        id: 'lft_kft',
+        title: 'Liver & Kidney Profile (LFT / KFT)',
+        description: 'Creatinine, Urea, Bilirubin & SGPT liver enzymes',
+        icon: '🏥',
+      ),
+      ServiceOptionItem(
+        id: 'vitamins',
+        title: 'Vitamin D & Vitamin B12 Test',
+        description: 'Checks essential bone & nerve vitamin deficiencies',
+        icon: '☀️',
+      ),
+      ServiceOptionItem(
+        id: 'urine_stool',
+        title: 'Routine Urine & Stool Examination',
+        description: 'Screening for infection, protein & digestive health',
+        icon: '🧪',
+      ),
+      ServiceOptionItem(
+        id: 'fever_panel',
+        title: 'Fever Panel (COVID, Dengue, Malaria, Typhoid)',
+        description: 'Rapid diagnostic screening for viral & bacterial fevers',
+        icon: '🤒',
+      ),
+      ServiceOptionItem(
+        id: 'full_body',
+        title: 'Full Body Health Checkup Package',
+        description: 'Comprehensive 60+ parameters essential health suite',
+        icon: '🔬',
+      ),
+      ServiceOptionItem(
+        id: 'express_blood',
+        title: 'Express Home Blood Sample Collection (1 Hr)',
+        description: 'Urgent technician arrival for instant blood draw at home',
+        icon: '⚡',
+      ),
+    ];
+  }
 }

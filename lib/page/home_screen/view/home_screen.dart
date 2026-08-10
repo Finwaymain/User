@@ -5,6 +5,7 @@ import 'package:finway/controller/home_controller.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:finway/page/features/Texi/texi_dash_board.dart';
 import 'package:finway/page/features/AllServices/all_services_screen.dart';
+import 'package:finway/page/features/AllServices/service_history_screen.dart';
 import 'package:finway/page/search_location_screen.dart';
 import 'package:finway/controller/new_ride_controller.dart';
 import 'dart:io';
@@ -464,14 +465,14 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                               },
                             ),
                             VerticalIconWithText(
-                              icon: Icons.history,
-                              text: 'Ride History',
+                              icon: Icons.home_repair_service_outlined,
+                              text: 'Service History',
                               onTap: () {
                                 if (!Preferences.getBoolean(Preferences.isLogin)) {
                                   Get.to(() => const PhoneEntryScreen(), transition: Transition.rightToLeftWithFade);
                                   return;
                                 }
-                                Get.to(() => const NewRideScreen(), transition: Transition.rightToLeftWithFade);
+                                Get.to(() => const ServiceHistoryScreen(), transition: Transition.rightToLeftWithFade);
                               },
                             ),
 

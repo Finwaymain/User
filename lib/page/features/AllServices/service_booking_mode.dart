@@ -20,7 +20,11 @@ ServiceBookingMode bookingModeFor({
     return ServiceBookingMode.remote;
   }
 
-  if (service == 'home tutor') {
+  if (RegExp(r'\btutor\b|\btuition\b|\bhome tutor\b').hasMatch(combined)) {
+    return ServiceBookingMode.homeVisit;
+  }
+
+  if (service == 'home tutor' || category.contains('home tutor')) {
     return ServiceBookingMode.homeVisit;
   }
 
@@ -35,7 +39,7 @@ ServiceBookingMode bookingModeFor({
     return ServiceBookingMode.remote;
   }
 
-  if (category.contains('education services')) {
+  if (category.contains('education services') && !category.contains('home tutor') && !RegExp(r'\btutor\b|\btuition\b').hasMatch(service)) {
     return ServiceBookingMode.remote;
   }
 

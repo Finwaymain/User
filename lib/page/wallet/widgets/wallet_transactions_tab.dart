@@ -32,7 +32,7 @@ class WalletTransactionsTab extends StatelessWidget {
 
     return Obx(() {
       if (controller.isLoading.value && controller.walletList.isEmpty) {
-        return const Center(
+        return Center(
           child: CircularProgressIndicator(color: AppThemeData.primary200),
         );
       }

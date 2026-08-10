@@ -8,10 +8,8 @@ import 'package:finway/controller/all_services_controller.dart';
 import 'package:finway/model/service_category_model.dart';
 import 'package:finway/themes/constant_colors.dart';
 import 'package:finway/utils/dark_theme_provider.dart';
-import 'lab_sample_selection_screen.dart';
-import 'service_category_detail_screen.dart';
 import 'service_category_tile.dart';
-import 'service_request_screen.dart';
+import 'service_flow.dart';
 import 'service_style.dart';
 
 class AllServicesScreen extends StatefulWidget {
@@ -107,30 +105,16 @@ class _AllServicesScreenState extends State<AllServicesScreen> {
     return category.breadcrumb.map(cleanServiceName).where((s) => s.isNotEmpty).join(' › ');
   }
 
-  String _parentCategoryName(ServiceCategoryData category) {
-    if (category.breadcrumb.isNotEmpty) return cleanServiceName(category.breadcrumb.last);
-    return cleanServiceName(category.libelle);
-  }
-
-  void _onTapCategory(ServiceCategoryData category) {
-    final rawName = category.libelle ?? '';
-    final cleanName = cleanServiceName(rawName);
-    final lower = cleanName.toLowerCase();
-
-    if (lower.contains('lab sample') || lower.contains('lab collection')) {
-      Get.to(() => LabSampleSelectionScreen(categoryName: _parentCategoryName(category)));
-      return;
+  void _onTapCategory(ServiceCategoryData category, {bool fromSearch = false}) {
+    var parentCategoryName = cleanServiceName(category.libelle);
+    if (fromSearch && category.breadcrumb.isNotEmpty) {
+      parentCategoryName = cleanServiceName(category.breadcrumb.last);
     }
-
-    if (isParentServiceCategory(rawName)) {
-      Get.to(() => ServiceCategoryDetailScreen(categoryId: category.id ?? 0, categoryName: rawName));
-      return;
-    }
-
-    Get.to(() => ServiceRequestScreen(
-          serviceName: rawName,
-          categoryName: _parentCategoryName(category),
-        ));
+    openServiceFlow(
+      category,
+      parentCategoryName: parentCategoryName,
+      controller: _controller,
+    );
   }
 
   Widget _buildGrid(List<ServiceCategoryData> items, bool isDarkMode, {bool showBreadcrumb = false}) {
@@ -157,7 +141,7 @@ class _AllServicesScreenState extends State<AllServicesScreen> {
           subtitle: showBreadcrumb ? _breadcrumbLabel(category) : null,
           isDarkMode: isDarkMode,
           iconSize: showBreadcrumb ? 48 : 56,
-          onTap: () => _onTapCategory(category),
+          onTap: () => _onTapCategory(category, fromSearch: showBreadcrumb),
         );
       },
     );
