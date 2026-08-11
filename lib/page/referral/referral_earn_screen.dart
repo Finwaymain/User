@@ -8,7 +8,7 @@ import 'package:finway/service/api.dart';
 import 'package:finway/themes/constant_colors.dart';
 import 'package:finway/utils/Preferences.dart';
 import 'package:finway/utils/dark_theme_provider.dart';
-import 'referral_history_screen.dart';
+import 'partner_webview_screen.dart';
 
 class ReferralEarnScreen extends StatefulWidget {
   const ReferralEarnScreen({super.key});
@@ -44,6 +44,9 @@ class _ReferralEarnScreenState extends State<ReferralEarnScreen> {
         final resData = json.decode(response.body);
         if (resData['success'] == 'success' && resData['data'] != null) {
           final data = resData['data'];
+          if (data['aadhar_number'] != null && (data['aadhar_number'].toString()).isNotEmpty) {
+            await Preferences.setString('user_aadhar_number', data['aadhar_number'].toString());
+          }
           if (mounted) {
             setState(() {
               referralCode = data['referral_code'] ?? referralCode;
@@ -64,7 +67,10 @@ class _ReferralEarnScreenState extends State<ReferralEarnScreen> {
 
   void _openHistory() {
     Get.to(
-      () => const ReferralHistoryScreen(),
+      () => const PartnerWebViewScreen(
+        title: 'Referral History',
+        urlPath: 'referral-history',
+      ),
       transition: Transition.rightToLeftWithFade,
     );
   }
@@ -97,7 +103,7 @@ class _ReferralEarnScreenState extends State<ReferralEarnScreen> {
           onPressed: () => Get.back(),
         ),
         title: Text(
-          'Refer & Earn'.tr,
+          'Partner Dashboard'.tr,
           style: TextStyle(
             color: isDark ? Colors.white : AppThemeData.grey900,
             fontFamily: AppThemeData.bold,
@@ -170,7 +176,7 @@ class _ReferralEarnScreenState extends State<ReferralEarnScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Refer & Earn'.tr,
+                  'Partner Program'.tr,
                   style: const TextStyle(
                     fontSize: 22,
                     fontFamily: AppThemeData.bold,
