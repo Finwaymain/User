@@ -48,141 +48,193 @@ class _MpinLoginScreenState extends State<MpinLoginScreen> {
           onPressed: () => Get.offAll(() => const PhoneEntryScreen(mode: 'signup')),
         ),
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 16),
-              Text(
-                'Enter your MPIN'.tr,
-                style: TextStyle(
-                  fontSize: 28,
-                  fontFamily: AppThemeData.bold,
-                  color: labelColor,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Verify your identity using your 4-digit MPIN for ${widget.phone}.'.tr,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontFamily: AppThemeData.regular,
-                  color: hintColor,
-                ),
-              ),
-              const SizedBox(height: 48),
 
-              // PIN Input
-              Center(
-                child: Pinput(
-                  controller: mpinController,
-                  length: 4,
-                  obscureText: true,
-                  obscuringCharacter: '●',
-                  defaultPinTheme: PinTheme(
-                    height: 56,
-                    width: 56,
-                    textStyle: TextStyle(
-                      fontSize: 22,
-                      fontFamily: AppThemeData.bold,
-                      color: isDark ? AppThemeData.grey50Dark : AppThemeData.grey50,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isDark ? AppThemeData.grey100Dark : AppThemeData.primary50,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isDark ? AppThemeData.grey200Dark : AppThemeData.grey200,
+    body: SafeArea(
+    child: LayoutBuilder(
+        builder: (context, constraints) {
+      return SingleChildScrollView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minHeight: constraints.maxHeight,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 16),
+
+                Text(
+                  'Enter your MPIN'.tr,
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontFamily: AppThemeData.bold,
+                    color: labelColor,
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                Text(
+                  'Verify your identity using your 4-digit MPIN for ${widget.phone}.'.tr,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontFamily: AppThemeData.regular,
+                    color: hintColor,
+                  ),
+                ),
+
+                const SizedBox(height: 48),
+
+                // PIN Input
+                Center(
+                  child: Pinput(
+                    controller: mpinController,
+                    length: 4,
+                    obscureText: true,
+                    obscuringCharacter: '●',
+                    defaultPinTheme: PinTheme(
+                      height: 56,
+                      width: 56,
+                      textStyle: TextStyle(
+                        fontSize: 22,
+                        fontFamily: AppThemeData.bold,
+                        color: isDark
+                            ? AppThemeData.grey50Dark
+                            : AppThemeData.grey50,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? AppThemeData.grey100Dark
+                            : AppThemeData.primary50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isDark
+                              ? AppThemeData.grey200Dark
+                              : AppThemeData.grey200,
+                        ),
                       ),
                     ),
-                  ),
-                  focusedPinTheme: PinTheme(
-                    height: 56,
-                    width: 56,
-                    textStyle: TextStyle(
-                      fontSize: 22,
-                      fontFamily: AppThemeData.bold,
-                      color: isDark ? AppThemeData.grey50Dark : AppThemeData.grey50,
+                    focusedPinTheme: PinTheme(
+                      height: 56,
+                      width: 56,
+                      textStyle: TextStyle(
+                        fontSize: 22,
+                        fontFamily: AppThemeData.bold,
+                        color: isDark
+                            ? AppThemeData.grey50Dark
+                            : AppThemeData.grey50,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? AppThemeData.grey100Dark
+                            : AppThemeData.primary50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppThemeData.primary200,
+                          width: 2,
+                        ),
+                      ),
                     ),
-                    decoration: BoxDecoration(
-                      color: isDark ? AppThemeData.grey100Dark : AppThemeData.primary50,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppThemeData.primary200, width: 2),
-                    ),
+                    keyboardType: TextInputType.number,
+                    textInputAction: TextInputAction.done,
                   ),
-                  keyboardType: TextInputType.number,
-                  textInputAction: TextInputAction.done,
                 ),
-              ),
 
-              const SizedBox(height: 40),
+                const SizedBox(height: 40),
 
-              Obx(() => ButtonThem.buildButton(
+                // Login Button
+                Obx(
+                      () => ButtonThem.buildButton(
                     context,
-                    title: controller.isLoading.value ? 'Please wait...' : 'Verify & Log in'.tr,
+                    title: controller.isLoading.value
+                        ? 'Please wait...'
+                        : 'Verify & Log in'.tr,
                     onPress: controller.isLoading.value
                         ? () {}
                         : () async {
-                            final mpin = mpinController.text.trim();
-                            if (mpin.length != 4) {
-                              return;
-                            }
-                            final user = await controller.loginByMpin(widget.phone, mpin, userCat: 'customer');
-                            if (user != null) {
-                              Get.offAll(() => MainDashboard());
-                            }
-                          },
-                  )),
+                      final mpin = mpinController.text.trim();
 
-              const Spacer(),
+                      if (mpin.length != 4) {
+                        return;
+                      }
 
-              // Forgot MPIN
-              Center(
-                child: TextButton(
-                  onPressed: () async {
-                    if (controller.isLoading.value) return;
-                    // Trigger phone OTP for resetting MPIN
-                    final sent = await controller.sendPhoneOtp(widget.phone, mode: 'login');
-                    if (sent) {
-                      Get.to(() => const PhoneOtpScreen(mode: 'reset_mpin'));
-                    }
-                  },
-                  child: Text(
-                    'Forgot MPIN?'.tr,
-                    style: TextStyle(
-                      color: AppThemeData.primary200,
-                      fontFamily: AppThemeData.semiBold,
-                      fontSize: 14,
-                      decoration: TextDecoration.underline,
-                      decorationColor: AppThemeData.primary200,
+                      final user = await controller.loginByMpin(
+                        widget.phone,
+                        mpin,
+                        userCat: 'customer',
+                      );
+
+                      if (user != null) {
+                        Get.offAll(() => MainDashboard());
+                      }
+                    },
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+
+                // Forgot MPIN
+                Center(
+                  child: TextButton(
+                    onPressed: () async {
+                      if (controller.isLoading.value) return;
+
+                      final sent = await controller.sendPhoneOtp(
+                        widget.phone,
+                        mode: 'login',
+                      );
+
+                      if (sent) {
+                        Get.to(
+                              () => const PhoneOtpScreen(
+                            mode: 'reset_mpin',
+                          ),
+                        );
+                      }
+                    },
+                    child: Text(
+                      'Forgot MPIN?'.tr,
+                      style: TextStyle(
+                        color: AppThemeData.primary200,
+                        fontFamily: AppThemeData.semiBold,
+                        fontSize: 14,
+                        decoration: TextDecoration.underline,
+                        decorationColor: AppThemeData.primary200,
+                      ),
                     ),
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 12),
+                const SizedBox(height: 8),
 
-              // Change Phone
-              Center(
-                child: TextButton(
-                  onPressed: () => Get.offAll(() => const PhoneEntryScreen(mode: 'signup')),
-                  child: Text(
-                    'Use a different mobile number'.tr,
-                    style: TextStyle(
-                      color: hintColor,
-                      fontFamily: AppThemeData.regular,
-                      fontSize: 13,
+                // Change Phone
+                Center(
+                  child: TextButton(
+                    onPressed: () => Get.offAll(
+                          () => const PhoneEntryScreen(mode: 'signup'),
+                    ),
+                    child: Text(
+                      'Use a different mobile number'.tr,
+                      style: TextStyle(
+                        color: hintColor,
+                        fontFamily: AppThemeData.regular,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 24),
-            ],
+                const SizedBox(height: 24),
+              ],
+            ),
           ),
         ),
-      ),
+      );
+    },
+    ),
+    ),
     );
   }
 }

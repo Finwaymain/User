@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:finway/constant/constant.dart';
 import 'package:finway/constant/show_toast_dialog.dart';
+import 'package:finway/controller/auth_otp_controller.dart';
 import 'package:finway/controller/dash_board_controller.dart';
 import 'package:finway/controller/my_profile_controller.dart';
 import 'package:finway/page/auth_screens/phone_entry_screen.dart';
@@ -407,6 +408,13 @@ class MyProfileScreen extends StatelessWidget {
                                             ],
                                           ),
                                         ),
+                                        // ── Referral Code Section ─────────────────
+                                        const SizedBox(height: 16),
+                                        _ReferralCodeCard(
+                                          userId: Constant.getUserData().data?.id?.toString() ?? '',
+                                          isDark: themeChange.getThem(),
+                                        ),
+                                        const SizedBox(height: 8),
                                       ],
                                     ),
                                   ),
@@ -629,5 +637,215 @@ class MyProfileScreen extends StatelessWidget {
     } on PlatformException catch (e) {
       ShowToastDialog.showToast("${"Failed to Pick :".tr}\n $e");
     }
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// REFERRAL CODE CARD — lets users apply a referral code from profile screen
+// if they missed it during registration
+// ══════════════════════════════════════════════════════════════════════════════
+class _ReferralCodeCard extends StatefulWidget {
+  final String userId;
+  final bool isDark;
+
+  const _ReferralCodeCard({required this.userId, required this.isDark});
+
+  @override
+  State<_ReferralCodeCard> createState() => _ReferralCodeCardState();
+}
+
+class _ReferralCodeCardState extends State<_ReferralCodeCard> {
+  final _codeController = TextEditingController();
+  bool _applying = false;
+  bool _applied = false;
+
+  @override
+  void dispose() {
+    _codeController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _apply() async {
+    final code = _codeController.text.trim();
+    if (code.isEmpty) {
+      ShowToastDialog.showToast('Please enter a referral code'.tr);
+      return;
+    }
+    setState(() => _applying = true);
+    final controller = Get.put(AuthOtpController());
+    final ok = await controller.applyReferralCode(
+      widget.userId,
+      code,
+      userCat: 'customer',
+    );
+    setState(() {
+      _applying = false;
+      if (ok) _applied = true;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final primaryColor = AppThemeData.primary200;
+    final cardBg = widget.isDark ? const Color(0xFF1E293B) : Colors.white;
+    final borderColor = widget.isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final textPrimary = widget.isDark ? Colors.white : const Color(0xFF0F172A);
+    final textSecondary = widget.isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final inputBg = widget.isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9);
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 2),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header row
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: primaryColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.card_giftcard_rounded, color: primaryColor, size: 18),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Enter Referral Code'.tr,
+                      style: TextStyle(
+                        fontFamily: AppThemeData.bold,
+                        fontSize: 14,
+                        color: textPrimary,
+                      ),
+                    ),
+                    Text(
+                      'Reward the friend who invited you'.tr,
+                      style: TextStyle(
+                        fontFamily: AppThemeData.regular,
+                        fontSize: 12,
+                        color: textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 14),
+
+          if (_applied)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.green.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.check_circle_rounded, color: Colors.green, size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Referral code applied successfully!'.tr,
+                    style: const TextStyle(
+                      fontFamily: AppThemeData.medium,
+                      fontSize: 13,
+                      color: Colors.green,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else ...[
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _codeController,
+                    textCapitalization: TextCapitalization.characters,
+                    style: TextStyle(
+                      fontFamily: AppThemeData.medium,
+                      color: textPrimary,
+                      fontSize: 14,
+                      letterSpacing: 1.5,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'e.g. ab3f2'.tr,
+                      hintStyle: TextStyle(
+                        fontFamily: AppThemeData.regular,
+                        color: textSecondary,
+                        fontSize: 13,
+                        letterSpacing: 0,
+                      ),
+                      filled: true,
+                      fillColor: inputBg,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: borderColor),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: borderColor),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: primaryColor, width: 1.5),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                SizedBox(
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: _applying ? null : _apply,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      elevation: 0,
+                    ),
+                    child: _applying
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          )
+                        : Text(
+                            'Apply'.tr,
+                            style: const TextStyle(color: Colors.white, fontFamily: AppThemeData.bold, fontSize: 13),
+                          ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'You can only apply a referral code once.'.tr,
+              style: TextStyle(fontFamily: AppThemeData.regular, fontSize: 11, color: textSecondary),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }

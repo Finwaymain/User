@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
+import 'package:finway/constant/constant.dart';
 
 import 'package:finway/page/MainDashBoard/screen/main_dashboard.dart';
 import 'package:finway/themes/button_them.dart';
@@ -20,7 +21,7 @@ class ServicePaymentSuccessScreen extends StatelessWidget {
     required this.paymentMethod,
   });
 
-  String _money(double value) => '₹${value.toStringAsFixed(0)}';
+  String _money(double value) => '${Constant.currency ?? ''}${value.toStringAsFixed(0)}';
 
   String get _methodLabel {
     switch (paymentMethod.toLowerCase()) {

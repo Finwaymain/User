@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:finway/constant/constant.dart';
 
 import 'package:finway/controller/service_booking_controller.dart';
 import 'package:finway/controller/service_history_controller.dart';
@@ -53,11 +54,7 @@ class _ServiceExpertAssignedScreenState extends State<ServiceExpertAssignedScree
         _loading = false;
         _error = null;
       });
-      if (item.isCompleted && item.isPaid) {
-        _controller.stopPolling();
-        return;
-      }
-      if (item.needsPayment) {
+      if (item.isPaid || item.isCompleted || item.needsPayment) {
         _controller.stopPolling();
         Get.off(() => ServiceCompletedPaymentScreen(bookingId: widget.bookingId));
       }
@@ -127,7 +124,7 @@ class _ServiceExpertAssignedScreenState extends State<ServiceExpertAssignedScree
     super.dispose();
   }
 
-  String _money(double value) => '₹${value.toStringAsFixed(0)}';
+  String _money(double value) => '${Constant.currency ?? ''}${value.toStringAsFixed(0)}';
 
   String _driverPhotoUrl(String? photo) {
     if (photo == null || photo.isEmpty) return '';
@@ -644,7 +641,7 @@ class _ServiceExpertAssignedScreenState extends State<ServiceExpertAssignedScree
   Widget _serviceRow(bool isDarkMode, Color accent, ServicePriceLineItem item) {
     final price = item.priceAvailable
         ? (item.maxPrice > item.minPrice && item.minPrice > 0
-            ? '₹${item.minPrice.toStringAsFixed(0)}-₹${item.maxPrice.toStringAsFixed(0)}'
+            ? '${Constant.currency ?? ''}${item.minPrice.toStringAsFixed(0)}-${Constant.currency ?? ''}${item.maxPrice.toStringAsFixed(0)}'
             : _money(item.minPrice))
         : (item.displayPrice.isNotEmpty ? item.displayPrice : '—');
     return Padding(

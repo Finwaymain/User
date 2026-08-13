@@ -172,7 +172,7 @@ class WalletTransactionsTab extends StatelessWidget {
     final category = TransactionHistoryDisplay.categoryTitle(data);
     final counterparty = TransactionHistoryDisplay.counterpartyName(data);
     final status = TransactionHistoryDisplay.statusLabel(data);
-    final amount = Constant().amountShow(amount: data.amount.toString());
+    final amount = Constant().amountShowWithoutSymbol(amount: data.amount.toString());
 
     showModalBottomSheet(
       context: context,
@@ -296,7 +296,7 @@ class _TransactionCard extends StatelessWidget {
     final iconType = TransactionHistoryDisplay.iconType(data);
     final iconColor = TransactionHistoryDisplay.iconColorFor(iconType);
     final iconBackground = TransactionHistoryDisplay.iconBackgroundFor(iconType);
-    final amount = Constant().amountShow(amount: data.amount.toString());
+    final amount = Constant().amountShowWithoutSymbol(amount: data.amount.toString());
 
     return Container(
       decoration: BoxDecoration(

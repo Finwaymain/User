@@ -113,6 +113,17 @@ class Constant {
     }
   }
 
+  String amountShowWithoutSymbol({required String? amount}) {
+    String amountdata = (amount == 'null' || amount == '' || amount == null || amount == '0') ? '0' : amount;
+    amountdata = amountdata.replaceAll(RegExp(r'[^0-9.]'), '');
+    if (amountdata.isEmpty || amountdata == '0') {
+      return "0.00";
+    }
+    double? val = double.tryParse(amountdata);
+    if (val == null) return amountdata;
+    return val.toStringAsFixed(Constant.decimal == null ? 2 : int.parse(Constant.decimal!));
+  }
+
   static Widget emptyView(BuildContext context, String msg, bool isButtonShow) {
     final themeChange = Provider.of<DarkThemeProvider>(context);
     final controllerDashBoard = Get.put(DashBoardController());

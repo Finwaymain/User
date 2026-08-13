@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
 import 'package:finway/constant/show_toast_dialog.dart';
-import 'package:finway/page/referral/partner_webview_screen.dart';
+import 'package:finway/page/referral/referral_earn_screen.dart';
 import 'package:finway/service/api.dart';
 import 'package:finway/themes/constant_colors.dart';
 import 'package:finway/utils/Preferences.dart';
@@ -34,7 +34,13 @@ class _SubmitAadharScreenState extends State<SubmitAadharScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final aadhar = _aadharController.text.trim().replaceAll(' ', '');
-    final userId = Preferences.getInt(Preferences.userId);
+    int userId = Preferences.getInt(Preferences.userId);
+    if (userId == 0) {
+      final strId = Preferences.getString(Preferences.userId);
+      if (strId.isNotEmpty) {
+        userId = int.tryParse(strId) ?? 0;
+      }
+    }
 
     if (userId == 0) {
       ShowToastDialog.showToast('Please login to continue.'.tr);
@@ -59,7 +65,7 @@ class _SubmitAadharScreenState extends State<SubmitAadharScreen> {
       setState(() => _isSubmitting = false);
 
       final data = json.decode(response.body);
-      if (response.statusCode == 200 && (data['success'] == true || data['success'] == 'success')) {
+      if (response.statusCode == 200 && (data['success'] == true || data['success'] == 'success' || data['res'] == 'success')) {
         await Preferences.setString('user_aadhar_number', aadhar);
         Get.snackbar(
           'Account Activated!'.tr,
@@ -69,14 +75,9 @@ class _SubmitAadharScreenState extends State<SubmitAadharScreen> {
           snackPosition: SnackPosition.BOTTOM,
           margin: const EdgeInsets.all(16),
         );
-        Get.off(
-          () => const PartnerWebViewScreen(
-            title: 'Partner Dashboard',
-            urlPath: 'partner-dashboard',
-          ),
-        );
+        Get.off(() => const ReferralEarnScreen());
       } else {
-        ShowToastDialog.showToast(data['message'] ?? 'Failed to submit Aadhaar. Please try again.'.tr);
+        ShowToastDialog.showToast(data['message'] ?? data['msg'] ?? 'Failed to submit Aadhaar. Please try again.'.tr);
       }
     } catch (e) {
       ShowToastDialog.closeLoader();

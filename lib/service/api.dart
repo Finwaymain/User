@@ -11,10 +11,10 @@ class API {
 
   // static const baseUrl = "https://fiinway.nexttech.fun/api/v1/"; // live
   // static const apiKey = "base64:nTfofcBByTDenJQYlsRbH0JjeVFW5lWsIIyXtq8/9sU=";
-  // static const baseUrl = "https://api.fiinway.com/api/v1/"; // live
-  // static const baseUrl = "http://192.168.1.34:8000/api/v1/"; // local dev
-  static const baseUrl = "https://fiinway.online/api/v1/"; // Live VPS
+  static const baseUrl = "https://api.fiinway.com/api/v1/"; // Live Production Server
   static const apiKey = "base64:nTfofcBByTDenJQYlsRbH0JjeVFW5lWsIIyXtq8/9sU=";
+
+  static const verifyMpin = "${baseUrl}verify-mpin";
 
   static Map<String, String> get authheader => {
     HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
@@ -147,7 +147,9 @@ class API {
   static const authLoginByMpin          = "${baseUrl}auth/login-by-mpin";
   static const authResetMpin            = "${baseUrl}auth/reset-mpin";
   static const authRegisterSimple       = "${baseUrl}auth/register-simple";
+  static const authApplyReferral        = "${baseUrl}auth/apply-referral";
   // ───────────────────────────────────────────────────────────────────────────
+
 
   // All Services catalog ("More" section)
   static const getServiceCategories = "${baseUrl}service-categories";

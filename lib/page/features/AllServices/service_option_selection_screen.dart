@@ -3,51 +3,13 @@ import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
 import 'package:finway/controller/all_services_controller.dart';
-import 'package:finway/model/service_category_model.dart';
 import 'package:finway/themes/button_them.dart';
 import 'package:finway/themes/constant_colors.dart';
 import 'package:finway/utils/dark_theme_provider.dart';
+import 'package:finway/model/service_option_item_model.dart';
 import 'service_flow.dart';
 import 'service_request_screen.dart';
 import 'service_style.dart';
-
-class ServiceOptionItem {
-  final String id;
-  final String title;
-  final String description;
-  final String icon;
-
-  const ServiceOptionItem({
-    required this.id,
-    required this.title,
-    this.description = '',
-    this.icon = '✓',
-  });
-
-  factory ServiceOptionItem.fromCategory(ServiceCategoryData data) {
-    return ServiceOptionItem(
-      id: (data.id ?? data.libelle ?? '').toString(),
-      title: cleanServiceName(data.libelle),
-      description: '',
-      icon: _iconFor(cleanServiceName(data.libelle)),
-    );
-  }
-
-  static String _iconFor(String name) {
-    final lower = name.toLowerCase();
-    if (lower.contains('physician') || lower.contains('doctor')) return '🩺';
-    if (lower.contains('pediatric') || lower.contains('child')) return '👶';
-    if (lower.contains('elderly') || lower.contains('geriatric')) return '🧓';
-    if (lower.contains('women')) return '👩‍⚕️';
-    if (lower.contains('heart') || lower.contains('bp')) return '❤️';
-    if (lower.contains('diabetes')) return '🍬';
-    if (lower.contains('physio') || lower.contains('rehab')) return '🦴';
-    if (lower.contains('nurse') || lower.contains('injection')) return '💉';
-    if (lower.contains('tutor') || lower.contains('tuition')) return '📚';
-    if (lower.contains('jee') || lower.contains('neet')) return '🎯';
-    return '✓';
-  }
-}
 
 class ServiceOptionSelectionScreen extends StatefulWidget {
   final int? categoryId;
@@ -90,10 +52,17 @@ class _ServiceOptionSelectionScreenState extends State<ServiceOptionSelectionScr
         categoryId: widget.categoryId,
         categoryName: widget.serviceName,
       );
+      final List<ServiceOptionItem> items;
+      if (children.isNotEmpty) {
+        items = children
+            .map((c) => ServiceOptionItem.fromCategory(c))
+            .where((e) => e.title.isNotEmpty)
+            .toList();
+      } else {
+        items = widget.controller.labTestOptions();
+      }
       setState(() {
-        _options = children.isNotEmpty
-            ? children.map(ServiceOptionItem.fromCategory).where((e) => e.title.isNotEmpty).toList()
-            : widget.controller.labTestOptions();
+        _options = items;
         _isLoading = false;
       });
       return;
@@ -104,8 +73,13 @@ class _ServiceOptionSelectionScreenState extends State<ServiceOptionSelectionScr
       categoryName: widget.serviceName,
     );
 
+    final List<ServiceOptionItem> items = children
+        .map<ServiceOptionItem>((c) => ServiceOptionItem.fromCategory(c))
+        .where((e) => e.title.isNotEmpty)
+        .toList();
+
     setState(() {
-      _options = children.map(ServiceOptionItem.fromCategory).where((e) => e.title.isNotEmpty).toList();
+      _options = items;
       _isLoading = false;
     });
   }
@@ -163,6 +137,7 @@ class _ServiceOptionSelectionScreenState extends State<ServiceOptionSelectionScr
     Get.to(() => ServiceRequestScreen(
           serviceName: selected.title,
           categoryName: cleanServiceName(widget.serviceName),
+          selectedServices: [selected.title],
         ));
   }
 
@@ -292,6 +267,7 @@ class _ServiceOptionSelectionScreenState extends State<ServiceOptionSelectionScr
                                       ],
                                     ),
                                   ),
+                                  const SizedBox(width: 8),
                                   if (_isMulti)
                                     Checkbox(
                                       value: isSelected,
@@ -330,7 +306,9 @@ class _ServiceOptionSelectionScreenState extends State<ServiceOptionSelectionScr
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        _isMulti ? "$selectedCount ${"Selected".tr}" : (selectedCount == 1 ? "1 ${"Selected".tr}" : "None selected".tr),
+                        _isMulti
+                            ? "$selectedCount ${"Selected".tr}"
+                            : (selectedCount == 1 ? "1 ${"Selected".tr}" : "None selected".tr),
                         style: TextStyle(
                           fontFamily: AppThemeData.bold,
                           fontSize: 15,

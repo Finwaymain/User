@@ -22,6 +22,10 @@ const Set<String> _singleSelectServices = {
 
 const Set<String> _multiSelectServices = {
   'lab sample collection',
+  'lab technician',
+  'diagnostic lab',
+  'blood tests',
+  'lab tests',
 };
 
 ServiceSelectionMode selectionModeForName(String? rawName) {
@@ -105,6 +109,7 @@ Future<void> openServiceFlow(
       Get.to(() => ServiceRequestScreen(
             serviceName: rawName,
             categoryName: categoryLabel,
+            selectedServices: [cleanServiceName(rawName)],
           ));
       return;
   }

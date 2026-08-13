@@ -5,9 +5,9 @@ import 'package:http/http.dart' as http;
 import 'package:finway/constant/show_toast_dialog.dart';
 import 'package:finway/model/service_category_model.dart';
 import 'package:finway/page/features/AllServices/service_style.dart';
+import 'package:finway/model/service_option_item_model.dart';
 import 'package:finway/service/api.dart';
 import 'package:finway/utils/Preferences.dart';
-import 'package:finway/page/features/AllServices/service_option_selection_screen.dart';
 
 class AllServicesController extends GetxController {
   /// Exact Home Services grid shown on "More" (matches product mockup).
@@ -32,11 +32,6 @@ class AllServicesController extends GetxController {
     'Personal Services',
     'Education Services',
     'Healthcare Services',
-    'Doctor Home Visit',
-    'Physiotherapy',
-    'Lab Sample Collection',
-    'Nursing Care',
-    'Ambulance Booking',
   ];
 
   static const Map<String, List<String>> subCategoryCatalog = {
@@ -72,6 +67,66 @@ class AllServicesController extends GetxController {
       'Elderly Care Nursing',
       'Post-Surgery Nursing Care',
     ],
+    'Lab Sample Collection': [
+      'Complete Blood Count (CBC)',
+      'Blood Sugar & HbA1c',
+      'Thyroid Profile (T3, T4, TSH)',
+      'Lipid Profile (Heart Risk)',
+      'Liver Function Test (LFT)',
+      'Kidney Function Test (KFT)',
+      'Vitamin D & Vitamin B12 Test',
+      'Iron Profile & Ferritin',
+      'Routine Urine & Stool Examination',
+      'Fever Panel (COVID, Dengue, Malaria, Typhoid)',
+      'Cardiac Risk Markers & ECG at Home',
+      'Hormone Panel (Testosterone, Estrogen, Cortisol)',
+      'Pregnancy & Women\'s Health Tests (Beta hCG, PCOS)',
+      'Full Body Health Checkup Package',
+      'Senior Citizen Health Package',
+      'Diabetes Care Health Suite',
+      'Home Blood Sample Collection (Standard)',
+      'Express Home Blood Sample Collection (1 Hr)',
+    ],
+    'Lab Technician': [
+      'Complete Blood Count (CBC)',
+      'Blood Sugar & HbA1c',
+      'Thyroid Profile (T3, T4, TSH)',
+      'Lipid Profile (Heart Risk)',
+      'Liver Function Test (LFT)',
+      'Kidney Function Test (KFT)',
+      'Vitamin D & Vitamin B12 Test',
+      'Iron Profile & Ferritin',
+      'Routine Urine & Stool Examination',
+      'Fever Panel (COVID, Dengue, Malaria, Typhoid)',
+      'Cardiac Risk Markers & ECG at Home',
+      'Hormone Panel (Testosterone, Estrogen, Cortisol)',
+      'Pregnancy & Women\'s Health Tests (Beta hCG, PCOS)',
+      'Full Body Health Checkup Package',
+      'Senior Citizen Health Package',
+      'Diabetes Care Health Suite',
+      'Home Blood Sample Collection (Standard)',
+      'Express Home Blood Sample Collection (1 Hr)',
+    ],
+    'Diagnostic Lab': [
+      'Complete Blood Count (CBC)',
+      'Blood Sugar & HbA1c',
+      'Thyroid Profile (T3, T4, TSH)',
+      'Lipid Profile (Heart Risk)',
+      'Liver Function Test (LFT)',
+      'Kidney Function Test (KFT)',
+      'Vitamin D & Vitamin B12 Test',
+      'Iron Profile & Ferritin',
+      'Routine Urine & Stool Examination',
+      'Fever Panel (COVID, Dengue, Malaria, Typhoid)',
+      'Cardiac Risk Markers & ECG at Home',
+      'Hormone Panel (Testosterone, Estrogen, Cortisol)',
+      'Pregnancy & Women\'s Health Tests (Beta hCG, PCOS)',
+      'Full Body Health Checkup Package',
+      'Senior Citizen Health Package',
+      'Diabetes Care Health Suite',
+      'Home Blood Sample Collection (Standard)',
+      'Express Home Blood Sample Collection (1 Hr)',
+    ],
     'Home Tutor': [
       'School Tuition (Class 1-12)',
       'Mathematics & Science Tutor',
@@ -93,6 +148,7 @@ class AllServicesController extends GetxController {
       'Doctor Home Visit',
       'Physiotherapy',
       'Lab Sample Collection',
+      'Lab Technician',
       'Nursing Care',
       'Ambulance Booking',
     ],
@@ -154,7 +210,7 @@ class AllServicesController extends GetxController {
       return ServiceCategoryData(
         id: -(i + 1),
         libelle: name,
-        image: 'icon:${name}',
+        image: 'icon:$name',
         hasChildren: !isLeaf,
       );
     });
@@ -163,6 +219,10 @@ class AllServicesController extends GetxController {
   static const Map<String, String> _catalogAliases = {
     'home tutor services': 'Home Tutor',
     'physiotherapist': 'Physiotherapy',
+    'lab technician': 'Lab Sample Collection',
+    'diagnostic lab': 'Lab Sample Collection',
+    'blood test': 'Lab Sample Collection',
+    'blood tests': 'Lab Sample Collection',
   };
 
   String _catalogKeyFor(String categoryName) {
@@ -339,9 +399,15 @@ class AllServicesController extends GetxController {
         icon: '🩸',
       ),
       ServiceOptionItem(
-        id: 'sugar_hba1c',
-        title: 'Blood Sugar & HbA1c',
-        description: 'Fasting, PP sugar and 3-month average blood glucose',
+        id: 'sugar_fasting_pp',
+        title: 'Blood Sugar (Fasting & PP)',
+        description: 'Fasting and post-meal blood glucose monitoring',
+        icon: '🍬',
+      ),
+      ServiceOptionItem(
+        id: 'hba1c',
+        title: 'HbA1c (3-Month Glycated Hemoglobin)',
+        description: 'Gold standard 3-month average blood sugar control',
         icon: '🍬',
       ),
       ServiceOptionItem(
@@ -352,26 +418,38 @@ class AllServicesController extends GetxController {
       ),
       ServiceOptionItem(
         id: 'lipid',
-        title: 'Lipid Profile (Heart Risk)',
+        title: 'Lipid Profile (Heart Risk & Cholesterol)',
         description: 'Cholesterol, HDL, LDL, and Triglycerides check',
         icon: '❤️',
       ),
       ServiceOptionItem(
-        id: 'lft_kft',
-        title: 'Liver & Kidney Profile (LFT / KFT)',
-        description: 'Creatinine, Urea, Bilirubin & SGPT liver enzymes',
+        id: 'lft',
+        title: 'Liver Function Test (LFT)',
+        description: 'Bilirubin, SGPT, SGOT, Alk Phos & Liver enzymes',
         icon: '🏥',
       ),
       ServiceOptionItem(
-        id: 'vitamins',
-        title: 'Vitamin D & Vitamin B12 Test',
-        description: 'Checks essential bone & nerve vitamin deficiencies',
+        id: 'kft',
+        title: 'Kidney Function Test (KFT / RFT)',
+        description: 'Creatinine, Blood Urea Nitrogen, Uric Acid & Electrolytes',
+        icon: '🏥',
+      ),
+      ServiceOptionItem(
+        id: 'vit_d_b12',
+        title: 'Vitamin D & Vitamin B12 Suite',
+        description: 'Essential bone density, energy & nerve vitamin levels',
         icon: '☀️',
       ),
       ServiceOptionItem(
-        id: 'urine_stool',
-        title: 'Routine Urine & Stool Examination',
-        description: 'Screening for infection, protein & digestive health',
+        id: 'iron_profile',
+        title: 'Iron Profile & Ferritin Test',
+        description: 'Serum iron, TIBC & Ferritin anemia evaluation',
+        icon: '🩸',
+      ),
+      ServiceOptionItem(
+        id: 'urine_routine',
+        title: 'Routine Urine Examination & Culture',
+        description: 'Screening for UTI, protein, pus cells & kidney indicators',
         icon: '🧪',
       ),
       ServiceOptionItem(
@@ -381,13 +459,31 @@ class AllServicesController extends GetxController {
         icon: '🤒',
       ),
       ServiceOptionItem(
-        id: 'full_body',
+        id: 'ecg_home',
+        title: 'Home ECG & Cardiac Risk Markers',
+        description: 'Portable digital 12-lead ECG recording at home',
+        icon: '💓',
+      ),
+      ServiceOptionItem(
+        id: 'hormone_panel',
+        title: 'Hormone Profile (Testosterone, Estrogen, Cortisol)',
+        description: 'Endocrine hormonal balance screening',
+        icon: '🧬',
+      ),
+      ServiceOptionItem(
+        id: 'full_body_package',
         title: 'Full Body Health Checkup Package',
         description: 'Comprehensive 60+ parameters essential health suite',
         icon: '🔬',
       ),
       ServiceOptionItem(
-        id: 'express_blood',
+        id: 'senior_package',
+        title: 'Senior Citizen Comprehensive Package',
+        description: 'Heart, kidney, bone, vitamins & diabetes for seniors',
+        icon: '🧓',
+      ),
+      ServiceOptionItem(
+        id: 'express_blood_draw',
         title: 'Express Home Blood Sample Collection (1 Hr)',
         description: 'Urgent technician arrival for instant blood draw at home',
         icon: '⚡',

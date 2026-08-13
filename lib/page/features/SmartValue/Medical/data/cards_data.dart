@@ -5,10 +5,10 @@ final List<Map<String, dynamic>> cardsJsonData = [
     "type": "CARE CREDIT",
     "limit": 500000.0,
     "price": 499.0,
-    "limitText": "Get a credit limit upto Rs 5,00,000",
+    "limitText": "Get a credit limit upto 5,00,000",
     "gradientColors": ["#064E3B", "#022C22"],
     "features": [
-      "Get a credit limit upto Rs 5,00,000",
+      "Get a credit limit upto 5,00,000",
       "Get 0% interest for up to 365days",
       "Select from flexible Tenure Options upto 36 months"
     ],

@@ -13,7 +13,6 @@ import 'package:finway/themes/button_them.dart';
 import 'package:finway/themes/constant_colors.dart';
 import 'package:finway/utils/dark_theme_provider.dart';
 import 'service_completed_payment_screen.dart';
-import 'service_completed_payment_screen.dart';
 import 'service_expert_assigned_screen.dart';
 
 class _SearchStep {

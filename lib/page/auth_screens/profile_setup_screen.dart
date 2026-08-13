@@ -26,9 +26,9 @@ class ProfileSetupScreen extends StatelessWidget {
     final borderColor = isDark ? AppThemeData.grey200Dark : AppThemeData.grey200;
     final inputBg = isDark ? AppThemeData.grey100Dark : AppThemeData.primary50;
 
-    InputDecoration inputDecoration(String label, String hint, IconData icon) {
+    InputDecoration inputDecoration(String label, String hint, IconData icon, {bool optional = false}) {
       return InputDecoration(
-        labelText: label,
+        labelText: optional ? '$label (Optional)' : label,
         labelStyle: TextStyle(color: hintColor, fontFamily: AppThemeData.regular, fontSize: 14),
         hintText: hint,
         hintStyle: TextStyle(color: hintColor, fontFamily: AppThemeData.regular),
@@ -61,14 +61,14 @@ class ProfileSetupScreen extends StatelessWidget {
         ),
       ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 16),
               Text(
-                'What\'s your name?'.tr,
+                'Complete your profile'.tr,
                 style: TextStyle(
                   fontSize: 26,
                   fontFamily: AppThemeData.bold,
@@ -98,10 +98,29 @@ class ProfileSetupScreen extends StatelessWidget {
                 controller: controller.lastNameController.value,
                 style: TextStyle(color: labelColor, fontFamily: AppThemeData.medium),
                 textCapitalization: TextCapitalization.words,
-                decoration: inputDecoration('Last name (Optional)'.tr, 'e.g. Sharma', Icons.person_outline_rounded),
+                decoration: inputDecoration('Last name'.tr, 'e.g. Sharma', Icons.person_outline_rounded, optional: true),
               ),
 
-              const Spacer(),
+              const SizedBox(height: 16),
+
+              // Referral code (optional)
+              TextField(
+                controller: controller.referralCodeController.value,
+                style: TextStyle(color: labelColor, fontFamily: AppThemeData.medium),
+                textCapitalization: TextCapitalization.characters,
+                decoration: inputDecoration('Referral code'.tr, 'e.g. ab3f2', Icons.card_giftcard_rounded, optional: true),
+              ),
+
+              // Referral tip
+              Padding(
+                padding: const EdgeInsets.only(top: 6, left: 4),
+                child: Text(
+                  'Have a friend\'s referral code? Enter it above to reward them.'.tr,
+                  style: TextStyle(fontSize: 12, color: hintColor, fontFamily: AppThemeData.regular),
+                ),
+              ),
+
+              const SizedBox(height: 48),
 
               Obx(() => ButtonThem.buildButton(
                     context,
@@ -111,6 +130,7 @@ class ProfileSetupScreen extends StatelessWidget {
                         : () async {
                             final first = controller.firstNameController.value.text.trim();
                             final last = controller.lastNameController.value.text.trim();
+                            final referral = controller.referralCodeController.value.text.trim();
 
                             if (first.isEmpty) {
                               ShowToastDialog.showToast('Please enter your first name.'.tr);
@@ -124,6 +144,7 @@ class ProfileSetupScreen extends StatelessWidget {
                               firstName: first,
                               lastName: last,
                               userCat: 'customer',
+                              referralCode: referral,
                             );
 
                             if (user != null) {

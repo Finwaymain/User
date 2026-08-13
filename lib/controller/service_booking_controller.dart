@@ -32,10 +32,10 @@ class ServiceBookingController extends GetxController {
   }) async {
     try {
       isLoading.value = true;
-      final params = <String, String>{'service_name': serviceName};
-      if (serviceNames.isNotEmpty) {
-        params['service_names'] = serviceNames.join('|');
-      }
+      final params = <String, String>{
+        'service_name': serviceName,
+        'service_names': serviceNames.join('|'),
+      };
       if (lat != null && lat.isNotEmpty) params['lat'] = lat;
       if (lng != null && lng.isNotEmpty) params['lng'] = lng;
 

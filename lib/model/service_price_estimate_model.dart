@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:finway/constant/constant.dart';
 
 class ServicePriceLineItem {
   final String name;
@@ -43,8 +44,28 @@ class ServicePriceLineItem {
   String get displayPrice {
     if (priceLabel.isNotEmpty) return priceLabel;
     if (!priceAvailable) return 'Rate on visit';
-    if (maxPrice > minPrice) return '₹${minPrice.toStringAsFixed(0)}-₹${maxPrice.toStringAsFixed(0)}';
-    return '₹${minPrice.toStringAsFixed(0)}';
+    if (maxPrice > minPrice && (maxPrice - minPrice).abs() >= 1) {
+      return '${Constant.currency ?? ''}${minPrice.toStringAsFixed(0)}-${Constant.currency ?? ''}${maxPrice.toStringAsFixed(0)}';
+    }
+    if (minPrice > 0) return '${Constant.currency ?? ''}${minPrice.toStringAsFixed(0)}';
+    return 'Rate on visit';
+  }
+
+  static ServicePriceLineItem? matchForSelection(String name, List<ServicePriceLineItem> items) {
+    final needle = name.toLowerCase().trim();
+    if (needle.isEmpty) return null;
+
+    for (final item in items) {
+      final label = item.name.toLowerCase().trim();
+      if (label == needle) return item;
+    }
+
+    for (final item in items) {
+      final label = item.name.toLowerCase().trim();
+      if (label.contains(needle)) return item;
+    }
+
+    return null;
   }
 }
 
@@ -82,7 +103,7 @@ class ServicePriceEstimate {
     required this.totalMax,
     required this.totalLabel,
     required this.providersNearby,
-    this.currencySymbol = '₹',
+    this.currencySymbol = '',
   });
 
   factory ServicePriceEstimate.fromJson(Map<String, dynamic> json) {
@@ -113,7 +134,7 @@ class ServicePriceEstimate {
       totalMax: totalMax,
       totalLabel: json['total_label']?.toString() ?? '',
       providersNearby: int.tryParse(json['providers_nearby']?.toString() ?? '') ?? 0,
-      currencySymbol: json['currency_symbol']?.toString() ?? '₹',
+      currencySymbol: json['currency_symbol']?.toString() ?? Constant.currency ?? '',
     );
   }
 
@@ -135,20 +156,55 @@ class ServicePriceEstimate {
 
   String get displayTotal {
     if (totalLabel.isNotEmpty) return totalLabel;
-    if (totalMax > totalMin && totalMin > 0) {
-      return '₹${totalMin.toStringAsFixed(0)}-₹${totalMax.toStringAsFixed(0)}';
+    if (totalMax > totalMin && (totalMax - totalMin).abs() >= 1 && totalMin > 0) {
+      return '${Constant.currency ?? ''}${totalMin.toStringAsFixed(0)}-${Constant.currency ?? ''}${totalMax.toStringAsFixed(0)}';
     }
-    if (totalMin > 0) return '₹${totalMin.toStringAsFixed(0)}';
+    if (totalMin > 0) return '${Constant.currency ?? ''}${totalMin.toStringAsFixed(0)}';
     return 'Rate on visit';
   }
 
   String get displayVisitingCharge {
     if (visitingChargeLabel.isNotEmpty) return visitingChargeLabel;
-    if (visitingChargeMax > visitingChargeMin && visitingChargeMin > 0) {
-      return '₹${visitingChargeMin.toStringAsFixed(0)}-₹${visitingChargeMax.toStringAsFixed(0)}';
+    if (visitingChargeMax > visitingChargeMin && (visitingChargeMax - visitingChargeMin).abs() >= 1 && visitingChargeMin > 0) {
+      return '${Constant.currency ?? ''}${visitingChargeMin.toStringAsFixed(0)}-${Constant.currency ?? ''}${visitingChargeMax.toStringAsFixed(0)}';
     }
-    if (visitingChargeMin > 0) return '₹${visitingChargeMin.toStringAsFixed(0)}';
+    if (visitingChargeMin > 0) return '${Constant.currency ?? ''}${visitingChargeMin.toStringAsFixed(0)}';
     return '';
+  }
+
+  bool get hasPricedServiceItems => serviceItems.any((item) => item.priceAvailable);
+
+  String displayTotalFor({required bool includeServicePrices}) {
+    if (!includeServicePrices) {
+      return displayVisitingCharge.isNotEmpty ? displayVisitingCharge : 'Rate on visit';
+    }
+    return displayTotal;
+  }
+
+  double payableAmountFor({required bool includeServicePrices}) {
+    if (!includeServicePrices) {
+      return visitingChargeMin > 0 ? visitingChargeMin : totalMin;
+    }
+    return totalMin;
+  }
+
+  List<ServicePriceLineItem> lineItemsForSelection(List<String> selectedServices) {
+    if (selectedServices.isEmpty) return const [];
+
+    final rows = <ServicePriceLineItem>[];
+    for (final name in selectedServices) {
+      rows.add(
+        ServicePriceLineItem.matchForSelection(name, serviceItems) ??
+            ServicePriceLineItem(
+              name: name,
+              price: 0,
+              minPrice: 0,
+              maxPrice: 0,
+              priceAvailable: false,
+            ),
+      );
+    }
+    return rows;
   }
 
   Map<String, dynamic> toBreakdownJson() => {
@@ -223,6 +279,6 @@ class ServiceDriverInfo {
     final r = rating ?? '4.8';
     final count = reviewCount ?? 0;
     if (count > 0) return '$r ($count Reviews)';
-    return '$r';
+    return r;
   }
 }

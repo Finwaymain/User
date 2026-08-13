@@ -28,7 +28,13 @@ class Preferences {
   }
 
   static String getString(String key) {
-    return pref.getString(key) ?? "";
+    try {
+      final val = pref.get(key);
+      if (val == null) return "";
+      return val.toString();
+    } catch (_) {
+      return "";
+    }
   }
 
   static Future<void> setString(String key, String value) async {
@@ -36,7 +42,14 @@ class Preferences {
   }
 
   static int getInt(String key) {
-    return pref.getInt(key) ?? 0;
+    try {
+      final val = pref.get(key);
+      if (val == null) return 0;
+      if (val is int) return val;
+      return int.tryParse(val.toString()) ?? 0;
+    } catch (_) {
+      return 0;
+    }
   }
 
   static Future<void> setInt(String key, int value) async {

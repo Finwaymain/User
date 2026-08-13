@@ -13,6 +13,7 @@ import 'package:finway/page/my_profile/my_profile_screen.dart';
 import 'package:finway/page/new_ride_screens/new_ride_screen.dart';
 import 'package:finway/page/parcel_service_screen/all_parcel_screen.dart';
 import 'package:finway/page/privacy_policy/privacy_policy_screen.dart';
+import 'package:finway/page/referral/submit_aadhar_screen.dart';
 import 'package:finway/page/referral_screen/referral_screen.dart';
 
 import 'package:finway/page/terms_service/terms_of_service_screen.dart';
@@ -127,6 +128,12 @@ class DashBoardController extends GetxController {
   //   ];
   // }
   getDrawerItems() {
+    final bool hasAadhar = (Preferences.getString('user_aadhar_number') ?? '').isNotEmpty;
+    final String partnerTitle = hasAadhar ? 'Partner Dashboard'.tr : 'Join as a Partner'.tr;
+    final String partnerDesc = hasAadhar 
+        ? 'Manage your partner team, view earnings and rewards'.tr 
+        : 'Submit Aadhaar to become a partner and earn rewards'.tr;
+
     drawerItems = [
       DrawerItem(
         title: 'Home'.tr,
@@ -150,8 +157,8 @@ class DashBoardController extends GetxController {
         icon: 'assets/icons/ic_lock.svg',
       ),
       DrawerItem(
-        title: 'Refer a Friend'.tr,
-        description: 'Share app link and earn referral rewards',
+        title: partnerTitle,
+        description: partnerDesc,
         icon: 'assets/icons/ic_refer.svg',
       ),
       DrawerItem(
@@ -197,7 +204,10 @@ class DashBoardController extends GetxController {
     Get.back();
     if (index >= drawerItems.length) return;
     var item = drawerItems[index];
-    if (item.title == 'Wallet'.tr || item.title == 'Smart Value'.tr || item.title == 'My Profile'.tr || item.title == 'Change Password'.tr || item.title == 'Refer a Friend'.tr) {
+    final bool hasAadhar = (Preferences.getString('user_aadhar_number') ?? '').isNotEmpty;
+    final String partnerTitle = hasAadhar ? 'Partner Dashboard'.tr : 'Join as a Partner'.tr;
+
+    if (item.title == 'Wallet'.tr || item.title == 'Smart Value'.tr || item.title == 'My Profile'.tr || item.title == 'Change Password'.tr || item.title == 'Join as a Partner'.tr || item.title == 'Partner Dashboard'.tr) {
       if (!isLogin) {
         Get.to(const PhoneEntryScreen());
         return;
@@ -209,8 +219,12 @@ class DashBoardController extends GetxController {
       Get.to(MyProfileScreen());
     } else if (item.title == 'Change Password'.tr) {
       Get.to(ChangePasswordScreen());
-    } else if (item.title == 'Refer a Friend'.tr) {
-      Get.to(const ReferralScreen());
+    } else if (item.title == 'Join as a Partner'.tr || item.title == 'Partner Dashboard'.tr || item.title == partnerTitle) {
+      if (hasAadhar) {
+        Get.to(const ReferralScreen());
+      } else {
+        Get.to(const SubmitAadharScreen());
+      }
     } else if (item.title == 'Terms & Conditions'.tr) {
       Get.to(const TermsOfServiceScreen());
     } else if (item.title == 'Privacy & Policy'.tr) {

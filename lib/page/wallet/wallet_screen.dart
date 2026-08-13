@@ -41,6 +41,14 @@ import 'MercadoPagoScreen.dart';
 import 'PayFastScreen.dart';
 import 'paystack_url_genrater.dart';
 
+import 'package:webview_flutter/webview_flutter.dart';
+import 'package:finway/utils/onboarding_url.dart';
+import 'package:finway/page/web_view_screen/web_view_screen.dart';
+import 'package:finway/page/features/SmartValue/AccountDetails/view/account_details.dart';
+import 'package:finway/page/features/SmartValue/MyQR/view/my_qr_view.dart';
+import 'package:finway/page/features/SmartValue/Payout/view/payout_screen.dart';
+import 'package:finway/page/features/SmartValue/ScanAndTransfer/view/scanner_and_transfer_screen.dart';
+
 class WalletScreen extends StatelessWidget {
   WalletScreen({super.key});
 
@@ -51,38 +59,71 @@ class WalletScreen extends StatelessWidget {
   static final GlobalKey<FormState> _walletFormKey = GlobalKey<FormState>();
   static final amountController = TextEditingController();
 
+  WebViewController? activeWebViewController;
+
   Future<void> _refreshAPI() async {
     walletController.getAmount();
-    walletController.getTransaction(showLoader: false);
-    amountController.clear();
-    setRef();
+    if (activeWebViewController != null) {
+      activeWebViewController!.runJavaScript("if (window.refreshWalletData) { window.refreshWalletData(); } else { location.reload(); }");
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final themeChange = Provider.of<DarkThemeProvider>(context);
+    final isDark = themeChange.getThem();
+    final String walletUrl = OnboardingUrl.build('/wallet', extra: {
+      'user_type': 'user',
+      'theme': isDark ? 'dark' : 'light',
+    });
+
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: CustomAppbar(
         title: 'Smart Value',
         bgColor: AppThemeData.primary200,
+        textColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(
+              Icons.refresh_rounded,
+              color: Colors.white,
+            ),
+            onPressed: () {
+              _refreshAPI();
+              ShowToastDialog.showToast('Refreshing...'.tr);
+            },
+          ),
+        ],
       ),
       body: Container(
         color: themeChange.getThem() ? AppThemeData.surface50Dark : AppThemeData.surface50,
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: WalletMainContent(
-              walletController: walletController,
-              onTopUp: () {
+          child: WebViewScreen(
+            url: walletUrl,
+            title: 'Smart Value',
+            showAppBar: false,
+            onBridgeAction: (data) {
+              if (data['_controller'] is WebViewController) {
+                activeWebViewController = data['_controller'] as WebViewController;
+              }
+              final action = data['action'];
+              if (action == 'topup') {
                 if (!Preferences.getBoolean(Preferences.isLogin)) {
                   Get.to(() => const PhoneEntryScreen());
                 } else {
                   addToWalletAmount(context, themeChange.getThem());
                 }
-              },
-              onRefresh: _refreshAPI,
-            ),
+              } else if (action == 'transfer' || action == 'scan') {
+                Get.to(() => ScannerAndTransferScreen());
+              } else if (action == 'payout') {
+                Get.to(() => PayoutScreen());
+              } else if (action == 'my_qr') {
+                Get.to(() => MyQRScreen());
+              } else if (action == 'account_details') {
+                Get.to(() => AccountDetails());
+              }
+            },
           ),
         ),
       ),
@@ -135,7 +176,7 @@ class WalletScreen extends StatelessWidget {
             ),
           ),
           Text(
-            data.deductionType.toString() == "1" ? "+${Constant().amountShow(amount: data.amount.toString())}" : "(${"-${Constant().amountShow(amount: data.amount.toString())}"})",
+            data.deductionType.toString() == "1" ? "+${Constant().amountShowWithoutSymbol(amount: data.amount.toString())}" : "(-${Constant().amountShowWithoutSymbol(amount: data.amount.toString())})",
             style: TextStyle(
               fontFamily: AppThemeData.medium,
               fontSize: 16,
@@ -162,6 +203,7 @@ class WalletScreen extends StatelessWidget {
           return GetX<WalletController>(
               init: WalletController(),
               initState: (controller) {
+                razorPayController.clear();
                 razorPayController.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
                 razorPayController.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWaller);
                 razorPayController.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
@@ -351,7 +393,7 @@ class WalletScreen extends StatelessWidget {
                                 ShowToastDialog.showToast("Please select payment method");
                               } else if (_walletFormKey.currentState!.validate()) {
                                 Get.back();
-                                showLoadingAlert(context);
+                               
                                 if (walletController.selectedRadioTile!.value == "Stripe") {
                                   Stripe.publishableKey = controller.paymentSettingModel.value.strip?.key ?? '';
                                   Stripe.merchantIdentifier = 'Cabme';
@@ -489,8 +531,13 @@ class WalletScreen extends StatelessWidget {
   }
 
   void _handlePaymentSuccess(PaymentSuccessResponse response) {
-    Get.back();
+    razorPayController.clear();
+    ShowToastDialog.closeLoader();
+    while (Get.isDialogOpen == true || Get.isBottomSheetOpen == true) {
+      Get.back();
+    }
     walletController.setAmount(amountController.text).then((value) {
+      ShowToastDialog.closeLoader();
       if (value != null) {
         _refreshAPI();
         Get.to(const WalletSuccessScreen());
@@ -499,19 +546,36 @@ class WalletScreen extends StatelessWidget {
   }
 
   void _handleExternalWaller(ExternalWalletResponse response) {
-    Get.back();
+    razorPayController.clear();
+    ShowToastDialog.closeLoader();
+    while (Get.isDialogOpen == true || Get.isBottomSheetOpen == true) {
+      Get.back();
+    }
     showSnackBarAlert(
-      message: "${"Payment Processing Via".tr}\n${response.walletName!}",
+      message: "${"Payment Processing Via".tr} \n${response.walletName!}",
       color: Colors.blue.shade400,
     );
   }
 
   void _handlePaymentError(PaymentFailureResponse response) {
-    Get.back();
+    razorPayController.clear();
+    ShowToastDialog.closeLoader();
+    while (Get.isDialogOpen == true || Get.isBottomSheetOpen == true) {
+      Get.back();
+    }
     showSnackBarAlert(
-      message: "${"Payment Failed!!".tr}\n${jsonDecode(response.message!)['error']['description']}",
+      message: "${"Payment Failed!!".tr}${jsonDecode(response.message!)['error']['description']}",
       color: Colors.red.shade400,
     );
+  }
+
+  SnackbarController showSnackBarAlert({required String message, Color color = Colors.green}) {
+    return Get.showSnackbar(GetSnackBar(
+      isDismissible: true,
+      message: message,
+      backgroundColor: color,
+      duration: const Duration(seconds: 2),
+    ));
   }
 
   /// Stripe Payment Gateway
@@ -621,15 +685,6 @@ class WalletScreen extends StatelessWidget {
         showSnackBarAlert(message: "Error while transaction!".tr, color: Colors.red);
       }
     });
-  }
-
-  showSnackBarAlert({required String message, Color color = Colors.green}) {
-    return Get.showSnackbar(GetSnackBar(
-      isDismissible: true,
-      message: message,
-      backgroundColor: color,
-      duration: const Duration(seconds: 8),
-    ));
   }
 
   String? _ref;

@@ -145,7 +145,7 @@ class WalletFlipCard extends StatelessWidget {
     final fourDigits = _lastFourDigits();
     final balanceText = controller.totalAmount.isNotEmpty && controller.totalAmount != '0'
         ? Constant().amountShow(amount: controller.totalAmount)
-        : '₹0.00';
+        : Constant().amountShow(amount: '0');
 
     return Stack(
       fit: StackFit.expand,

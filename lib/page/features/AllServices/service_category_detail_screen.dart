@@ -50,13 +50,12 @@ class _ServiceCategoryDetailScreenState extends State<ServiceCategoryDetailScree
   bool _isLoading = true;
   List<ServiceCategoryData> _children = [];
 
-  static const _gridDelegate = SliverGridDelegateWithFixedCrossAxisCount(
-    crossAxisCount: 4,
-    mainAxisSpacing: 12,
-    crossAxisSpacing: 10,
-    childAspectRatio: 0.82,
-  );
-
+static const _gridDelegate = SliverGridDelegateWithFixedCrossAxisCount(
+  crossAxisCount: 4,
+  mainAxisSpacing: 12,
+  crossAxisSpacing: 10,
+  childAspectRatio: 0.82,
+);
   @override
   void initState() {
     super.initState();
@@ -132,22 +131,23 @@ class _ServiceCategoryDetailScreenState extends State<ServiceCategoryDetailScree
                 child: Text("No services available yet".tr, style: TextStyle(color: AppThemeData.grey500)),
               )
             else
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: _children.length,
-                gridDelegate: _gridDelegate,
-                itemBuilder: (context, index) {
-                  final child = _children[index];
-                  return ServiceCategoryTile(
-                    label: child.libelle,
-                    imageUrl: child.image,
-                    isDarkMode: isDarkMode,
-                    parentStyle: style,
-                    onTap: () => _onTapChild(child),
-                  );
-                },
-              ),
+             GridView.builder(
+  shrinkWrap: true,
+  physics: const NeverScrollableScrollPhysics(),
+  itemCount: _children.length,
+  gridDelegate: _gridDelegate,
+  itemBuilder: (context, index) {
+    final child = _children[index];
+
+    return ServiceCategoryTile(
+      label: child.libelle,
+      imageUrl: child.image,
+      isDarkMode: isDarkMode,
+      parentStyle: style,
+      onTap: () => _onTapChild(child),
+    );
+  },
+)
           ],
         ),
       ),

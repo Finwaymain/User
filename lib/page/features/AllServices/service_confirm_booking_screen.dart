@@ -90,7 +90,7 @@ class _ServiceConfirmBookingScreenState extends State<ServiceConfirmBookingScree
   bool _veryUrgent = false;
 
   late List<_DateOption> _dateOptions;
-  int _selectedDateIndex = 1;
+ int _selectedDateIndex = 0;
   String? _selectedTimeSlotId;
   List<_TimeSlot> _availableTimeSlots = [];
 
@@ -180,27 +180,69 @@ class _ServiceConfirmBookingScreenState extends State<ServiceConfirmBookingScree
   }
 
   List<_DateOption> _buildDateOptions() {
-    final now = DateTime.now();
-    final labels = ['Today', 'Tomorrow', 'Day 3', 'Day 4'];
-    return List.generate(4, (i) {
-      final date = DateTime(now.year, now.month, now.day + i);
-      final monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      return _DateOption(
+  final now = DateTime.now();
+  final monthNames = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+  ];
+
+  final List<_DateOption> validOptions = [];
+
+  // Check next 7 days and only show dates that have available slots.
+  for (int i = 0; validOptions.length < 4 && i < 7; i++) {
+    final date = DateTime(
+      now.year,
+      now.month,
+      now.day + i,
+    );
+
+    // Get available slots for this date.
+    final slots = _slotsForDate(date);
+
+    // If this date has no available slots, don't show it.
+    if (slots.isEmpty) continue;
+
+    final isToday = i == 0;
+
+    final tomorrow = DateTime(
+      now.year,
+      now.month,
+      now.day + 1,
+    );
+
+    final isTomorrow =
+        date.year == tomorrow.year &&
+        date.month == tomorrow.month &&
+        date.day == tomorrow.day;
+
+    String topLabel;
+
+    if (isToday) {
+      topLabel = 'Today';
+    } else if (isTomorrow) {
+      topLabel = 'Tomorrow';
+    } else {
+      topLabel = '${date.day} ${monthNames[date.month - 1]}';
+    }
+
+    validOptions.add(
+      _DateOption(
         date: date,
-        topLabel: i < 2 ? labels[i] : '${date.day} ${monthNames[date.month - 1]}',
+        topLabel: topLabel,
         bottomLabel: '${date.day} ${monthNames[date.month - 1]}',
-      );
-    });
+      ),
+    );
   }
 
-  Future<void> _loadEstimate() async {
-    final selected = widget.draft.selectedServices.isNotEmpty
-        ? widget.draft.selectedServices
-        : parseSelectedServiceNames(widget.draft.serviceName);
+  return validOptions;
+}
 
+  bool get _hasSelectedSubServices => widget.draft.selectedServices.isNotEmpty;
+
+  Future<void> _loadEstimate() async {
     final estimate = await _controller.fetchPriceEstimate(
       serviceName: widget.draft.serviceName,
-      serviceNames: selected,
+      serviceNames: widget.draft.selectedServices.isNotEmpty ? widget.draft.selectedServices : [widget.draft.serviceName],
       lat: _lat,
       lng: _lng,
     );
@@ -239,6 +281,7 @@ class _ServiceConfirmBookingScreenState extends State<ServiceConfirmBookingScree
 
   void _showPriceBreakup(bool isDarkMode) {
     if (_estimate == null) return;
+    final pricedItems = _buildDisplayItems();
     showModalBottomSheet(
       context: context,
       backgroundColor: _cardBg(isDarkMode),
@@ -251,7 +294,11 @@ class _ServiceConfirmBookingScreenState extends State<ServiceConfirmBookingScree
           children: [
             Text('Price Breakup'.tr, style: TextStyle(fontFamily: AppThemeData.bold, fontSize: 18, color: _titleColor(isDarkMode))),
             const SizedBox(height: 12),
-            ..._buildDisplayItems().map((e) => _breakupRow(isDarkMode, e.name, e.displayPrice)),
+            ...pricedItems.map((e) => _breakupRow(
+                  isDarkMode,
+                  e.name,
+                  e.displayPrice.isNotEmpty && e.displayPrice != 'Rate on visit' ? e.displayPrice : (_estimate!.displayTotal),
+                )),
             if (_estimate!.displayVisitingCharge.isNotEmpty)
               _breakupRow(isDarkMode, 'Visiting Charge'.tr, _estimate!.displayVisitingCharge),
             if (_estimate!.providersNearby > 0)
@@ -263,7 +310,12 @@ class _ServiceConfirmBookingScreenState extends State<ServiceConfirmBookingScree
                 ),
               ),
             const Divider(height: 24),
-            _breakupRow(isDarkMode, 'Total Payable'.tr, _estimate!.displayTotal, bold: true),
+            _breakupRow(
+              isDarkMode,
+              'Total Payable'.tr,
+              _estimate!.displayTotal,
+              bold: true,
+            ),
             const SizedBox(height: 12),
           ],
         ),
@@ -323,7 +375,7 @@ class _ServiceConfirmBookingScreenState extends State<ServiceConfirmBookingScree
       'description': description,
       'booking_frequency': widget.draft.bookingFrequency,
       'booking_mode': widget.draft.bookingMode,
-      'amount': _estimate!.totalMin,
+      'amount': _estimate!.totalMin > 0 ? _estimate!.totalMin : _estimate!.payableAmountFor(includeServicePrices: true),
       'price_breakdown': _estimate!.toBreakdownJson(),
     });
 
@@ -336,57 +388,24 @@ class _ServiceConfirmBookingScreenState extends State<ServiceConfirmBookingScree
   }
 
   List<ServicePriceLineItem> _buildDisplayItems() {
-    final selected = widget.draft.selectedServices.isNotEmpty
+    if (_estimate == null) return const [];
+    final names = _hasSelectedSubServices && widget.draft.selectedServices.isNotEmpty
         ? widget.draft.selectedServices
-        : parseSelectedServiceNames(widget.draft.serviceName);
-    final estimateItems = List<ServicePriceLineItem>.from(_estimate?.serviceItems ?? []);
+        : [cleanServiceName(widget.draft.serviceName)];
+    final matched = _estimate!.lineItemsForSelection(names);
+    if (matched.isNotEmpty) return matched;
+    if (_estimate!.serviceItems.isNotEmpty) return _estimate!.serviceItems;
 
-    if (selected.isEmpty) {
-      if (estimateItems.isNotEmpty) return estimateItems;
-      return [
-        ServicePriceLineItem(
-          name: cleanServiceName(widget.draft.serviceName),
-          price: 0,
-          minPrice: 0,
-          maxPrice: 0,
-          priceAvailable: false,
-        ),
-      ];
-    }
-
-    final rows = <ServicePriceLineItem>[];
-    final used = <String>{};
-
-    for (final name in selected) {
-      ServicePriceLineItem? match;
-      for (final item in estimateItems) {
-        final a = name.toLowerCase();
-        final b = item.name.toLowerCase();
-        if (a == b || b.contains(a) || a.contains(b)) {
-          match = item;
-          break;
-        }
-      }
-      rows.add(
-        match ??
-            ServicePriceLineItem(
-              name: name,
-              price: 0,
-              minPrice: 0,
-              maxPrice: 0,
-              priceAvailable: false,
-            ),
-      );
-      used.add(name.toLowerCase());
-    }
-
-    for (final item in estimateItems) {
-      if (!used.contains(item.name.toLowerCase())) {
-        rows.add(item);
-      }
-    }
-
-    return rows;
+    return [
+      ServicePriceLineItem(
+        name: cleanServiceName(widget.draft.serviceName),
+        price: _estimate!.totalMin,
+        minPrice: _estimate!.totalMin,
+        maxPrice: _estimate!.totalMax,
+        priceAvailable: _estimate!.totalMin > 0 || _estimate!.totalMax > 0,
+        priceLabel: _estimate!.displayTotal,
+      ),
+    ];
   }
 
   @override
@@ -395,7 +414,8 @@ class _ServiceConfirmBookingScreenState extends State<ServiceConfirmBookingScree
     final style = categoryStyleFor(widget.draft.categoryName);
     final accent = _accent(isDarkMode);
     final items = _buildDisplayItems();
-    final serviceCount = items.length;
+    final serviceCount = items.isEmpty ? 1 : items.length;
+    final payableTotal = _estimate?.displayTotal ?? 'Rate on visit'.tr;
 
     return Scaffold(
       backgroundColor: _pageBg(isDarkMode),
@@ -434,7 +454,13 @@ class _ServiceConfirmBookingScreenState extends State<ServiceConfirmBookingScree
                             children: [
                               _sectionHeader(isDarkMode, Icons.home_repair_service_outlined, 'Selected Services'.tr),
                               const SizedBox(height: 12),
-                              ...items.map((e) => _serviceRow(isDarkMode, e.name, widget.draft.categoryName, e.displayPrice, style)),
+                              ...items.map((e) => _serviceRow(
+                                    isDarkMode,
+                                    e.name,
+                                    widget.draft.categoryName,
+                                    e.displayPrice.isNotEmpty && e.displayPrice != 'Rate on visit' ? e.displayPrice : (_estimate?.displayTotal ?? 'Rate on visit'.tr),
+                                    style,
+                                  )),
                               if (_estimate != null && _estimate!.displayVisitingCharge.isNotEmpty) ...[
                                 const SizedBox(height: 8),
                                 _serviceRow(isDarkMode, 'Visiting Charge'.tr, 'Nearby providers'.tr, _estimate!.displayVisitingCharge, style, icon: Icons.directions_walk_rounded),
@@ -448,7 +474,7 @@ class _ServiceConfirmBookingScreenState extends State<ServiceConfirmBookingScree
                                   ),
                                   const Spacer(),
                                   Text(
-                                    _estimate?.displayTotal ?? 'Rate on visit'.tr,
+                                    payableTotal,
                                     style: TextStyle(fontFamily: AppThemeData.bold, fontSize: 15, color: accent),
                                   ),
                                 ],
@@ -665,7 +691,7 @@ class _ServiceConfirmBookingScreenState extends State<ServiceConfirmBookingScree
                             children: [
                               Text('Total Payable'.tr, style: TextStyle(fontSize: 12, color: _mutedColor(isDarkMode))),
                               Text(
-                                _estimate?.displayTotal ?? '—',
+                                payableTotal,
                                 style: TextStyle(fontFamily: AppThemeData.bold, fontSize: 20, color: _titleColor(isDarkMode)),
                               ),
                               GestureDetector(

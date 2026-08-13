@@ -58,6 +58,8 @@ class AppThemeData {
   static const String regular = 'Switzer-Regular';
   static const String semiBold = 'Switzer-Semibold';
   static const String thin = 'Switzer-Thin';
+
+  static get grey700 => null;
 }
 
 class ConstantColors {

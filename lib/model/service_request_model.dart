@@ -1,6 +1,5 @@
-import 'dart:convert';
-
 import 'service_price_estimate_model.dart';
+import 'package:finway/constant/constant.dart';
 
 class ServiceRequestData {
   final int? id;
@@ -114,11 +113,12 @@ class ServiceRequestData {
   }
 
   bool get isCancelled => _normalizedStatus == 'cancelled' || _normalizedStatus == 'canceled';
+  bool get isRejected => _normalizedStatus == 'rejected' || _normalizedStatus == 'reject';
 
   bool get isPending {
-    if (isHistory || isOngoing) return false;
+    if (isHistory) return false;
     final s = _normalizedStatus;
-    return s.isEmpty || s == 'pending';
+    return s.isEmpty || s == 'pending' || s == 'new' || s == 'open' || s == 'requested';
   }
 
   bool get isAwaitingPayment =>
@@ -128,7 +128,6 @@ class ServiceRequestData {
 
   bool get isOngoing {
     final s = _normalizedStatus;
-    if (hasAssignedDriver && (s == 'pending' || s.isEmpty)) return true;
     return s == 'accepted' ||
         s == 'confirmed' ||
         s == 'in progress' ||
@@ -167,7 +166,7 @@ class ServiceRequestData {
   }
 
   bool get canTrackLive =>
-      !isCancelled && (isPending || isOngoing || needsPayment || (isCompleted && isPaid));
+      !isCancelled && !isRejected && (isPending || isOngoing || needsPayment || (isCompleted && isPaid));
 
   String get trackActionLabel {
     if (needsPayment) return 'Pay Now';
@@ -177,9 +176,20 @@ class ServiceRequestData {
   }
 
   bool get shouldShowExpertAssigned {
-    if (isCancelled) return false;
-    if (isCompleted && isPaid) return false;
-    return hasAssignedDriver;
+    if (isCancelled || isCompleted || isRejected) return false;
+    final s = _normalizedStatus;
+    if (s == 'pending' || s == 'new' || s == 'open' || s == 'requested' || s.isEmpty) {
+      return false;
+    }
+    return hasAssignedDriver &&
+        (s == 'accepted' ||
+            s == 'confirmed' ||
+            s == 'in progress' ||
+            s == 'in_progress' ||
+            s == 'awaiting payment' ||
+            s == 'awaiting_payment' ||
+            s == 'started' ||
+            s == 'on ride');
   }
 
   double get payableAmount {
@@ -213,20 +223,20 @@ class ServiceRequestData {
   String get visitingChargeLabel {
     final label = priceBreakdown?.visitingChargeLabel ?? '';
     if (label.isNotEmpty) return label;
-    if (visitingChargeAmount > 0) return '₹${visitingChargeAmount.toStringAsFixed(0)}';
+    if (visitingChargeAmount > 0) return '${Constant.currency ?? ''}${visitingChargeAmount.toStringAsFixed(0)}';
     return '';
   }
 
   String get displayPayableLabel {
     if (amount != null && amount! > 0) {
-      return '₹${amount!.toStringAsFixed(0)}';
+      return '${Constant.currency ?? ''}${amount!.toStringAsFixed(0)}';
     }
     final breakdownLabel = priceBreakdown?.displayTotal ?? '';
     if (breakdownLabel.isNotEmpty && breakdownLabel != 'Rate on visit') {
       return breakdownLabel;
     }
     if (payableAmount > 0) {
-      return '₹${payableAmount.toStringAsFixed(0)}';
+      return '${Constant.currency ?? ''}${payableAmount.toStringAsFixed(0)}';
     }
     return 'Rate on visit';
   }

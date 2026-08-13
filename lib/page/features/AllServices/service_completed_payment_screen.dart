@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
-
+import 'package:finway/constant/constant.dart';
+import 'package:finway/page/wallet/wallet_screen.dart';
 import 'package:finway/constant/show_toast_dialog.dart';
 import 'package:finway/controller/service_booking_controller.dart';
 import 'package:finway/model/service_request_model.dart';
@@ -12,6 +14,7 @@ import 'package:finway/controller/wallet_controller.dart';
 import 'package:finway/model/razorpay_gen_orderid_model.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'service_payment_success_screen.dart';
+import 'service_scan_to_pay_screen.dart';
 
 class ServiceCompletedPaymentScreen extends StatefulWidget {
   final int bookingId;
@@ -32,6 +35,7 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
   bool _loading = true;
   double _walletBalance = 0;
   double _pendingRazorpayAmount = 0;
+  Timer? _pollTimer;
 
   @override
   void initState() {
@@ -42,12 +46,24 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
     _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handleRazorpayError);
     _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
     _load();
+    _pollTimer = Timer.periodic(const Duration(seconds: 3), (_) => _checkCashPaidStatus());
   }
 
   @override
   void dispose() {
+    _pollTimer?.cancel();
     _razorpay.clear();
     super.dispose();
+  }
+
+  Future<void> _checkCashPaidStatus() async {
+    if (!mounted || _paying) return;
+    final item = await _controller.refreshBooking(widget.bookingId);
+    if (!mounted || item == null) return;
+    if (item.isPaid || item.isCompleted) {
+      _pollTimer?.cancel();
+      _goToSuccess(item.payableAmount, item.paymentStatus ?? 'paid_cash');
+    }
   }
 
   Future<void> _load() async {
@@ -123,8 +139,17 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
       return;
     }
 
-    if (_paymentMethod == 'wallet' && _walletBalance < total) {
-      ShowToastDialog.showToast('Insufficient wallet balance. Please add money or choose UPI.'.tr);
+    if (_paymentMethod == 'wallet') {
+      final paymentSuccess = await Get.to(() => ServiceScanToPayScreen(
+            bookingId: widget.bookingId,
+            expectedDriverId: booking.driverId?.toString() ?? '',
+            amount: total,
+            controller: _controller,
+          ));
+
+      if (paymentSuccess == true) {
+        _goToSuccess(total, 'wallet');
+      }
       return;
     }
 
@@ -153,7 +178,7 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
     );
   }
 
-  String _money(double value) => '₹${value.toStringAsFixed(0)}';
+  String _money(double value) => '${Constant.currency ?? ''}${value.toStringAsFixed(0)}';
 
   @override
   Widget build(BuildContext context) {
@@ -225,8 +250,6 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
                                   _priceRow('Visiting Charge'.tr, visitLabel, isDarkMode),
                                 if (materialAmount > 0)
                                   _priceRow('Material Cost'.tr, _money(materialAmount), isDarkMode),
-                                if (platformFee > 0)
-                                  _priceRow('Platform Fee'.tr, _money(platformFee), isDarkMode),
                                 const Divider(height: 20),
                                 _priceRow('Total Amount'.tr, total > 0 ? _money(total) : booking.displayPayableLabel, isDarkMode, bold: true),
                               ],
@@ -249,11 +272,64 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
                                   value: 'wallet',
                                   groupValue: _paymentMethod,
                                   activeColor: AppThemeData.primary200,
-                                  title: Text('Wallet Balance'.tr),
+
+                                  title: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          'Wallet Balance'.tr,
+                                        ),
+                                      ),
+
+                                      // Show Add Money button only when balance is insufficient
+                                      if (_walletBalance < total && total > 0)
+                                        InkWell(
+                                          borderRadius: BorderRadius.circular(20),
+                                          onTap: () {
+                                            Get.to(() =>  WalletScreen());
+                                          },
+                                          child: Container(
+                                            width: 34,
+                                            height: 34,
+                                            decoration: BoxDecoration(
+                                              color: AppThemeData.primary200.withValues(
+                                                alpha: 0.10,
+                                              ),
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: Icon(
+                                              Icons.add_rounded,
+                                              size: 22,
+                                              color: AppThemeData.primary200,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+
                                   subtitle: _walletBalance < total && total > 0
-                                      ? Text('Insufficient balance'.tr, style: TextStyle(fontSize: 11, color: Colors.orange.shade700))
-                                      : null,
-                                  onChanged: booking.isPaid ? null : (v) => setState(() => _paymentMethod = v ?? 'wallet'),
+                                      ? Text(
+                                    'Insufficient balance'.tr,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.orange.shade700,
+                                    ),
+                                  )
+                                      : Text(
+                                    _money(_walletBalance),
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: isDarkMode
+                                          ? AppThemeData.grey500Dark
+                                          : AppThemeData.grey500,
+                                    ),
+                                  ),
+
+                                  onChanged: booking.isPaid
+                                      ? null
+                                      : (v) => setState(
+                                        () => _paymentMethod = v ?? 'wallet',
+                                  ),
                                 ),
                                 RadioListTile<String>(
                                   value: 'upi',
@@ -262,13 +338,6 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
                                   title: Text('UPI'.tr),
                                   subtitle: Text('Pay via Razorpay UPI'.tr, style: TextStyle(fontSize: 11, color: isDarkMode ? AppThemeData.grey500Dark : AppThemeData.grey500)),
                                   onChanged: booking.isPaid ? null : (v) => setState(() => _paymentMethod = v ?? 'upi'),
-                                ),
-                                RadioListTile<String>(
-                                  value: 'cash',
-                                  groupValue: _paymentMethod,
-                                  activeColor: AppThemeData.primary200,
-                                  title: Text('Cash / Other'.tr),
-                                  onChanged: booking.isPaid ? null : (v) => setState(() => _paymentMethod = v ?? 'cash'),
                                 ),
                               ],
                             ),

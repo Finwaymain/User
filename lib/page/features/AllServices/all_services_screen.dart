@@ -31,17 +31,17 @@ class _AllServicesScreenState extends State<AllServicesScreen> {
   List<ServiceCategoryData> _searchResults = [];
 
   static const _gridDelegate = SliverGridDelegateWithFixedCrossAxisCount(
-    crossAxisCount: 5,
-    mainAxisSpacing: 14,
-    crossAxisSpacing: 8,
-    childAspectRatio: 0.72,
+    crossAxisCount: 4,
+    mainAxisSpacing: 12,
+    crossAxisSpacing: 10,
+    childAspectRatio: 0.78,
   );
 
-  static const _searchGridDelegate = SliverGridDelegateWithFixedCrossAxisCount(
-    crossAxisCount: 5,
-    mainAxisSpacing: 14,
-    crossAxisSpacing: 8,
-    childAspectRatio: 0.58,
+   static const _searchGridDelegate = SliverGridDelegateWithFixedCrossAxisCount(
+    crossAxisCount: 4,
+    mainAxisSpacing: 12,
+    crossAxisSpacing: 10,
+    childAspectRatio: 0.62,
   );
 
   @override
@@ -140,7 +140,7 @@ class _AllServicesScreenState extends State<AllServicesScreen> {
           imageUrl: null,
           subtitle: showBreadcrumb ? _breadcrumbLabel(category) : null,
           isDarkMode: isDarkMode,
-          iconSize: showBreadcrumb ? 48 : 56,
+          iconSize: showBreadcrumb ? 52 : 64,
           onTap: () => _onTapCategory(category, fromSearch: showBreadcrumb),
         );
       },

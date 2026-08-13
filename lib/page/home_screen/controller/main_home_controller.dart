@@ -3,11 +3,10 @@ import 'package:get/get.dart';
 
 import '../../../utils/Preferences.dart';
 import '../../auth_screens/phone_entry_screen.dart';
-import '../../features/SmartValue/Payout/view/payout_screen.dart';
 import '../../in_progress_screen.dart';
 import '../../features/Texi/texi_dash_board.dart';
-import '../view/home_screen.dart';
-import '../../web_view_screen/web_view_screen.dart';
+import '../../subscription_plan_screen/subscription_plan_screen.dart';
+import '../../wallet/wallet_screen.dart';
 
 class MainHomeController extends GetxController
     with GetTickerProviderStateMixin {
@@ -96,20 +95,20 @@ class MainHomeController extends GetxController
 
   void onFeatureTap(int index) {
     final card = featureCards[index];
-    final status = card['status'] ?? 0;
     final routeName = (card['routeName'] ?? '').toString();
     final bool isLogin = Preferences.getBoolean(Preferences.isLogin) ?? false;
 
     if (!isLogin) {
       Get.to(() => const PhoneEntryScreen(),
           transition: Transition.rightToLeftWithFade);
-    }
-    else if (routeName == '/addFund') {
-      Get.to(() => AddFundScreen(), transition: Transition.rightToLeftWithFade);
+      return;
     }
 
-    else if (routeName == '/payouts') {
-      Get.to(() => PayoutScreen(), transition: Transition.rightToLeftWithFade);
+    if (routeName == '/addFund' || routeName == '/payouts') {
+      Get.to(() => WalletScreen(), transition: Transition.rightToLeftWithFade);
+    } else if (routeName == '/rewards') {
+      Get.to(() => const SubscriptionPlanScreen(isbackButton: true),
+          transition: Transition.rightToLeftWithFade);
     } else {
       Get.to(() => const InProgressScreen(),
           transition: Transition.rightToLeftWithFade);
@@ -119,19 +118,20 @@ class MainHomeController extends GetxController
   void onServiceTap(int index) {
     final card = serviceCards[index];
     final bool isLogin = Preferences.getBoolean(Preferences.isLogin) ?? false;
-    final status = card['status'] ?? 0;
     final String routeName = card['routeName']?.toString() ?? '';
 
     if (!isLogin) {
       Get.to(() => const PhoneEntryScreen(),
           transition: Transition.rightToLeftWithFade);
-    } else if (routeName == '/smartValue') {
-      String token = Preferences.getString(Preferences.accesstoken);
-      String userId = Preferences.getInt(Preferences.userId).toString();
-      String finalUrl = 'https://fiinway-maini.onrender.com/onboarding/smartvalue?accesstoken=$token&user_id=$userId';
-      Get.to(() => WebViewScreen(url: finalUrl, title: 'Smart Value'),
+      return;
+    }
+
+    if (routeName == '/smartValue') {
+      Get.to(() => WalletScreen(), transition: Transition.rightToLeftWithFade);
+    } else if (routeName == '/cashbackCard') {
+      Get.to(() => const SubscriptionPlanScreen(isbackButton: true),
           transition: Transition.rightToLeftWithFade);
-    } else if (index == 0) {
+    } else if (index == 0 || routeName == '/travelTransport') {
       Get.to(() => TexiDashboard(), transition: Transition.rightToLeftWithFade);
     } else {
       Get.to(() => const InProgressScreen(),

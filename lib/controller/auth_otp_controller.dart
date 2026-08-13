@@ -17,6 +17,7 @@ class AuthOtpController extends GetxController {
   final emailOtpController = TextEditingController().obs;
   final firstNameController = TextEditingController().obs;
   final lastNameController = TextEditingController().obs;
+  final referralCodeController = TextEditingController().obs;
 
   var phone = ''.obs;
   var emailHint = ''.obs; // masked email shown during login OTP step
@@ -36,6 +37,7 @@ class AuthOtpController extends GetxController {
     emailOtpController.value.dispose();
     firstNameController.value.dispose();
     lastNameController.value.dispose();
+    referralCodeController.value.dispose();
     super.onClose();
   }
 
@@ -349,6 +351,7 @@ class AuthOtpController extends GetxController {
     required String firstName,
     String lastName = '',
     String userCat = 'customer',
+    String referralCode = '',
   }) async {
     try {
       isLoading.value = true;
@@ -359,6 +362,7 @@ class AuthOtpController extends GetxController {
         'firstname': firstName,
         'lastname': lastName,
         'user_cat': userCat,
+        'referral_code': referralCode,
       });
       final res = await http.post(Uri.parse(API.authRegisterSimple), headers: API.authheader, body: body);
       final data = json.decode(res.body);
@@ -378,6 +382,37 @@ class AuthOtpController extends GetxController {
       isLoading.value = false;
       ShowToastDialog.showToast(e.toString());
       return null;
+    }
+  }
+
+  // ── Apply Referral Code from Profile (post-registration) ───────────────────
+  Future<bool> applyReferralCode(String userId, String referralCode, {String userCat = 'customer'}) async {
+    try {
+      isLoading.value = true;
+      final body = jsonEncode({
+        'user_id': userId,
+        'referral_code': referralCode.trim(),
+        'user_cat': userCat,
+      });
+      final res = await http.post(Uri.parse(API.authApplyReferral), headers: API.authheader, body: body);
+      final data = json.decode(res.body);
+      isLoading.value = false;
+
+      if (res.statusCode == 200 && data['success'] == 'success') {
+        ShowToastDialog.showToast(data['message'] ?? 'Referral code applied!');
+        return true;
+      } else {
+        ShowToastDialog.showToast(data['error'] ?? 'Failed to apply referral code');
+        return false;
+      }
+    } on SocketException {
+      isLoading.value = false;
+      ShowToastDialog.showToast('No internet connection');
+      return false;
+    } catch (e) {
+      isLoading.value = false;
+      ShowToastDialog.showToast(e.toString());
+      return false;
     }
   }
 

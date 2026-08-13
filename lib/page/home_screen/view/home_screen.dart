@@ -14,6 +14,7 @@ import 'package:http/http.dart' as http;
 import 'dart:developer';
 
 import 'package:finway/page/referral_screen/referral_screen.dart';
+import 'package:finway/page/referral/submit_aadhar_screen.dart';
 import 'package:finway/themes/custom_base_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -36,11 +37,15 @@ import '../../features/SmartValue/MyQR/view/my_qr_view.dart';
 import '../../features/SmartValue/Payout/view/payout_screen.dart';
 import '../../features/SmartValue/ScanAndTransfer/view/scanner_and_transfer_screen.dart';
 import '../../in_progress_screen.dart';
+import '../../contact_us/customer_support_screen.dart';
 import '../../features/SmartValue/AccountDetails/view/account_details.dart';
 import '../../features/SmartValue/AddPerson/view/add_user_screen.dart';
 import '../../wallet/MercadoPagoScreen.dart';
 import '../../wallet/PayFastScreen.dart';
 import '../../wallet/paystack_url_genrater.dart';
+import '../../../utils/onboarding_url.dart';
+import '../../web_view_screen/web_view_screen.dart';
+import '../../wallet/wallet_screen.dart';
 import '../controller/main_home_controller.dart';
 import '../widget/vertical_icon_with_text.dart';
 import '../widget/vertical_line_section.dart';
@@ -498,20 +503,33 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                                 Get.to(() => const InProgressScreen(), transition: Transition.rightToLeftWithFade);
                               },
                             ),
-                             VerticalIconWithText(
+                            VerticalIconWithText(
                               icon: Icons.storefront_outlined,
                               text: 'Marketplace',
                               onTap: () {
-                                if (!Preferences.getBoolean(Preferences.isLogin)) {
-                                  Get.to(() => const PhoneEntryScreen(), transition: Transition.rightToLeftWithFade);
-                                  return;
-                                }
-                                bool isMarketplaceEnabled = (Constant.getUserData().data?.marketplaceEnabled == '1');
-                                if (!isMarketplaceEnabled) {
-                                  ShowToastDialog.showToast("Marketplace is disabled. Please enable it in your profile.".tr);
-                                  return;
-                                }
-                                Get.to(() => const MarketplaceHomeScreen(), transition: Transition.rightToLeftWithFade);
+                                final url = OnboardingUrl.build('/onboarding/marketplace.html');
+                                Get.to(
+                                  () => WebViewScreen(url: url, title: 'Marketplace'.tr),
+                                  transition: Transition.rightToLeftWithFade,
+                                );
+                              },
+                            ),
+                            VerticalIconWithText(
+                              icon: Icons.fastfood_outlined,
+                              text: 'Food Order',
+                              onTap: () {
+                                final url = OnboardingUrl.build('/onboarding/food.html');
+                                Get.to(
+                                  () => WebViewScreen(url: url, title: 'Food Ordering'.tr),
+                                  transition: Transition.rightToLeftWithFade,
+                                );
+                              },
+                            ),
+                            VerticalIconWithText(
+                              icon: Icons.headset_mic_outlined,
+                              text: 'Support',
+                              onTap: () {
+                                Get.to(() => const CustomerSupportScreen(), transition: Transition.rightToLeftWithFade);
                               },
                             ),
                             VerticalIconWithText(
@@ -595,25 +613,31 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                                   Get.to(() => const PhoneEntryScreen(), transition: Transition.rightToLeftWithFade);
                                   return;
                                 }
-                                Get.to(() => PayoutScreen(), transition: Transition.rightToLeftWithFade);
+                                Get.to(() => WalletScreen(), transition: Transition.rightToLeftWithFade);
                               },
                             ),
                             VerticalIconWithText(
                               icon: Icons.group_add_outlined,
-                              text: 'Refer & Earn',
+                              text: (Preferences.getString('user_aadhar_number') ?? '').isNotEmpty
+                                  ? 'Partner Dashboard'
+                                  : 'Join as a Partner',
                               onTap: () {
                                 if (!Preferences.getBoolean(Preferences.isLogin)) {
                                   Get.to(() => const PhoneEntryScreen(), transition: Transition.rightToLeftWithFade);
                                   return;
                                 }
-                                Get.to(() => ReferralScreen(), transition: Transition.rightToLeftWithFade);
+                                if ((Preferences.getString('user_aadhar_number') ?? '').isNotEmpty) {
+                                  Get.to(() => const ReferralScreen(), transition: Transition.rightToLeftWithFade);
+                                } else {
+                                  Get.to(() => const SubmitAadharScreen(), transition: Transition.rightToLeftWithFade);
+                                }
                               },
                             ),
                           ],
                         ),
 
                         VerticalLineSection(
-                          text: "Medical",
+                          text: "Medical Cashback",
                           margin: const EdgeInsets.only(top: 25),
                           cardChildren: [
                             VerticalIconWithText(
@@ -624,7 +648,8 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                                   Get.to(() => const PhoneEntryScreen(), transition: Transition.rightToLeftWithFade);
                                   return;
                                 }
-                                Get.to(() => MedicalScreen(), transition: Transition.rightToLeftWithFade);
+                                final finalUrl = OnboardingUrl.build('/onboarding/medical-cashback');
+                                Get.to(() => WebViewScreen(url: finalUrl, title: 'Medical Cashback'), transition: Transition.rightToLeftWithFade);
                               },
                             ),
                           ],

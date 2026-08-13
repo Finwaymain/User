@@ -37,7 +37,7 @@
 
     <application
         android:name="${applicationName}"
-        android:icon="@mipmap/launcher_icon"
+        android:icon="@mipmap/ic_launcher"
         android:label="Fiinway"
         android:requestLegacyExternalStorage="true"
         android:usesCleartextTraffic="true">

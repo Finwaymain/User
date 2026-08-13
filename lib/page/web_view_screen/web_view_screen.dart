@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:get/get.dart';
@@ -11,8 +12,16 @@ import 'package:geolocator/geolocator.dart';
 class WebViewScreen extends StatefulWidget {
   final String url;
   final String title;
+  final bool showAppBar;
+  final void Function(Map<String, dynamic> data)? onBridgeAction;
 
-  const WebViewScreen({super.key, required this.url, required this.title});
+  const WebViewScreen({
+    super.key,
+    required this.url,
+    required this.title,
+    this.showAppBar = true,
+    this.onBridgeAction,
+  });
 
   @override
   State<WebViewScreen> createState() => _WebViewScreenState();
@@ -95,6 +104,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
         onMessageReceived: (JavaScriptMessage message) async {
           if (message.message == 'close') {
             Get.back();
+            return;
           } else if (message.message == 'getLocation') {
             try {
               LocationPermission permission = await Geolocator.checkPermission();
@@ -111,7 +121,16 @@ class _WebViewScreenState extends State<WebViewScreen> {
             } catch (e) {
               controller.runJavaScript("window.receiveLocationError('${e.toString()}');");
             }
+            return;
           }
+
+          try {
+            final data = jsonDecode(message.message);
+            if (widget.onBridgeAction != null && data is Map<String, dynamic>) {
+              data['_controller'] = controller;
+              widget.onBridgeAction!(data);
+            }
+          } catch (_) {}
         },
       )
       ..setNavigationDelegate(
@@ -128,10 +147,16 @@ class _WebViewScreenState extends State<WebViewScreen> {
             });
           },
           onWebResourceError: (WebResourceError error) {
-            setState(() {
-              isLoading = false;
-              hasError = true;
-            });
+            if (error.isForMainFrame == true) {
+              final desc = error.description.toUpperCase();
+              if (desc.contains('ERR_ABORTED') || desc.contains('CANCELLED') || error.errorCode == -999) {
+                return;
+              }
+              setState(() {
+                isLoading = false;
+                hasError = true;
+              });
+            }
           },
         ),
       )
@@ -145,23 +170,25 @@ class _WebViewScreenState extends State<WebViewScreen> {
     
     return Scaffold(
       backgroundColor: isDark ? AppThemeData.surface50Dark : AppThemeData.surface50,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, color: isDark ? Colors.white : AppThemeData.grey900, size: 20),
-          onPressed: () => Get.back(),
-        ),
-        title: Text(
-          widget.title,
-          style: TextStyle(
-            color: isDark ? Colors.white : AppThemeData.grey900,
-            fontFamily: AppThemeData.bold,
-            fontSize: 18,
-          ),
-        ),
-        centerTitle: true,
-      ),
+      appBar: widget.showAppBar 
+          ? AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              leading: IconButton(
+                icon: Icon(Icons.arrow_back_ios_new_rounded, color: isDark ? Colors.white : AppThemeData.grey900, size: 20),
+                onPressed: () => Get.back(),
+              ),
+              title: Text(
+                widget.title,
+                style: TextStyle(
+                  color: isDark ? Colors.white : AppThemeData.grey900,
+                  fontFamily: AppThemeData.bold,
+                  fontSize: 18,
+                ),
+              ),
+              centerTitle: true,
+            )
+          : null,
       body: Stack(
         children: [
           if (!hasError) WebViewWidget(controller: controller),

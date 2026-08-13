@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
+import 'package:finway/constant/constant.dart';
 
 import 'package:finway/controller/service_history_controller.dart';
 import 'package:finway/model/service_request_model.dart';
@@ -211,7 +212,7 @@ class _ServiceHistoryScreenState extends State<ServiceHistoryScreen> with Single
           const SizedBox(height: 10),
           _infoRow(Icons.calendar_today_outlined, item.scheduleLabel, isDarkMode),
           if (item.payableAmount > 0)
-            _infoRow(Icons.payments_outlined, '₹${item.payableAmount.toStringAsFixed(0)}', isDarkMode),
+            _infoRow(Icons.payments_outlined, '${Constant.currency ?? ''}${item.payableAmount.toStringAsFixed(0)}', isDarkMode),
           if ((item.serviceAddress ?? item.addressType ?? '').isNotEmpty)
             _infoRow(Icons.location_on_outlined, item.serviceAddress ?? item.addressType!, isDarkMode),
           if ((item.description ?? '').trim().isNotEmpty)
