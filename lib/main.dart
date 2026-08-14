@@ -226,15 +226,25 @@ class NotificationService {
   static void display(RemoteMessage message) async {
     try {
       final id = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      final title = message.notification?.title ?? message.data['title'] ?? 'Fiinway';
+      final body = message.notification?.body ?? message.data['body'] ?? 'Service request status update';
 
       const NotificationDetails notificationDetails = NotificationDetails(
-          android: AndroidNotificationDetails("01", "cabme",
-              importance: Importance.max, priority: Priority.high));
+          android: AndroidNotificationDetails(
+              "high_importance_channel",
+              "High Importance Notifications",
+              channelDescription: "Notifications for booking updates and acceptances",
+              importance: Importance.max,
+              priority: Priority.high,
+              playSound: true,
+              enableVibration: true,
+          ),
+      );
 
       await _flutterLocalNotificationsPlugin.show(
           id,
-          message.notification!.title,
-          message.notification!.body,
+          title,
+          body,
           notificationDetails,
           payload: jsonEncode(message.data));
     } on Exception catch (e) {
