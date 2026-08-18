@@ -1,15 +1,16 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:finway/themes/constant_colors.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
-import '../../../constant/constant.dart';
-import '../../../constant/image_constant.dart';
-import '../../../controller/dash_board_controller.dart';
-import '../../../controller/subscription_controller.dart';
-import '../../../utils/Preferences.dart';
-import '../../../utils/dark_theme_provider.dart';
+
+import 'package:finway/constant/constant.dart';
+import 'package:finway/constant/image_constant.dart';
+import 'package:finway/controller/dash_board_controller.dart';
+import 'package:finway/controller/subscription_controller.dart';
+import 'package:finway/themes/constant_colors.dart';
+import 'package:finway/utils/Preferences.dart';
+import 'package:finway/utils/dark_theme_provider.dart';
 import '../../auth_screens/phone_entry_screen.dart';
 import '../../subscription_plan_screen/subscription_plan_screen.dart' as subs;
 
@@ -20,9 +21,10 @@ class CustomDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool isLogin = Preferences.getBoolean(Preferences.isLogin) ?? false;
     final themeChange = Provider.of<DarkThemeProvider>(context);
+    final bool isDark = themeChange.getThem();
     final dashBoardController = Get.put(DashBoardController());
-    
-    // Force refresh user data when drawer opens
+
+    // Refresh user data
     dashBoardController.getUsrData();
 
     var drawerOptions = <Widget>[];
@@ -31,174 +33,105 @@ class CustomDrawer extends StatelessWidget {
       if (d.title == 'Log Out' && !isLogin) {
         continue;
       }
-      drawerOptions.add(InkWell(
-        onTap: () {
-          dashBoardController.onSelectItem(i, isLogin);
-        },
-        child: Container(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Visibility(
-                visible: d.section != null,
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 30, bottom: 10, left: 16),
-                  child: Text(
-                    d.section ?? '',
-                    style: TextStyle(
-                      color: themeChange.getThem()
-                          ? AppThemeData.grey500Dark
-                          : AppThemeData.grey300Dark,
-                      fontSize: 14,
-                      fontFamily: AppThemeData.regular,
-                    ),
-                  ),
+      final bool isLogout = d.title == 'Log Out' ||
+          (i == dashBoardController.drawerItems.length - 1 && d.title.toLowerCase().contains('log out'));
+
+      drawerOptions.add(Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (d.section != null && d.section!.isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.only(top: 20, bottom: 6, left: 16, right: 16),
+              child: Text(
+                d.section!.toUpperCase(),
+                style: TextStyle(
+                  color: isDark ? AppThemeData.grey400Dark : AppThemeData.grey500,
+                  fontSize: 11,
+                  fontFamily: AppThemeData.bold,
+                  letterSpacing: 1,
                 ),
               ),
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
+            ),
+          ],
+          InkWell(
+            onTap: () {
+              if (d.isSwitch == true) {
+                themeChange.darkTheme = isDark ? 1 : 0;
+              } else {
+                dashBoardController.onSelectItem(i, isLogin);
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Row(
                       children: [
-                        Container(
-                          margin: EdgeInsets.only(
-                              top: (d.description != null &&
-                                      d.description!.isNotEmpty)
-                                  ? 8
-                                  : 0),
-                          child: SvgPicture.asset(
-                            d.icon,
-                            width: 24,
-                            height: 24,
-                            colorFilter: ColorFilter.mode(
-                              dashBoardController.drawerItems[i].title ==
-                                      dashBoardController
-                                          .drawerItems[dashBoardController
-                                                  .drawerItems.length -
-                                              1]
-                                          .title
-                                  ? AppThemeData.error200
-                                  : dashBoardController
-                                              .selectedDrawerIndex.value ==
-                                          i
-                                      ? AppThemeData.primary200
-                                      : themeChange.getThem()
-                                          ? AppThemeData.grey900Dark
-                                          : AppThemeData.grey900,
-                              BlendMode.srcIn,
-                            ),
+                        SvgPicture.asset(
+                          d.icon,
+                          width: 20,
+                          height: 20,
+                          colorFilter: ColorFilter.mode(
+                            isLogout
+                                ? AppThemeData.error200
+                                : dashBoardController.selectedDrawerIndex.value == i
+                                    ? AppThemeData.primary200
+                                    : isDark
+                                        ? AppThemeData.grey400Dark
+                                        : AppThemeData.grey400,
+                            BlendMode.srcIn,
                           ),
                         ),
                         const SizedBox(width: 16),
-                        Flexible(
-                          fit: FlexFit.loose,
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(
-                                maxWidth:
-                                    MediaQuery.of(context).size.width * 0.55),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  d.title,
-                                  style: TextStyle(
-                                    color: dashBoardController
-                                                .drawerItems[i].title ==
-                                            dashBoardController
-                                                .drawerItems[dashBoardController
-                                                        .drawerItems.length -
-                                                    1]
-                                                .title
-                                        ? AppThemeData.error200
-                                        : dashBoardController
-                                                    .selectedDrawerIndex
-                                                    .value ==
-                                                i
-                                            ? AppThemeData.primary200
-                                            : themeChange.getThem()
-                                                ? AppThemeData.grey900Dark
-                                                : AppThemeData.grey900,
-                                    fontSize: 16,
-                                    fontFamily: AppThemeData.medium,
-                                  ),
-                                ),
-                                if (d.description != null &&
-                                    d.description!.isNotEmpty)
-                                  Text(
-                                    d.description ?? '',
-                                    maxLines: 3,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: themeChange.getThem()
-                                          ? AppThemeData.grey400Dark
-                                          : AppThemeData.grey400,
-                                      fontFamily: AppThemeData.regular,
-                                    ),
-                                  ),
-                              ],
+                        Expanded(
+                          child: Text(
+                            d.title,
+                            style: TextStyle(
+                              color: isLogout
+                                  ? AppThemeData.error200
+                                  : dashBoardController.selectedDrawerIndex.value == i
+                                      ? AppThemeData.primary200
+                                      : isDark
+                                          ? AppThemeData.grey900Dark
+                                          : AppThemeData.grey900,
+                              fontSize: 15,
+                              fontFamily: AppThemeData.medium,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
                     ),
-                    d.isSwitch == null
-                        ? SvgPicture.asset(
-                            'assets/icons/ic_right_arrow.svg',
-                            width: 20,
-                            height: 20,
-                            colorFilter: ColorFilter.mode(
-                              themeChange.getThem()
-                                  ? AppThemeData.grey400Dark
-                                  : AppThemeData.grey400,
-                              BlendMode.srcIn,
-                            ),
-                          )
-                        : SizedBox(
-                            height: 25,
-                            child: Switch(
-                              trackOutlineColor:
-                                  WidgetStateProperty.resolveWith<Color>(
-                                      (Set<WidgetState> states) {
-                                return Colors.transparent;
-                              }),
-                              inactiveTrackColor: themeChange.getThem()
-                                  ? AppThemeData.grey300Dark
-                                  : AppThemeData.grey300,
-                              activeTrackColor: AppThemeData.primary200,
-                              thumbColor:
-                                  WidgetStateProperty.resolveWith<Color>(
-                                      (Set<WidgetState> states) {
-                                return themeChange.getThem()
-                                    ? AppThemeData.grey50
-                                    : AppThemeData.grey50Dark;
-                              }),
-                              value: themeChange.getThem(),
-                              onChanged: (value) => (themeChange.darkTheme =
-                                  value == true ? 0 : 1),
-                            ),
-                          ),
-                  ],
-                ),
+                  ),
+                  if (d.isSwitch == true)
+                    SizedBox(
+                      height: 25,
+                      child: Switch.adaptive(
+                        value: isDark,
+                        activeColor: AppThemeData.primary200,
+                        onChanged: (bool val) {
+                          themeChange.darkTheme = val ? 0 : 1;
+                        },
+                      ),
+                    )
+                  else
+                    SvgPicture.asset(
+                      'assets/icons/ic_right_arrow.svg',
+                      width: 18,
+                      height: 18,
+                      colorFilter: ColorFilter.mode(
+                        isDark ? AppThemeData.grey400Dark : AppThemeData.grey400,
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                ],
               ),
-              if ((dashBoardController.drawerItems.length - 2) > i)
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
-                  height: 0.5,
-                  color: themeChange.getThem()
-                      ? AppThemeData.grey200Dark
-                      : AppThemeData.grey200,
-                )
-            ],
+            ),
           ),
-        ),
+        ],
       ));
     }
 
@@ -206,14 +139,15 @@ class CustomDrawer extends StatelessWidget {
       child: SingleChildScrollView(
         child: Column(
           children: [
+            // Drawer Header
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.only(left: 16, right: 16, top: 50, bottom: 20),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
                     AppThemeData.primary200,
-                    AppThemeData.primary200.withValues(alpha: 0.5)
+                    AppThemeData.primary200.withValues(alpha: 0.8),
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomRight,
@@ -221,147 +155,108 @@ class CustomDrawer extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.only(
-                        left: 0, right: 0, top: 50, bottom: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Align(
-                          alignment: Alignment.center,
-                          child: InkWell(
-                            onTap: () {},
-                            child: Container(
-                              height: 70,
-                              width: 70,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                    color: Colors.white,
-                                    width: 2), // White circular border
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(80.0),
-                                child: isLogin
-                                    ? CachedNetworkImage(
-                                        imageUrl: (dashBoardController
-                                                    .userModel
-                                                    .value
-                                                    ?.data
-                                                    ?.photoPath
-                                                    ?.isNotEmpty ??
-                                                false)
-                                            ? dashBoardController
-                                                .userModel.value!.data!.photoPath!
-                                            : Constant.placeholderUrl,
-                                        height: double.infinity,
-                                        width: double.infinity,
-                                        fit: BoxFit.cover,
-                                        progressIndicatorBuilder:
-                                            (context, url, downloadProgress) =>
-                                                Center(
-                                          child: CircularProgressIndicator(
-                                            value: downloadProgress.progress,
-                                          ),
-                                        ),
-                                        errorWidget: (context, url, error) =>
-                                            Image.asset(
-                                          ImageConstant.logo,
-                                          height: double.infinity,
-                                          width: double.infinity,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      )
-                                    : Container(
-                                        color: Colors.grey[400],
-                                        child: const Icon(Icons.person,
-                                            size: 50, color: Colors.white),
-                                      ),
+                  Row(
+                    children: [
+                      Container(
+                        height: 60,
+                        width: 60,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(60.0),
+                          child: isLogin
+                              ? CachedNetworkImage(
+                                  imageUrl: (dashBoardController.userModel.value?.data?.photoPath?.isNotEmpty == true)
+                                      ? dashBoardController.userModel.value!.data!.photoPath!
+                                      : (Constant.placeholderUrl ?? ''),
+                                  height: double.infinity,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                  errorWidget: (context, url, error) => Image.asset(
+                                    ImageConstant.logo,
+                                    height: double.infinity,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                              : Container(
+                                  color: Colors.grey[400],
+                                  child: const Icon(Icons.person, size: 40, color: Colors.white),
+                                ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              isLogin
+                                  ? "${dashBoardController.userModel.value?.data?.prenom ?? ''} ${dashBoardController.userModel.value?.data?.nom ?? ''}".trim().isEmpty
+                                      ? "User"
+                                      : "${dashBoardController.userModel.value?.data?.prenom ?? ''} ${dashBoardController.userModel.value?.data?.nom ?? ''}"
+                                  : "Guest User",
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: AppThemeData.surface50,
+                                fontSize: 16,
+                                fontFamily: AppThemeData.bold,
                               ),
                             ),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 10),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                isLogin
-                                    ? "${dashBoardController.userModel.value?.data?.prenom ?? ''} ${dashBoardController.userModel.value?.data?.nom ?? ''}"
-                                    : "Guest User",
-                                style: TextStyle(
-                                  color: AppThemeData.surface50,
-                                  fontSize: 18,
-                                  fontFamily: AppThemeData.regular,
-                                ),
+                            const SizedBox(height: 2),
+                            Text(
+                              isLogin
+                                  ? "${(dashBoardController.userModel.value?.data?.phone ?? 'user')}@${Constant.appName ?? 'fiinway'}.com".toLowerCase()
+                                  : "guest@fiinway.com",
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: AppThemeData.surface50.withValues(alpha: 0.8),
+                                fontSize: 11,
+                                fontFamily: AppThemeData.regular,
                               ),
-                              Padding(
-                                padding: const EdgeInsets.only(top: 4),
-                                child: Text(
-                                  isLogin
-                                      ? "${(dashBoardController.userModel.value?.data?.phone ?? 'guest')}@${Constant.appName}.com"
-                                          .toLowerCase()
-                                      : "guest@${Constant.appName}.com"
-                                          .toLowerCase(),
-                                  style: TextStyle(
-                                    color:
-                                        AppThemeData.surface50.withValues(alpha: 0.7),
-                                    fontSize: 12,
-                                    fontFamily: AppThemeData.regular,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  if (!isLogin)
+                  if (!isLogin) ...[
+                    const SizedBox(height: 14),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
-                          if (!isLogin) {
-                            Get.to(() => const PhoneEntryScreen(),
-                                transition: Transition.rightToLeftWithFade);
-                          } else {}
+                          Get.to(() => const PhoneEntryScreen(), transition: Transition.rightToLeftWithFade);
                         },
                         style: ElevatedButton.styleFrom(
-                          padding: EdgeInsets.zero,
+                          backgroundColor: Colors.white,
+                          foregroundColor: AppThemeData.primary200,
+                          elevation: 0,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent,
-                        ),
-                        child: Ink(
-                          decoration: BoxDecoration(
-                            color: Colors.white, // Solid white background
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: Container(
-                            alignment: Alignment.center,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            child: Text(
-                              isLogin ? "Sign Out" : "Sign In",
-                              style: TextStyle(
-                                color: AppThemeData.primary200,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                        ),
+                        child: Text(
+                          "Sign In",
+                          style: TextStyle(
+                            color: AppThemeData.primary200,
+                            fontSize: 14,
+                            fontFamily: AppThemeData.bold,
                           ),
                         ),
                       ),
                     ),
+                  ],
                 ],
               ),
             ),
 
-            // Subscription Plan Card
+            // Subscription / Membership Plan Card
             GestureDetector(
               onTap: () {
                 Get.back(); // close drawer
@@ -372,11 +267,15 @@ class CustomDrawer extends StatelessWidget {
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: themeChange.getThem() ? const Color(0xFF1E293B) : Colors.white,
+                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppThemeData.primary200, width: 1.5),
                   boxShadow: [
-                    BoxShadow(color: AppThemeData.primary200.withValues(alpha: 0.12), blurRadius: 6, offset: const Offset(0, 2)),
+                    BoxShadow(
+                      color: AppThemeData.primary200.withValues(alpha: 0.12),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
                   ],
                 ),
                 child: Obx(() => Row(
@@ -415,7 +314,7 @@ class CustomDrawer extends StatelessWidget {
                           Text(
                             dashBoardController.userModel.value?.data?.consumerPlan?.name ?? 'Standard Plan',
                             style: TextStyle(
-                              color: themeChange.getThem() ? Colors.white : AppThemeData.grey900,
+                              color: isDark ? Colors.white : AppThemeData.grey900,
                               fontSize: 14,
                               fontFamily: AppThemeData.bold,
                             ),
@@ -424,7 +323,7 @@ class CustomDrawer extends StatelessWidget {
                           Text(
                             'View membership & change plan',
                             style: TextStyle(
-                              color: themeChange.getThem() ? AppThemeData.grey400Dark : AppThemeData.grey500,
+                              color: isDark ? AppThemeData.grey400Dark : AppThemeData.grey500,
                               fontSize: 11,
                               fontFamily: AppThemeData.regular,
                             ),
@@ -441,6 +340,8 @@ class CustomDrawer extends StatelessWidget {
             const Divider(height: 1),
 
             Column(children: drawerOptions),
+
+            const SizedBox(height: 24),
           ],
         ),
       ),
