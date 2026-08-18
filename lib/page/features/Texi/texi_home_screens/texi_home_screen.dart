@@ -153,22 +153,9 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
                 .toList();
           }
           vehicleCategoryModel = categories ?? VehicleCategoryModel(data: []);
-          if (categories != null && categories.data != null && categories.data!.isNotEmpty) {
-            if (widget.initialVehicleCategory != null) {
-              selectedVehicle = categories.data!.firstWhere(
-                (cat) => cat.libelle?.toLowerCase().contains(widget.initialVehicleCategory!.toLowerCase()) ?? false,
-                orElse: () => categories.data!.first,
-              );
-            } else {
-              selectedVehicle = categories.data!.first;
-            }
-          } else {
-            selectedVehicle = null;
-          }
+          selectedVehicle = null;
+          nearbyDrivers = null;
         });
-        if (categories != null && categories.data != null && categories.data!.isNotEmpty) {
-          fetchNearbyDrivers();
-        }
       }
     } catch (e) {
       print('Fetch categories error: $e');
@@ -981,8 +968,8 @@ Widget buildUnifiedBookingPanel(HomeController controller, bool isDarkMode) {
                 onTap: () {
                   setState(() {
                     selectedTabIndex = 0;
-                    if (displayedCategories.isNotEmpty)
-                      selectedVehicle = displayedCategories.first;
+                    selectedVehicle = null;
+                    nearbyDrivers = null;
                   });
                 },
                 child: Column(
@@ -1015,8 +1002,8 @@ Widget buildUnifiedBookingPanel(HomeController controller, bool isDarkMode) {
                 onTap: () {
                   setState(() {
                     selectedTabIndex = 1;
-                    if (displayedCategories.isNotEmpty)
-                      selectedVehicle = displayedCategories.first;
+                    selectedVehicle = null;
+                    nearbyDrivers = null;
                   });
                 },
                 child: Column(
@@ -1207,61 +1194,136 @@ Widget buildUnifiedBookingPanel(HomeController controller, bool isDarkMode) {
         const SizedBox(height: 8),
 
         // Compact Payment Method Selector
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(
-            color: isDarkMode ? AppThemeData.grey100Dark : Colors.grey.shade50,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.account_balance_wallet_outlined,
-                  color: AppThemeData.primary200, size: 18),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  selectedPaymentMethod == "wallet"
-                      ? "Wallet Balance (1,250)".tr
-                      : selectedPaymentMethod == "upi"
-                      ? "UPI Payment (Mock)".tr
-                      : "Cash Payment".tr,
-                  style: TextStyle(
-                    fontFamily: AppThemeData.semiBold,
-                    fontSize: 12,
-                    color: isDarkMode ? AppThemeData.grey900Dark : AppThemeData
-                        .grey900,
+        if (selectedVehicle != null) ...[
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: isDarkMode ? AppThemeData.grey100Dark : Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.account_balance_wallet_outlined,
+                    color: AppThemeData.primary200, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    selectedPaymentMethod == "wallet"
+                        ? "Wallet Balance (₹1,250)".tr
+                        : selectedPaymentMethod == "upi"
+                        ? "UPI Payment".tr
+                        : "Cash Payment".tr,
+                    style: TextStyle(
+                      fontFamily: AppThemeData.semiBold,
+                      fontSize: 12,
+                      color: isDarkMode ? AppThemeData.grey900Dark : AppThemeData.grey900,
+                    ),
                   ),
                 ),
-              ),
-              DropdownButton<String>(
-                value: selectedPaymentMethod,
-                underline: const SizedBox(),
-
-                isDense: true,
-                icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 18),
-                items: [
-                  DropdownMenuItem(value: "cash",
-                      child: Text(
-                          "Cash".tr, style: const TextStyle(fontSize: 12))),
-                  DropdownMenuItem(value: "wallet",
-                      child: Text(
-                          "Wallet".tr, style: const TextStyle(fontSize: 12))),
-                  DropdownMenuItem(value: "upi",
-                      child: Text(
-                          "UPI".tr, style: const TextStyle(fontSize: 12))),
-                ],
-                onChanged: (val) {
-                  if (val != null) setState(() => selectedPaymentMethod = val);
-                },
-              )
-            ],
+                DropdownButton<String>(
+                  value: selectedPaymentMethod,
+                  underline: const SizedBox(),
+                  isDense: true,
+                  icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 18),
+                  items: [
+                    DropdownMenuItem(value: "cash", child: Text("Cash".tr, style: const TextStyle(fontSize: 12))),
+                    DropdownMenuItem(value: "wallet", child: Text("Wallet".tr, style: const TextStyle(fontSize: 12))),
+                    DropdownMenuItem(value: "upi", child: Text("UPI".tr, style: const TextStyle(fontSize: 12))),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) setState(() => selectedPaymentMethod = val);
+                  },
+                )
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
+          const SizedBox(height: 8),
+        ],
 
         // Footer Fare & Action Button
-        if (isLocationSelected)
+        if (!isLocationSelected)
+          Text(
+            "Please select pickup & drop locations above to continue.".tr,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.grey, fontSize: 11),
+          )
+        else if (selectedVehicle == null)
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+            decoration: BoxDecoration(
+              color: isDarkMode ? AppThemeData.grey800 : Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.touch_app_outlined, size: 18, color: AppThemeData.primary200),
+                const SizedBox(width: 8),
+                Text(
+                  "Select a vehicle above to see fare & book ride".tr,
+                  style: TextStyle(
+                    fontFamily: AppThemeData.medium,
+                    fontSize: 12,
+                    color: isDarkMode ? AppThemeData.grey500Dark : AppThemeData.grey500,
+                  ),
+                ),
+              ],
+            ),
+          )
+        else if (isLoadingDrivers)
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+            decoration: BoxDecoration(
+              color: isDarkMode ? AppThemeData.grey800 : Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  "Checking nearby ${selectedVehicle!.libelle} drivers...".tr,
+                  style: TextStyle(
+                    fontFamily: AppThemeData.medium,
+                    fontSize: 12,
+                    color: isDarkMode ? AppThemeData.grey500Dark : AppThemeData.grey500,
+                  ),
+                ),
+              ],
+            ),
+          )
+        else if (nearbyDrivers?.data == null || nearbyDrivers!.data!.isEmpty)
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFEF2F2),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFFCA5A5)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline, size: 18, color: Color(0xFFDC2626)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    "No ${selectedVehicle!.libelle} drivers online nearby right now.".tr,
+                    style: const TextStyle(
+                      color: Color(0xFF991B1B),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
           Row(
             children: [
               Column(
@@ -1315,14 +1377,7 @@ Widget buildUnifiedBookingPanel(HomeController controller, bool isDarkMode) {
                 ),
               ),
             ],
-          )
-        else
-          Text(
-            "Please select pickup & drop locations above to continue.".tr,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.grey, fontSize: 11),
           ),
-
       ],
     ),
   );
