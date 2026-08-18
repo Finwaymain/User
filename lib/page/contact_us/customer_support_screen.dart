@@ -215,7 +215,7 @@ class _CustomerSupportScreenState extends State<CustomerSupportScreen> {
                               height: 52,
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
-                                  colors: [AppThemeData.primary200, AppThemeData.primary400],
+                                  colors: [AppThemeData.primary200, AppThemeData.primary300],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                 ),

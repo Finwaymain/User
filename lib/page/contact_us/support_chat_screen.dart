@@ -46,7 +46,7 @@ class SupportChatScreen extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [AppThemeData.primary200, AppThemeData.primary400],
+                  colors: [AppThemeData.primary200, AppThemeData.primary300],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -147,7 +147,7 @@ class SupportChatScreen extends StatelessWidget {
                           return ActionChip(
                             elevation: 0,
                             pressElevation: 1,
-                            backgroundColor: isDark ? AppThemeData.grey700 : const Color(0xFFEEF2F6),
+                            backgroundColor: isDark ? AppThemeData.grey800 : const Color(0xFFEEF2F6),
                             side: BorderSide(color: AppThemeData.primary200.withValues(alpha: 0.3)),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                             label: Text(
@@ -225,7 +225,7 @@ class SupportChatScreen extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         decoration: BoxDecoration(
-                          color: isDark ? AppThemeData.grey700 : const Color(0xFFF1F5F9),
+                          color: isDark ? AppThemeData.grey800 : const Color(0xFFF1F5F9),
                           borderRadius: BorderRadius.circular(24),
                         ),
                         child: TextField(
@@ -256,7 +256,7 @@ class SupportChatScreen extends StatelessWidget {
                           height: 44,
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [AppThemeData.primary200, AppThemeData.primary400],
+                              colors: [AppThemeData.primary200, AppThemeData.primary300],
                             ),
                             shape: BoxShape.circle,
                             boxShadow: [
@@ -309,7 +309,7 @@ class SupportChatScreen extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: isAdmin
-              ? (isDark ? AppThemeData.grey700 : Colors.white)
+              ? (isDark ? AppThemeData.grey800 : Colors.white)
               : AppThemeData.primary200,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
