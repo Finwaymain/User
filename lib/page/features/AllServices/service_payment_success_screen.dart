@@ -559,6 +559,7 @@ class _ServicePaymentSuccessScreenState extends State<ServicePaymentSuccessScree
                         context,
                         title: 'View Booking History'.tr,
                         btnColor: AppThemeData.primary200,
+                        txtColor: Colors.white,
                         radius: 14,
                         btnHeight: 50,
                         onPress: () {
