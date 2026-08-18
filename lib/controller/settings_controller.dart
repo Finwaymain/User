@@ -58,7 +58,10 @@ class SettingsController extends GetxController {
         } else {
           Constant.selectedMapType = model.data?.mapForApplication != null ? '${model.data?.mapForApplication?.toLowerCase()}' : '';
         }
-        AppThemeData.primary200 = Color(int.parse(model.data!.websiteColor!.replaceFirst("#", "0xff")));
+        if (model.data?.websiteColor != null && model.data!.websiteColor!.isNotEmpty) {
+          Preferences.setString(Preferences.themeColor, model.data!.websiteColor!);
+          AppThemeData.applyThemeColor(model.data!.websiteColor!);
+        }
         Constant.distanceUnit = model.data!.deliveryDistance!;
         Constant.driverRadius = model.data!.driverRadios!;
         Constant.appVersion = model.data!.appVersion.toString();

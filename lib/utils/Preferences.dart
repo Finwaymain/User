@@ -12,6 +12,8 @@ class Preferences {
   static const currency = "currency";
   static const accesstoken = "accesstoken";
   static const admincommission = "adminCommission";
+  static const themeColor = "themeColor";
+  static const websiteColor = "websiteColor";
 
   static late SharedPreferences pref;
 

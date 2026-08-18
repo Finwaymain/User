@@ -13,6 +13,7 @@ import 'package:finway/page/route_view_screen/route_osm_view_screen.dart';
 import 'package:finway/page/route_view_screen/route_view_screen.dart';
 import 'package:finway/page/features/SmartValue/AddPerson/controller/add_user_controller.dart';
 import 'package:finway/themes/styles.dart';
+import 'package:finway/themes/constant_colors.dart';
 import 'package:finway/utils/dark_theme_provider.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
@@ -285,6 +286,10 @@ class AppInitialization {
           log('Preferences initialization timeout');
         },
       );
+      final cachedColor = Preferences.getString(Preferences.themeColor);
+      if (cachedColor.isNotEmpty) {
+        AppThemeData.applyThemeColor(cachedColor);
+      }
     } catch (e) {
       log('Preferences initialization error: $e');
     }
