@@ -563,22 +563,10 @@ class MyProfileScreen extends StatelessWidget {
 class _ReferralCodeCard extends StatefulWidget {
   final String userId;
   final bool isDark;
-  final String userCat;
-  final Color? cardBg;
-  final Color? borderColor;
-  final Color? textPrimary;
-  final Color? textSecondary;
-  final Color? primaryColor;
 
   const _ReferralCodeCard({
     required this.userId,
     required this.isDark,
-    this.userCat = 'customer',
-    this.cardBg,
-    this.borderColor,
-    this.textPrimary,
-    this.textSecondary,
-    this.primaryColor,
   });
 
   @override
@@ -607,7 +595,7 @@ class _ReferralCodeCardState extends State<_ReferralCodeCard> {
     final ok = await controller.applyReferralCode(
       widget.userId,
       code,
-      userCat: widget.userCat,
+      userCat: 'customer',
     );
     setState(() {
       _applying = false;
@@ -617,11 +605,11 @@ class _ReferralCodeCardState extends State<_ReferralCodeCard> {
 
   @override
   Widget build(BuildContext context) {
-    final cardBg = widget.cardBg ?? (widget.isDark ? AppThemeData.surface50Dark : Colors.white);
-    final borderColor = widget.borderColor ?? (widget.isDark ? AppThemeData.grey200Dark : AppThemeData.grey200);
-    final textPrimary = widget.textPrimary ?? (widget.isDark ? AppThemeData.grey900Dark : AppThemeData.grey900);
-    final textSecondary = widget.textSecondary ?? (widget.isDark ? AppThemeData.grey400Dark : AppThemeData.grey400);
-    final primaryColor = widget.primaryColor ?? AppThemeData.primary200;
+    final cardBg = widget.isDark ? AppThemeData.surface50Dark : Colors.white;
+    final borderColor = widget.isDark ? AppThemeData.grey200Dark : AppThemeData.grey200;
+    final textPrimary = widget.isDark ? AppThemeData.grey900Dark : AppThemeData.grey900;
+    final textSecondary = widget.isDark ? AppThemeData.grey400Dark : AppThemeData.grey400;
+    final primaryColor = AppThemeData.primary200;
     final inputBg = widget.isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9);
 
     return Container(
