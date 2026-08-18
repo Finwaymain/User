@@ -32,124 +32,131 @@ class MyProfileScreen extends StatelessWidget {
   MyProfileScreen({super.key});
 
   final GlobalKey<FormState> _profileKey = GlobalKey();
-
   final dashboardController = Get.put(DashBoardController());
+  final ImagePicker _imagePicker = ImagePicker();
 
   @override
   Widget build(BuildContext context) {
     final themeChange = Provider.of<DarkThemeProvider>(context);
+    final isDark = themeChange.getThem();
+
     return GetX<MyProfileController>(
-        init: MyProfileController(),
-        builder: (myProfileController) {
-          return Scaffold(
-            resizeToAvoidBottomInset: false,
-            appBar: CustomAppbar(
-              title: 'My Profile'.tr,
-              bgColor: AppThemeData.primary200,
-            ),
-            bottomNavigationBar: SizedBox(
-              height: 80,
-              child: Column(
-                children: [
-                  buildShowDetails(
-                    isTrailingShow: false,
-                    textIconColor: AppThemeData.error200,
-                    isDarkMode: themeChange.getThem(),
-                    title: "Delete Account".tr,
-                    icon: 'assets/icons/ic_delete.svg',
-                    onPress: () async {
-                      await showDialog(
-                          context: context,
-                          useSafeArea: true,
-                          builder: (context) {
-                            return AlertDialog(
-                              title: Text(
-                                'Are you sure you want to delete account?'.tr,
-                                style: const TextStyle(fontSize: 16),
-                              ),
-                              actions: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: ButtonThem.buildButton(
-                                        context,
-                                        title: 'No'.tr,
-                                        btnColor: Colors.red,
-                                        txtColor: Colors.white,
-                                        onPress: () {
+      init: MyProfileController(),
+      builder: (myProfileController) {
+        return Scaffold(
+          resizeToAvoidBottomInset: true,
+          appBar: CustomAppbar(
+            title: 'My Profile'.tr,
+            bgColor: AppThemeData.primary200,
+          ),
+          bottomNavigationBar: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            color: isDark ? AppThemeData.surface50Dark : AppThemeData.surface50,
+            child: SafeArea(
+              child: SizedBox(
+                height: 56,
+                child: buildShowDetails(
+                  isTrailingShow: false,
+                  textIconColor: AppThemeData.error200,
+                  isDarkMode: isDark,
+                  title: "Delete Account".tr,
+                  icon: 'assets/icons/ic_delete.svg',
+                  onPress: () async {
+                    await showDialog(
+                      context: context,
+                      useSafeArea: true,
+                      builder: (context) {
+                        return AlertDialog(
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          title: Text(
+                            'Are you sure you want to delete account?'.tr,
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                          actions: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: ButtonThem.buildButton(
+                                    context,
+                                    title: 'No'.tr,
+                                    btnColor: Colors.grey.shade400,
+                                    txtColor: Colors.white,
+                                    onPress: () => Get.back(),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: ButtonThem.buildButton(
+                                    context,
+                                    title: 'Yes'.tr,
+                                    btnColor: AppThemeData.error200,
+                                    txtColor: Colors.white,
+                                    onPress: () {
+                                      myProfileController.deleteAccount(Preferences.getInt(Preferences.userId).toString()).then((value) {
+                                        if (value != null && value["success"] == "success") {
+                                          ShowToastDialog.showToast(value['message']);
                                           Get.back();
-                                        },
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                      width: 10,
-                                    ),
-                                    Expanded(
-                                      child: ButtonThem.buildButton(
-                                        context,
-                                        title: 'Yes'.tr,
-                                        btnColor: AppThemeData.primary200,
-                                        txtColor: Colors.white,
-                                        onPress: () {
-                                          myProfileController.deleteAccount(Preferences.getInt(Preferences.userId).toString()).then((value) {
-                                            if (value != null) {
-                                              if (value["success"] == "success") {
-                                                ShowToastDialog.showToast(value['message']);
-                                                Get.back();
-                                                Preferences.clearSharPreference();
-                                                Get.offAll(const PhoneEntryScreen());
-                                              }
-                                            }
-                                          });
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                )
+                                          Preferences.clearSharPreference();
+                                          Get.offAll(const PhoneEntryScreen());
+                                        }
+                                      });
+                                    },
+                                  ),
+                                ),
                               ],
-                            );
-                          });
-                    },
+                            )
+                          ],
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+          body: Stack(
+            children: [
+              Column(
+                children: [
+                  Expanded(
+                    flex: 1,
+                    child: Container(color: AppThemeData.primary200),
                   ),
-                  const SizedBox(
-                    height: 20,
+                  Expanded(
+                    flex: 8,
+                    child: Container(
+                      color: isDark ? AppThemeData.surface50Dark : AppThemeData.surface50,
+                    ),
                   ),
                 ],
               ),
-            ),
-            body: Stack(
-              children: [
-                Column(
-                  children: [
-                    Expanded(
-                      flex: 1,
-                      child: Container(
-                        color: AppThemeData.primary200,
-                      ),
-                    ),
-                    Expanded(
-                      flex: 8,
-                      child: Container(
-                        alignment: Alignment.bottomCenter,
-                        color: themeChange.getThem() ? AppThemeData.surface50Dark : AppThemeData.surface50,
-                      ),
-                    ),
-                  ],
-                ),
-                SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
-                      children: [
-                        Expanded(
-                          child: SingleChildScrollView(
-                            child: Form(
-                              key: _profileKey,
-                              child: Column(
-                                children: [
-                                  const SizedBox(height: 20),
-                                  Align(
-                                    alignment: Alignment.center,
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          child: Form(
+                            key: _profileKey,
+                            child: Column(
+                              children: [
+                                const SizedBox(height: 20),
+                                // Avatar Section with Smooth Border
+                                Align(
+                                  alignment: Alignment.center,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.1),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
                                     child: SizedBox(
                                       height: 120,
                                       width: 120,
@@ -160,39 +167,24 @@ class MyProfileScreen extends StatelessWidget {
                                             child: ClipRRect(
                                               borderRadius: BorderRadius.circular(100),
                                               child: myProfileController.imageData.value.path.isNotEmpty
-                                                  ? Center(
-                                                      child: Image.file(
-                                                        File(myProfileController.imageData.value.path),
-                                                        height: 120,
-                                                        width: 120,
-                                                        fit: BoxFit.cover,
-                                                      ),
-                                                    )
-                                                  : myProfileController.photoPath.isEmpty
-                                                      ? CachedNetworkImage(
-                                                          imageUrl: Constant.placeholderUrl,
-                                                          height: 120,
-                                                          width: 120,
-                                                          fit: BoxFit.cover,
-                                                          progressIndicatorBuilder: (context, url, downloadProgress) => Center(
-                                                            child: CircularProgressIndicator(value: downloadProgress.progress),
-                                                          ),
-                                                          errorWidget: (context, url, error) => Image.asset(
-                                                            ImageConstant.logo,
-                                                          ),
-                                                        )
-                                                      : CachedNetworkImage(
-                                                          imageUrl: myProfileController.photoPath.toString(),
-                                                          height: 120,
-                                                          width: 120,
-                                                          fit: BoxFit.cover,
-                                                          progressIndicatorBuilder: (context, url, downloadProgress) => Center(
-                                                            child: CircularProgressIndicator(value: downloadProgress.progress),
-                                                          ),
-                                                          errorWidget: (context, url, error) => Image.asset(
-                                                            ImageConstant.logo,
-                                                          ),
-                                                        ),
+                                                  ? Image.file(
+                                                File(myProfileController.imageData.value.path),
+                                                height: 120,
+                                                width: 120,
+                                                fit: BoxFit.cover,
+                                              )
+                                                  : CachedNetworkImage(
+                                                imageUrl: myProfileController.photoPath.isNotEmpty
+                                                    ? myProfileController.photoPath.toString()
+                                                    : Constant.placeholderUrl,
+                                                height: 120,
+                                                width: 120,
+                                                fit: BoxFit.cover,
+                                                progressIndicatorBuilder: (context, url, downloadProgress) => Center(
+                                                  child: CircularProgressIndicator(value: downloadProgress.progress),
+                                                ),
+                                                errorWidget: (context, url, error) => Image.asset(ImageConstant.logo),
+                                              ),
                                             ),
                                           ),
                                           Align(
@@ -201,17 +193,18 @@ class MyProfileScreen extends StatelessWidget {
                                               onTap: () => buildBottomSheet(context, myProfileController),
                                               child: ClipOval(
                                                 child: Container(
-                                                  decoration: BoxDecoration(color: AppThemeData.primary200, borderRadius: BorderRadius.circular(50)),
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.all(8.0),
-                                                    child: SvgPicture.asset(
-                                                      'assets/icons/ic_edit.svg',
-                                                      width: 22,
-                                                      height: 22,
-                                                      colorFilter: ColorFilter.mode(
-                                                        themeChange.getThem() ? AppThemeData.grey900 : AppThemeData.grey900Dark,
-                                                        BlendMode.srcIn,
-                                                      ),
+                                                  decoration: BoxDecoration(
+                                                    color: AppThemeData.primary200,
+                                                    borderRadius: BorderRadius.circular(50),
+                                                  ),
+                                                  padding: const EdgeInsets.all(8.0),
+                                                  child: SvgPicture.asset(
+                                                    'assets/icons/ic_edit.svg',
+                                                    width: 20,
+                                                    height: 20,
+                                                    colorFilter: ColorFilter.mode(
+                                                      isDark ? AppThemeData.grey900 : AppThemeData.grey900Dark,
+                                                      BlendMode.srcIn,
                                                     ),
                                                   ),
                                                 ),
@@ -222,244 +215,223 @@ class MyProfileScreen extends StatelessWidget {
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(height: 50),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 10),
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.start,
-                                      children: [
-                                        Container(
-                                          color: themeChange.getThem() ? AppThemeData.surface50Dark : AppThemeData.surface50,
-                                          child: Column(
-                                            children: [
-                                              Row(
-                                                children: [
-                                                  Expanded(
-                                                    child: TextFieldWidget(
-                                                      prefix: IconButton(
-                                                        onPressed: () {},
-                                                        icon: SvgPicture.asset(
-                                                          'assets/icons/ic_user.svg',
-                                                          colorFilter: ColorFilter.mode(
-                                                            themeChange.getThem() ? AppThemeData.grey500Dark : AppThemeData.grey300Dark,
-                                                            BlendMode.srcIn,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      hintText: 'Name'.tr,
-                                                      controller: myProfileController.fullNameController.value,
-                                                      textInputType: TextInputType.text,
-                                                      maxLength: 22,
-                                                      validators: (String? value) {
-                                                        if (value!.isNotEmpty) {
-                                                          return null;
-                                                        } else {
-                                                          return 'required'.tr;
-                                                        }
-                                                      },
-                                                    ),
-                                                  ),
-                                                  Expanded(
-                                                    child: TextFieldWidget(
-                                                      prefix: IconButton(
-                                                        onPressed: () {},
-                                                        icon: SvgPicture.asset(
-                                                          'assets/icons/ic_user.svg',
-                                                          colorFilter: ColorFilter.mode(
-                                                            themeChange.getThem() ? AppThemeData.grey500Dark : AppThemeData.grey300Dark,
-                                                            BlendMode.srcIn,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      hintText: 'Last Name'.tr,
-                                                      controller: myProfileController.lastNameController.value,
-                                                      textInputType: TextInputType.text,
-                                                      maxLength: 22,
-                                                      validators: (String? value) {
-                                                        if (value!.isNotEmpty) {
-                                                          return null;
-                                                        } else {
-                                                          return 'required'.tr;
-                                                        }
-                                                      },
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              Container(
-                                                decoration: BoxDecoration(
-                                                    border: Border.all(
-                                                  color: themeChange.getThem() ? AppThemeData.grey200Dark : AppThemeData.grey200,
-                                                  width: 0.8,
-                                                )),
-                                                child: IntlPhoneField(
-                                                  countries: countries.where((country) => country.code == 'IN').toList(),
-                                                  initialCountryCode: 'IN',
-                                                  textAlign: TextAlign.start,
-                                                  flagsButtonPadding: EdgeInsets.only(left: 10, right: 10),
-                                                  readOnly: true,
-                                                  initialValue: myProfileController.phoneController.value.text,
-                                                  onChanged: (phone) {
-                                                    myProfileController.phoneController.value.text = phone.completeNumber;
-                                                  },
-                                                  invalidNumberMessage: "number invalid".tr,
-                                                  showDropdownIcon: false,
-                                                  disableLengthCheck: true,
-                                                  decoration: InputDecoration(
-                                                    border: InputBorder.none,
-                                                    focusedBorder: UnderlineInputBorder(
-                                                      borderRadius: const BorderRadius.only(),
-                                                      borderSide: BorderSide(
-                                                        color: AppThemeData.primary200,
-                                                        width: 0.8,
-                                                      ),
-                                                    ),
-                                                    contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                                                    hintText: 'Phone Number'.tr,
-                                                    isDense: true,
+                                ),
+                                const SizedBox(height: 30),
+
+                                // Form Fields Container Card with Rounded Corners
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: isDark ? AppThemeData.surface50Dark : Colors.white,
+                                    borderRadius: BorderRadius.circular(20),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.04),
+                                        blurRadius: 15,
+                                        offset: const Offset(0, 5),
+                                      ),
+                                    ],
+                                  ),
+                                  padding: const EdgeInsets.all(16),
+                                  child: Column(
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: TextFieldWidget(
+                                              prefix: IconButton(
+                                                onPressed: () {},
+                                                icon: SvgPicture.asset(
+                                                  'assets/icons/ic_user.svg',
+                                                  colorFilter: ColorFilter.mode(
+                                                    isDark ? AppThemeData.grey500Dark : AppThemeData.grey300Dark,
+                                                    BlendMode.srcIn,
                                                   ),
                                                 ),
                                               ),
-                                              TextFieldWidget(
-                                                isReadOnly: true,
-                                                prefix: IconButton(
-                                                  onPressed: () {},
-                                                  icon: SvgPicture.asset(
-                                                    'assets/icons/ic_email.svg',
-                                                    colorFilter: ColorFilter.mode(
-                                                      themeChange.getThem() ? AppThemeData.grey500Dark : AppThemeData.grey300Dark,
-                                                      BlendMode.srcIn,
-                                                    ),
+                                              hintText: 'Name'.tr,
+                                              controller: myProfileController.fullNameController.value,
+                                              textInputType: TextInputType.text,
+                                              maxLength: 22,
+                                              validators: (String? value) {
+                                                return (value != null && value.isNotEmpty) ? null : 'required'.tr;
+                                              },
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Expanded(
+                                            child: TextFieldWidget(
+                                              prefix: IconButton(
+                                                onPressed: () {},
+                                                icon: SvgPicture.asset(
+                                                  'assets/icons/ic_user.svg',
+                                                  colorFilter: ColorFilter.mode(
+                                                    isDark ? AppThemeData.grey500Dark : AppThemeData.grey300Dark,
+                                                    BlendMode.srcIn,
                                                   ),
                                                 ),
-                                                hintText: 'email'.tr,
-                                                controller: myProfileController.emailController.value,
-                                                textInputType: TextInputType.emailAddress,
-                                                validators: (String? value) {
-                                                  bool emailValid = RegExp(r'^.+@[a-zA-Z]+\.{1}[a-zA-Z]+(\.{0,1}[a-zA-Z]+)$').hasMatch(value!);
-                                                  if (!emailValid) {
-                                                    return 'email not valid'.tr;
-                                                  } else {
-                                                    return null;
-                                                  }
-                                                },
                                               ),
-                                              const SizedBox(height: 10),
-                                              Row(
-                                                children: [
-                                                  Expanded(
-                                                    child: TextFieldWidget(
-                                                      prefix: IconButton(
-                                                        onPressed: () {},
-                                                        icon: Icon(
-                                                          Icons.phone_android,
-                                                          color: themeChange.getThem() ? AppThemeData.grey500Dark : AppThemeData.grey300Dark,
-                                                        ),
-                                                      ),
-                                                      hintText: 'Alternate Phone Number'.tr,
-                                                      controller: myProfileController.alternatePhoneController.value,
-                                                      textInputType: TextInputType.phone,
-                                                      validators: (String? value) {
-                                                        return null;
-                                                      },
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 8),
-                                                  ElevatedButton(
-                                                    onPressed: () {
-                                                      String phoneVal = myProfileController.alternatePhoneController.value.text.trim();
-                                                      if (phoneVal.isEmpty) {
-                                                        ShowToastDialog.showToast("Please enter alternate phone number".tr);
-                                                        return;
-                                                      }
-                                                      myProfileController.showOtpVerificationDialog(context, phoneVal);
-                                                    },
-                                                    style: ElevatedButton.styleFrom(
-                                                      backgroundColor: AppThemeData.primary200,
-                                                      foregroundColor: Colors.white,
-                                                    ),
-                                                    child: Text("Verify".tr),
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 10),
-                                              Obx(() => SwitchListTile(
-                                                title: Text(
-                                                  'Marketplace Visibility'.tr,
-                                                  style: TextStyle(
-                                                    color: themeChange.getThem() ? Colors.white : Colors.black,
-                                                  ),
-                                                ),
-                                                subtitle: Text(
-                                                  myProfileController.marketplaceEnabled.value
-                                                      ? 'Marketplace is active'.tr
-                                                      : 'Marketplace is disabled'.tr,
-                                                  style: TextStyle(
-                                                    color: themeChange.getThem() ? Colors.white70 : Colors.black54,
-                                                    fontSize: 12,
-                                                  ),
-                                                ),
-                                                value: myProfileController.marketplaceEnabled.value,
-                                                activeColor: AppThemeData.primary200,
-                                                onChanged: (bool value) {
-                                                  myProfileController.toggleMarketplace(value);
-                                                },
-                                              )),
-                                            ],
+                                              hintText: 'Last Name'.tr,
+                                              controller: myProfileController.lastNameController.value,
+                                              textInputType: TextInputType.text,
+                                              maxLength: 22,
+                                              validators: (String? value) {
+                                                return (value != null && value.isNotEmpty) ? null : 'required'.tr;
+                                              },
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(12),
+                                          border: Border.all(
+                                            color: isDark ? AppThemeData.grey200Dark : AppThemeData.grey200,
+                                            width: 0.8,
                                           ),
                                         ),
-                                        // ── Referral Code Section ─────────────────
-                                        const SizedBox(height: 16),
-                                        _ReferralCodeCard(
-                                          userId: Constant.getUserData().data?.id?.toString() ?? '',
-                                          isDark: themeChange.getThem(),
+                                        child: IntlPhoneField(
+                                          countries: countries.where((country) => country.code == 'IN').toList(),
+                                          initialCountryCode: 'IN',
+                                          textAlign: TextAlign.start,
+                                          flagsButtonPadding: const EdgeInsets.only(left: 10, right: 10),
+                                          readOnly: true,
+                                          initialValue: myProfileController.phoneController.value.text,
+                                          onChanged: (phone) {
+                                            myProfileController.phoneController.value.text = phone.completeNumber;
+                                          },
+                                          invalidNumberMessage: "number invalid".tr,
+                                          showDropdownIcon: false,
+                                          disableLengthCheck: true,
+                                          decoration: InputDecoration(
+                                            border: InputBorder.none,
+                                            focusedBorder: UnderlineInputBorder(
+                                              borderSide: BorderSide(color: AppThemeData.primary200, width: 0.8),
+                                            ),
+                                            contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                                            hintText: 'Phone Number'.tr,
+                                            isDense: true,
+                                          ),
                                         ),
-                                        const SizedBox(height: 8),
-                                      ],
-                                    ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      TextFieldWidget(
+                                        isReadOnly: false,
+                                        prefix: IconButton(
+                                          onPressed: () {},
+                                          icon: SvgPicture.asset(
+                                            'assets/icons/ic_email.svg',
+                                            colorFilter: ColorFilter.mode(
+                                              isDark ? AppThemeData.grey500Dark : AppThemeData.grey300Dark,
+                                              BlendMode.srcIn,
+                                            ),
+                                          ),
+                                        ),
+                                        hintText: 'email'.tr,
+                                        controller: myProfileController.emailController.value,
+                                        textInputType: TextInputType.emailAddress,
+                                        validators: (String? value) {
+                                          bool emailValid = RegExp(r'^.+@[a-zA-Z]+\.{1}[a-zA-Z]+(\.{0,1}[a-zA-Z]+)$').hasMatch(value ?? '');
+                                          return emailValid ? null : 'email not valid'.tr;
+                                        },
+                                      ),
+                                      const SizedBox(height: 10),
+                                      SwitchListTile(
+                                        title: Text(
+                                          'Marketplace Visibility'.tr,
+                                          style: TextStyle(
+                                            color: isDark ? Colors.white : Colors.black87,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        subtitle: Text(
+                                          myProfileController.marketplaceEnabled.value
+                                              ? 'Marketplace is active'.tr
+                                              : 'Marketplace is disabled'.tr,
+                                          style: TextStyle(
+                                            color: isDark ? Colors.white70 : Colors.black54,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                        value: myProfileController.marketplaceEnabled.value,
+                                        activeColor: AppThemeData.primary200,
+                                        onChanged: (bool value) {
+                                          myProfileController.toggleMarketplace(value);
+                                        },
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
+                                ),
+                                const SizedBox(height: 16),
+
+                                // Referral Code Card Container
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: isDark ? AppThemeData.surface50Dark : Colors.white,
+                                    borderRadius: BorderRadius.circular(20),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.04),
+                                        blurRadius: 15,
+                                        offset: const Offset(0, 5),
+                                      ),
+                                    ],
+                                  ),
+                                  child: _ReferralCodeCard(
+                                    userId: Constant.getUserData().data?.id?.toString() ?? '',
+                                    isDark: isDark,
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+                              ],
                             ),
                           ),
                         ),
-                        ButtonThem.buildButton(context, title: 'Save Details'.tr, onPress: () async {
-                          FocusScope.of(context).unfocus();
-                          if (_profileKey.currentState!.validate()) {
-                            await myProfileController
-                                .updateUser(
-                              image: File(myProfileController.imageData.value.path),
-                              name: myProfileController.fullNameController.value.text.trim(),
-                              lname: myProfileController.lastNameController.value.text.trim(),
-                              email: myProfileController.emailController.value.text.trim(),
-                              phoneNum: myProfileController.phoneController.value.text.trim(),
-                              password: myProfileController.currentPasswordController.value.text.trim(),
-                            )
-                                .then((value) {
-                              if (value != null) {
-                                if (value.success == "success") {
-                                  Preferences.setInt(Preferences.userId, int.parse(value.data!.id.toString()));
-                                  Preferences.setString(Preferences.user, jsonEncode(value));
-                                  Get.back();
-                                } else {
-                                  ShowToastDialog.showToast(value.error);
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        child: ButtonThem.buildButton(
+                          context,
+                          title: 'Save Details'.tr,
+                          onPress: () async {
+                            FocusScope.of(context).unfocus();
+                            if (_profileKey.currentState!.validate()) {
+                              await myProfileController
+                                  .updateUser(
+                                image: File(myProfileController.imageData.value.path),
+                                name: myProfileController.fullNameController.value.text.trim(),
+                                lname: myProfileController.lastNameController.value.text.trim(),
+                                email: myProfileController.emailController.value.text.trim(),
+                                phoneNum: myProfileController.phoneController.value.text.trim(),
+                                password: myProfileController.currentPasswordController.value.text.trim(),
+                              )
+                                  .then((value) {
+                                if (value != null) {
+                                  if (value.success == "success") {
+                                    Preferences.setInt(Preferences.userId, int.parse(value.data!.id.toString()));
+                                    Preferences.setString(Preferences.user, jsonEncode(value));
+                                    Get.back();
+                                  } else {
+                                    ShowToastDialog.showToast(value.error);
+                                  }
                                 }
-                              }
-                            });
-                          }
-                        }),
-                        const SizedBox(height: 20),
-                      ],
-                    ),
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
-          );
-        });
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
-  buildShowDetails({
+  Widget buildShowDetails({
     required String title,
     required String icon,
     required Function()? onPress,
@@ -468,6 +440,7 @@ class MyProfileScreen extends StatelessWidget {
     bool? isTrailingShow = true,
   }) {
     return ListTile(
+      contentPadding: EdgeInsets.zero,
       splashColor: Colors.transparent,
       leading: SvgPicture.asset(
         icon,
@@ -481,7 +454,7 @@ class MyProfileScreen extends StatelessWidget {
       title: Text(
         title,
         style: TextStyle(
-          fontSize: 16,
+          fontSize: 15,
           fontFamily: AppThemeData.medium,
           color: textIconColor ?? (isDarkMode ? AppThemeData.grey900Dark : AppThemeData.grey900),
         ),
@@ -490,51 +463,12 @@ class MyProfileScreen extends StatelessWidget {
       trailing: isTrailingShow == false
           ? null
           : SvgPicture.asset(
-              'assets/icons/ic_right_arrow.svg',
-              width: 20,
-              height: 20,
-              colorFilter: ColorFilter.mode(
-                isDarkMode ? AppThemeData.grey300Dark : AppThemeData.grey400,
-                BlendMode.srcIn,
-              ),
-            ),
-    );
-  }
-
-  buildAlertChangeData(
-    BuildContext context, {
-    required String title,
-    required TextEditingController controller,
-    required IconData iconData,
-    required String? Function(String?) validators,
-    required Function() onSubmitBtn,
-  }) {
-    return Get.defaultDialog(
-      titlePadding: const EdgeInsets.only(top: 20),
-      radius: 6,
-      title: "Change Information".tr,
-      titleStyle: const TextStyle(
-        fontSize: 20,
-      ),
-      content: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextFieldThem.boxBuildTextField(conext: context, hintText: title, controller: controller, validators: validators),
-            const SizedBox(
-              height: 20,
-            ),
-            Row(
-              children: [
-                ButtonThem.buildButton(context, title: "Save".tr, btnColor: AppThemeData.primary200, txtColor: Colors.white, onPress: onSubmitBtn, btnWidthRatio: 0.3),
-                const SizedBox(
-                  width: 15,
-                ),
-                ButtonThem.buildButton(context, title: "cancel".tr, btnWidthRatio: 0.3, btnColor: AppThemeData.secondary200, txtColor: Colors.black, onPress: () => Get.back()),
-              ],
-            )
-          ],
+        'assets/icons/ic_right_arrow.svg',
+        width: 18,
+        height: 18,
+        colorFilter: ColorFilter.mode(
+          isDarkMode ? AppThemeData.grey300Dark : AppThemeData.grey400,
+          BlendMode.srcIn,
         ),
       ),
     );
@@ -542,77 +476,61 @@ class MyProfileScreen extends StatelessWidget {
 
   buildBottomSheet(BuildContext context, MyProfileController controller) {
     return showModalBottomSheet(
-        context: context,
-        builder: (context) {
-          return StatefulBuilder(builder: (context, setState) {
-            return Container(
-              height: Responsive.height(22, context),
-              color: Colors.white,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          height: Responsive.height(20, context),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                "Please Select".tr,
+                style: TextStyle(
+                  color: const Color(0XFF333333).withValues(alpha: 0.8),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.only(top: 15),
-                    child: Text(
-                      "Please Select".tr,
-                      style: TextStyle(
-                        color: const Color(0XFF333333).withValues(alpha: 0.8),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Column(
+                      children: [
+                        IconButton(
+                          onPressed: () => pickFile(controller, source: ImageSource.camera),
+                          icon: const Icon(Icons.camera_alt, size: 30),
+                        ),
+                        Text("camera".tr, style: const TextStyle(fontSize: 12)),
+                      ],
                     ),
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(18.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            IconButton(
-                                onPressed: () => pickFile(controller, source: ImageSource.camera),
-                                icon: const Icon(
-                                  Icons.camera_alt,
-                                  size: 32,
-                                )),
-                            Padding(
-                              padding: const EdgeInsets.only(top: 3),
-                              child: Text("camera".tr),
-                            ),
-                          ],
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Column(
+                      children: [
+                        IconButton(
+                          onPressed: () => pickFile(controller, source: ImageSource.gallery),
+                          icon: const Icon(Icons.photo_library_sharp, size: 30),
                         ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(18.0),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            IconButton(
-                                onPressed: () => pickFile(controller, source: ImageSource.gallery),
-                                icon: const Icon(
-                                  Icons.photo_library_sharp,
-                                  size: 32,
-                                )),
-                            Padding(
-                              padding: const EdgeInsets.only(top: 3),
-                              child: Text("gallery".tr),
-                            ),
-                          ],
-                        ),
-                      )
-                    ],
-                  ),
+                        Text("gallery".tr, style: const TextStyle(fontSize: 12)),
+                      ],
+                    ),
+                  )
                 ],
               ),
-            );
-          });
-        });
+            ],
+          ),
+        );
+      },
+    );
   }
-
-  final ImagePicker _imagePicker = ImagePicker();
 
   Future pickFile(MyProfileController controller, {required ImageSource source}) async {
     try {
@@ -621,17 +539,15 @@ class MyProfileScreen extends StatelessWidget {
       Get.back();
       controller.imageData.value = image;
       controller.uploadPhoto(File(image.path)).then((value) {
-        if (value != null) {
-          if (value["success"] == "Success") {
-            UserModel userModel = Constant.getUserData();
-            userModel.data!.photoPath = value['data']['photo_path'];
-            Preferences.setString(Preferences.user, jsonEncode(userModel.toJson()));
-            controller.getUsrData();
-            dashboardController.getUsrData();
-            ShowToastDialog.showToast("Upload successfully!".tr);
-          } else {
-            ShowToastDialog.showToast(value['error']);
-          }
+        if (value != null && value["success"] == "Success") {
+          UserModel userModel = Constant.getUserData();
+          userModel.data!.photoPath = value['data']['photo_path'];
+          Preferences.setString(Preferences.user, jsonEncode(userModel.toJson()));
+          controller.getUsrData();
+          dashboardController.getUsrData();
+          ShowToastDialog.showToast("Upload successfully!".tr);
+        } else if (value != null) {
+          ShowToastDialog.showToast(value['error']);
         }
       });
     } on PlatformException catch (e) {
@@ -641,14 +557,29 @@ class MyProfileScreen extends StatelessWidget {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// REFERRAL CODE CARD — lets users apply a referral code from profile screen
-// if they missed it during registration
+// REFERRAL CODE CARD (shown in profile — lets user apply a referral code
+// if they missed it during registration)
 // ══════════════════════════════════════════════════════════════════════════════
 class _ReferralCodeCard extends StatefulWidget {
   final String userId;
   final bool isDark;
+  final String userCat;
+  final Color? cardBg;
+  final Color? borderColor;
+  final Color? textPrimary;
+  final Color? textSecondary;
+  final Color? primaryColor;
 
-  const _ReferralCodeCard({required this.userId, required this.isDark});
+  const _ReferralCodeCard({
+    required this.userId,
+    required this.isDark,
+    this.userCat = 'customer',
+    this.cardBg,
+    this.borderColor,
+    this.textPrimary,
+    this.textSecondary,
+    this.primaryColor,
+  });
 
   @override
   State<_ReferralCodeCard> createState() => _ReferralCodeCardState();
@@ -676,7 +607,7 @@ class _ReferralCodeCardState extends State<_ReferralCodeCard> {
     final ok = await controller.applyReferralCode(
       widget.userId,
       code,
-      userCat: 'customer',
+      userCat: widget.userCat,
     );
     setState(() {
       _applying = false;
@@ -686,33 +617,25 @@ class _ReferralCodeCardState extends State<_ReferralCodeCard> {
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = AppThemeData.primary200;
-    final cardBg = widget.isDark ? const Color(0xFF1E293B) : Colors.white;
-    final borderColor = widget.isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
-    final textPrimary = widget.isDark ? Colors.white : const Color(0xFF0F172A);
-    final textSecondary = widget.isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final cardBg = widget.cardBg ?? (widget.isDark ? AppThemeData.surface50Dark : Colors.white);
+    final borderColor = widget.borderColor ?? (widget.isDark ? AppThemeData.grey200Dark : AppThemeData.grey200);
+    final textPrimary = widget.textPrimary ?? (widget.isDark ? AppThemeData.grey900Dark : AppThemeData.grey900);
+    final textSecondary = widget.textSecondary ?? (widget.isDark ? AppThemeData.grey400Dark : AppThemeData.grey400);
+    final primaryColor = widget.primaryColor ?? AppThemeData.primary200;
     final inputBg = widget.isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9);
 
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.symmetric(horizontal: 2),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: cardBg,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: borderColor),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header row
+          // Header
           Row(
             children: [
               Container(
@@ -750,9 +673,8 @@ class _ReferralCodeCardState extends State<_ReferralCodeCard> {
             ],
           ),
 
-          const SizedBox(height: 14),
-
-          if (_applied)
+          if (_applied) ...[
+            const SizedBox(height: 14),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
@@ -774,8 +696,9 @@ class _ReferralCodeCardState extends State<_ReferralCodeCard> {
                   ),
                 ],
               ),
-            )
-          else ...[
+            ),
+          ] else ...[
+            const SizedBox(height: 14),
             Row(
               children: [
                 Expanded(
@@ -825,20 +748,13 @@ class _ReferralCodeCardState extends State<_ReferralCodeCard> {
                       elevation: 0,
                     ),
                     child: _applying
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                          )
-                        : Text(
-                            'Apply'.tr,
-                            style: const TextStyle(color: Colors.white, fontFamily: AppThemeData.bold, fontSize: 13),
-                          ),
+                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        : Text('Apply'.tr, style: const TextStyle(color: Colors.white, fontFamily: AppThemeData.bold, fontSize: 13)),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Text(
               'You can only apply a referral code once.'.tr,
               style: TextStyle(fontFamily: AppThemeData.regular, fontSize: 11, color: textSecondary),
