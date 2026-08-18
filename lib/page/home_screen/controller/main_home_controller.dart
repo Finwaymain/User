@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../utils/Preferences.dart';
+import '../../../utils/onboarding_url.dart';
 import '../../auth_screens/phone_entry_screen.dart';
 import '../../in_progress_screen.dart';
 import '../../features/Texi/texi_dash_board.dart';
-import '../../features/SmartValue/Medical/view/medical_screen.dart';
 import '../../referral/referral_earn_screen.dart';
 import '../../subscription_plan_screen/subscription_plan_screen.dart';
 import '../../wallet/wallet_screen.dart';
+import '../../web_view_screen/web_view_screen.dart';
 
 class MainHomeController extends GetxController
     with GetTickerProviderStateMixin {
@@ -131,8 +132,11 @@ class MainHomeController extends GetxController
     if (routeName == '/smartValue') {
       Get.to(() => WalletScreen(), transition: Transition.rightToLeftWithFade);
     } else if (routeName == '/cashbackCard') {
-      Get.to(() => MedicalScreen(),
-          transition: Transition.rightToLeftWithFade);
+      final finalUrl = OnboardingUrl.build('/onboarding/medical-cashback');
+      Get.to(
+        () => WebViewScreen(url: finalUrl, title: 'Medical Cashback'.tr),
+        transition: Transition.rightToLeftWithFade,
+      );
     } else if (index == 0 || routeName == '/travelTransport') {
       Get.to(() => TexiDashboard(), transition: Transition.rightToLeftWithFade);
     } else {
