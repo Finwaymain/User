@@ -20,6 +20,7 @@ void resumeServiceBookingFlow(ServiceRequestData booking) {
           bookingId: id,
           amountPaid: booking.payableAmount,
           paymentMethod: booking.paymentStatus ?? 'wallet',
+          initialBooking: booking,
         ));
     return;
   }

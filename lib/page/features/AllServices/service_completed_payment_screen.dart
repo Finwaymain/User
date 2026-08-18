@@ -174,6 +174,7 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
         bookingId: widget.bookingId,
         amountPaid: amount,
         paymentMethod: method,
+        initialBooking: _booking,
       ),
     );
   }
