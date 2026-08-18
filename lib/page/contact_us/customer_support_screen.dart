@@ -9,6 +9,7 @@ import '../../service/api.dart';
 import '../../themes/constant_colors.dart';
 import '../../utils/dark_theme_provider.dart';
 import 'package:provider/provider.dart';
+import 'support_chat_screen.dart';
 
 class CustomerSupportScreen extends StatefulWidget {
   const CustomerSupportScreen({super.key});
@@ -189,6 +190,106 @@ class _CustomerSupportScreenState extends State<CustomerSupportScreen> {
                       fontSize: 15,
                       fontFamily: AppThemeData.bold,
                       color: textColor,
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // Option 0: Live Chat Support
+                  Card(
+                    elevation: 0,
+                    color: cardBg,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: AppThemeData.primary200.withValues(alpha: 0.4)),
+                    ),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(16),
+                      onTap: () => Get.to(() => const SupportChatScreen(userType: 'customer')),
+                      child: Padding(
+                        padding: const EdgeInsets.all(18),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 52,
+                              height: 52,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [AppThemeData.primary200, AppThemeData.primary400],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(14),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppThemeData.primary200.withValues(alpha: 0.25),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.forum_rounded,
+                                color: Colors.white,
+                                size: 26,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        'Chat with Support Team'.tr,
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontFamily: AppThemeData.bold,
+                                          color: textColor,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Text(
+                                          'Online'.tr,
+                                          style: const TextStyle(
+                                            color: Color(0xFF10B981),
+                                            fontSize: 10,
+                                            fontFamily: AppThemeData.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Realtime live chat • Instant answers'.tr,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: mutedColor,
+                                      fontFamily: AppThemeData.medium,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppThemeData.primary200,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 18),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
 

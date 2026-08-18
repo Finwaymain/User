@@ -30,6 +30,7 @@ class API {
   static const editProfile = "${baseUrl}update-user-profile";
   static const bannerHome = "${baseUrl}get-banners";
   static const userLogin = "${baseUrl}user-login";
+  static const submitAadhar = "${baseUrl}submit-aadhar";
   static const sendResetPasswordOtp = "${baseUrl}reset-password-otp";
   static const resetPasswordOtp = "${baseUrl}resert-password";
   static const getProfileByPhone = "${baseUrl}profilebyphone";
@@ -164,4 +165,11 @@ class API {
   static const getSubscriptionPlans = "${baseUrl}get-consumer-plans";
   static const setSubscription = "${baseUrl}set-consumer-subscription";
   static const getSubscriptionHistory = "${baseUrl}get-subscription-history";
+
+  // Support Live Chat Endpoints
+  static const supportQuickQuestions = "${baseUrl}support/quick-questions";
+  static const supportTicket = "${baseUrl}support/ticket";
+  static const supportMessages = "${baseUrl}support/messages";
+  static const supportSendMessage = "${baseUrl}support/send-message";
+  static const supportCloseTicket = "${baseUrl}support/close-ticket";
 }
