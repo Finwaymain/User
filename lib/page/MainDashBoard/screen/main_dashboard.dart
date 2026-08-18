@@ -24,6 +24,8 @@ import '../../wallet/wallet_screen.dart';
 import '../../features/AllServices/service_history_screen.dart';
 import '../../../controller/service_history_controller.dart';
 
+import '../../search_services/search_all_services_screen.dart';
+
 class MainDashboard extends StatefulWidget {
   const MainDashboard({super.key});
 
@@ -34,9 +36,9 @@ class MainDashboard extends StatefulWidget {
 class _MainDashboardState extends State<MainDashboard> {
   int currentIndex = 0;
 
-  final List<Widget> _screens =  [
+  final List<Widget> _screens = [
     MainHomeScreen(),
-    InProgressScreen(),
+    const SearchAllServicesScreen(isTab: true),
     InProgressScreen(),
     const ServiceHistoryScreen(showScaffold: false),
     InProgressScreen(),
