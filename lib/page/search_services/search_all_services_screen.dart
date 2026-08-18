@@ -14,6 +14,8 @@ import '../features/SmartValue/Medical/view/medical_screen.dart';
 import '../features/SmartValue/MyQR/view/my_qr_view.dart';
 import '../features/SmartValue/AccountDetails/view/account_details.dart';
 import '../contact_us/customer_support_screen.dart';
+import '../../utils/onboarding_url.dart';
+import '../web_view_screen/web_view_screen.dart';
 
 class ServiceSearchItem {
   final String id;
@@ -383,7 +385,14 @@ class _SearchAllServicesScreenState extends State<SearchAllServicesScreen> {
         iconData: Icons.storefront_rounded,
         accentColor: const Color(0xFF673AB7),
         badge: 'Offers',
-        onTap: () => Get.to(() => const MarketplaceHomeScreen()),
+        onTap: () {
+          final isDarkTheme = Provider.of<DarkThemeProvider>(Get.context!, listen: false).getThem();
+          final url = OnboardingUrl.build('/marketplace', extra: {
+            'user_type': 'user',
+            'theme': isDarkTheme ? 'dark' : 'light',
+          });
+          Get.to(() => WebViewScreen(url: url, title: 'Marketplace'));
+        },
       ),
       ServiceSearchItem(
         id: 'support_help',
