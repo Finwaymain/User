@@ -19,6 +19,7 @@ import 'package:finway/page/referral_screen/referral_screen.dart';
 import 'package:finway/page/terms_service/terms_of_service_screen.dart';
 import 'package:finway/page/wallet/wallet_screen.dart';
 import 'package:finway/service/api.dart';
+import 'package:finway/service/app_version_service.dart';
 import 'package:finway/utils/Preferences.dart';
 import 'package:finway/utils/dark_theme_provider.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -52,6 +53,8 @@ class DashBoardController extends GetxController {
     getPaymentSettingData();
     // Fetch latest wallet balance
     await getWalletBalance();
+    // Check for compulsory or optional Play Store updates
+    AppVersionService.checkAppVersion(appType: 'customer');
   }
 
   Future<void> getWalletBalance() async {
@@ -151,11 +154,7 @@ class DashBoardController extends GetxController {
         description: 'View and update your personal profile details',
         icon: 'assets/icons/ic_profile.svg',
       ),
-      DrawerItem(
-        title: 'Change Password'.tr,
-        description: 'Update your password for better account security',
-        icon: 'assets/icons/ic_lock.svg',
-      ),
+
       DrawerItem(
         title: partnerTitle,
         description: partnerDesc,
@@ -220,11 +219,7 @@ class DashBoardController extends GetxController {
     } else if (item.title == 'Change Password'.tr) {
       Get.to(ChangePasswordScreen());
     } else if (item.title == 'Join as a Partner'.tr || item.title == 'Partner Dashboard'.tr || item.title == partnerTitle) {
-      if (hasAadhar) {
-        Get.to(const ReferralScreen());
-      } else {
-        Get.to(const SubmitAadharScreen());
-      }
+      Get.to(const ReferralScreen());
     } else if (item.title == 'Terms & Conditions'.tr) {
       Get.to(const TermsOfServiceScreen());
     } else if (item.title == 'Privacy & Policy'.tr) {
@@ -270,7 +265,18 @@ class DashBoardController extends GetxController {
 
   Future<dynamic> updateFCMToken(String token) async {
     try {
-      Map<String, dynamic> bodyParams = {'user_id': Preferences.getInt(Preferences.userId), 'fcm_id': token, 'device_id': "", 'user_cat': userModel.value?.data?.userCat};
+      final intId = Preferences.getInt(Preferences.userId);
+      final strId = Preferences.getString(Preferences.userId);
+      final userId = intId > 0 ? intId.toString() : (strId.isNotEmpty ? strId : (userModel.value?.data?.id ?? ""));
+      final phone = userModel.value?.data?.phone ?? "";
+
+      Map<String, dynamic> bodyParams = {
+        'user_id': userId,
+        'phone': phone,
+        'fcm_id': token,
+        'device_id': "",
+        'user_cat': userModel.value?.data?.userCat ?? "user_app"
+      };
       final response = await http.post(Uri.parse(API.updateToken), headers: API.header, body: jsonEncode(bodyParams)).timeout(const Duration(seconds: 10));
       showLog("API :: URL :: ${API.updateToken} ");
       showLog("API :: Request Body :: ${jsonEncode(bodyParams)} ");

@@ -172,4 +172,7 @@ class API {
   static const supportMessages = "${baseUrl}support/messages";
   static const supportSendMessage = "${baseUrl}support/send-message";
   static const supportCloseTicket = "${baseUrl}support/close-ticket";
+
+  // App Version Control
+  static const checkAppVersion = "${baseUrl}app-version/check";
 }
