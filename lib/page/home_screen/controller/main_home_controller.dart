@@ -5,6 +5,7 @@ import '../../../utils/Preferences.dart';
 import '../../auth_screens/phone_entry_screen.dart';
 import '../../in_progress_screen.dart';
 import '../../features/Texi/texi_dash_board.dart';
+import '../../referral/referral_earn_screen.dart';
 import '../../subscription_plan_screen/subscription_plan_screen.dart';
 import '../../wallet/wallet_screen.dart';
 
@@ -107,7 +108,7 @@ class MainHomeController extends GetxController
     if (routeName == '/addFund' || routeName == '/payouts') {
       Get.to(() => WalletScreen(), transition: Transition.rightToLeftWithFade);
     } else if (routeName == '/rewards') {
-      Get.to(() => const SubscriptionPlanScreen(isbackButton: true),
+      Get.to(() => const ReferralEarnScreen(),
           transition: Transition.rightToLeftWithFade);
     } else {
       Get.to(() => const InProgressScreen(),
