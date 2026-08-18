@@ -756,23 +756,40 @@ class TripHistoryScreen extends StatelessWidget {
                               ],
                             ),
                           if (controller.data.value.statut == "completed" || controller.data.value.statut == "rejected")
-                            Row(
+                            Column(
                               children: [
-
-                                Visibility(
-                                  visible: (controller.data.value.statut == "completed") || (controller.data.value.statut == "rejected"),
-                                  child: Expanded(
-                                    child: ButtonThem.buildButton(
-                                      context,
-                                      title: 'Add Review'.tr,
-                                      onPress: () async {
-                                        Get.to(const AddReviewScreen(), arguments: {
-                                          "data": controller.data.value,
-                                          "ride_type": "ride",
-                                        });
-                                      },
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: ButtonThem.buildButton(
+                                        context,
+                                        title: 'Add Review'.tr,
+                                        onPress: () async {
+                                          Get.to(const AddReviewScreen(), arguments: {
+                                            "data": controller.data.value,
+                                            "ride_type": "ride",
+                                          });
+                                        },
+                                      ),
                                     ),
-                                  ),
+                                  ],
+                                ),
+                                const SizedBox(height: 10),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: ButtonThem.buildBorderButton(
+                                        context,
+                                        title: 'Back to Home'.tr,
+                                        btnColor: isDarkMode ? AppThemeData.surface50Dark : AppThemeData.surface50,
+                                        txtColor: AppThemeData.primary200,
+                                        btnBorderColor: AppThemeData.primary200,
+                                        onPress: () async {
+                                          Get.offAll(() => const MainDashboard());
+                                        },
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
