@@ -5,6 +5,7 @@ import '../../../utils/Preferences.dart';
 import '../../auth_screens/phone_entry_screen.dart';
 import '../../in_progress_screen.dart';
 import '../../features/Texi/texi_dash_board.dart';
+import '../../features/SmartValue/Medical/view/medical_screen.dart';
 import '../../referral/referral_earn_screen.dart';
 import '../../subscription_plan_screen/subscription_plan_screen.dart';
 import '../../wallet/wallet_screen.dart';
@@ -30,7 +31,7 @@ class MainHomeController extends GetxController
     {
       "routeName": "/payouts",
       "icon": Icons.payments_outlined,
-      "title": "Payouts",
+      "title": "Earnings",
       "status": 1,
     },
   ];
@@ -39,19 +40,19 @@ class MainHomeController extends GetxController
     {
       "routeName": "/travelTransport",
       "title": "Travel & Transport",
-      "subtitle": "Book cabs, recharge passes, pay bills, and more",
+      "subtitle": "Bike Ride, Cab - Parcel Delivery & Packers & Movers",
       "status": 1,
     },
     {
       "routeName": "/cashbackCard",
       "title": "Cashback Card",
-      "subtitle": "Send money to friends or pay shops and earn rewards",
+      "subtitle": "Get Cashback On Active Card",
       "status": 1,
     },
     {
       "routeName": "/smartValue",
       "title": "Smart Value",
-      "subtitle": "Pay directly within the app and ride instantly",
+      "subtitle": "Earn Upto 2%  By Using App Services",
       "status": 1,
     },
   ];
@@ -130,7 +131,7 @@ class MainHomeController extends GetxController
     if (routeName == '/smartValue') {
       Get.to(() => WalletScreen(), transition: Transition.rightToLeftWithFade);
     } else if (routeName == '/cashbackCard') {
-      Get.to(() => const SubscriptionPlanScreen(isbackButton: true),
+      Get.to(() => MedicalScreen(),
           transition: Transition.rightToLeftWithFade);
     } else if (index == 0 || routeName == '/travelTransport') {
       Get.to(() => TexiDashboard(), transition: Transition.rightToLeftWithFade);

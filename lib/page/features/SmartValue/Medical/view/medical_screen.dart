@@ -730,7 +730,9 @@ class _ClaimFormScreenState extends State<ClaimFormScreen> {
 }
 
 class MedicalScreen extends StatelessWidget {
-    final MedicalCardController controller = Get.find<MedicalCardController>();
+  final MedicalCardController controller = Get.isRegistered<MedicalCardController>()
+      ? Get.find<MedicalCardController>()
+      : Get.put(MedicalCardController());
 
   MedicalScreen({super.key});
 
