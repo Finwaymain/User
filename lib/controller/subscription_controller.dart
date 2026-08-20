@@ -98,7 +98,7 @@ class SubscriptionController extends GetxController {
     return null;
   }
 
-  Future<bool> completeSubscription({bool redirect = false}) async {
+  Future<bool> completeSubscription({bool redirect = false, String? mpin}) async {
     final planId = selectedSubscriptionPlan.value.id;
     final userId = userModel.value.data?.id;
 
@@ -121,6 +121,7 @@ class SubscriptionController extends GetxController {
         "planId": planId,
         "userId": userId,
         "paymentType": selectedRadioTile.value,
+        if (mpin != null && mpin.isNotEmpty) "mpin": mpin,
       };
       final response = await http
           .post(Uri.parse(API.setSubscription), headers: API.header, body: jsonEncode(bodyParams))

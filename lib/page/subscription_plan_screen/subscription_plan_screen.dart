@@ -15,6 +15,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:finway/utils/dark_theme_provider.dart';
+import 'package:finway/utils/mpin_dialog.dart';
 
 class SubscriptionPlanScreen extends StatefulWidget {
   final bool isbackButton;
@@ -363,8 +364,7 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
                 _buildSubDetailRow('Plan Name', activePlanName, isDark),
                 const Divider(height: 16),
                 _buildSubDetailRow('Subscription Price', activePlanPrice, isDark),
-                const Divider(height: 16),
-                _buildSubDetailRow('Booking Limit', activePlan.bookingLimit == null || activePlan.bookingLimit == "-1" ? "Unlimited" : "${activePlan.bookingLimit} Rides", isDark),
+               
               ],
             ),
           ),
@@ -1106,6 +1106,17 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
                                       if (method == 'razorpay') {
                                         razorpayPayment(paymentController);
                                         return;
+                                      }
+                                      if (method == 'wallet') {
+                                        final verified = await showMpinVerificationBottomSheet(
+                                          context,
+                                          amount: paymentController.totalAmount.value,
+                                          title: 'Enter MPIN to Pay'.tr,
+                                          userCat: 'customer',
+                                        );
+                                        if (verified != true) {
+                                          return;
+                                        }
                                       }
                                       final success = await paymentController.completeSubscription();
                                       if (!mounted) return;
