@@ -5,8 +5,6 @@ import 'package:provider/provider.dart';
 
 import '../../../utils/dark_theme_provider.dart';
 import '../../features/SmartValue/ScanAndTransfer/view/scanner_and_transfer_screen.dart';
-import '../../wallet/wallet_screen.dart';
-import '../screen/main_dashboard.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -23,16 +21,7 @@ class CustomBottomNavBar extends StatelessWidget {
   void _handleTabSelected(int index) {
     if (onTabSelected != null) {
       onTabSelected!(index);
-      return;
     }
-
-    if (index == 4) {
-      if (currentIndex == 4) return;
-      Get.to(() => WalletScreen());
-      return;
-    }
-
-    Get.offAll(() => MainDashboard(initialIndex: index));
   }
 
   void _handleFingerprintTap() {

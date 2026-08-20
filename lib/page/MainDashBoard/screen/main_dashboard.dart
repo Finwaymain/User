@@ -42,7 +42,7 @@ class _MainDashboardState extends State<MainDashboard> {
     const SearchAllServicesScreen(isTab: true),
     InProgressScreen(),
     const ServiceHistoryScreen(showScaffold: false),
-    InProgressScreen(),
+    WalletScreen(isTab: true),
   ];
 
   @override
@@ -104,10 +104,6 @@ class _MainDashboardState extends State<MainDashboard> {
   }
 
   void _onTabSelected(int index) {
-    if (index == 4) {
-      Get.to(() => WalletScreen());
-      return;
-    }
     if (index == 3) {
       final tag = 'service_history_false';
       if (Get.isRegistered<ServiceHistoryController>(tag: tag)) {

@@ -51,7 +51,8 @@ import 'package:finway/page/features/SmartValue/ScanAndTransfer/view/scanner_and
 import 'package:finway/page/MainDashBoard/widget/custom_bottom_navbar.dart';
 
 class WalletScreen extends StatelessWidget {
-  WalletScreen({super.key});
+  final bool isTab;
+  WalletScreen({super.key, this.isTab = false});
 
   final walletController = Get.put(WalletController());
 
@@ -80,24 +81,26 @@ class WalletScreen extends StatelessWidget {
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      bottomNavigationBar: const CustomBottomNavBar(currentIndex: 4),
-      appBar: CustomAppbar(
-        title: 'Smart Value',
-        bgColor: AppThemeData.primary200,
-        textColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(
-              Icons.refresh_rounded,
-              color: Colors.white,
+      bottomNavigationBar: isTab ? null : const CustomBottomNavBar(currentIndex: 4),
+      appBar: isTab
+          ? null
+          : CustomAppbar(
+              title: 'Smart Value',
+              bgColor: AppThemeData.primary200,
+              textColor: Colors.white,
+              actions: [
+                IconButton(
+                  icon: const Icon(
+                    Icons.refresh_rounded,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {
+                    _refreshAPI();
+                    ShowToastDialog.showToast('Refreshing...'.tr);
+                  },
+                ),
+              ],
             ),
-            onPressed: () {
-              _refreshAPI();
-              ShowToastDialog.showToast('Refreshing...'.tr);
-            },
-          ),
-        ],
-      ),
       body: Container(
         color: themeChange.getThem() ? AppThemeData.surface50Dark : AppThemeData.surface50,
         child: SafeArea(
