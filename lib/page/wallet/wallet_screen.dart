@@ -48,11 +48,9 @@ import 'package:finway/page/features/SmartValue/AccountDetails/view/account_deta
 import 'package:finway/page/features/SmartValue/MyQR/view/my_qr_view.dart';
 import 'package:finway/page/features/SmartValue/Payout/view/payout_screen.dart';
 import 'package:finway/page/features/SmartValue/ScanAndTransfer/view/scanner_and_transfer_screen.dart';
-import 'package:finway/page/MainDashBoard/widget/custom_bottom_navbar.dart';
 
 class WalletScreen extends StatelessWidget {
-  final bool isTab;
-  WalletScreen({super.key, this.isTab = false});
+  WalletScreen({super.key});
 
   final walletController = Get.put(WalletController());
 
@@ -81,26 +79,23 @@ class WalletScreen extends StatelessWidget {
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      bottomNavigationBar: isTab ? null : const CustomBottomNavBar(currentIndex: 4),
-      appBar: isTab
-          ? null
-          : CustomAppbar(
-              title: 'Smart Value',
-              bgColor: AppThemeData.primary200,
-              textColor: Colors.white,
-              actions: [
-                IconButton(
-                  icon: const Icon(
-                    Icons.refresh_rounded,
-                    color: Colors.white,
-                  ),
-                  onPressed: () {
-                    _refreshAPI();
-                    ShowToastDialog.showToast('Refreshing...'.tr);
-                  },
-                ),
-              ],
+      appBar: CustomAppbar(
+        title: 'Smart Value',
+        bgColor: AppThemeData.primary200,
+        textColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(
+              Icons.refresh_rounded,
+              color: Colors.white,
             ),
+            onPressed: () {
+              _refreshAPI();
+              ShowToastDialog.showToast('Refreshing...'.tr);
+            },
+          ),
+        ],
+      ),
       body: Container(
         color: themeChange.getThem() ? AppThemeData.surface50Dark : AppThemeData.surface50,
         child: SafeArea(

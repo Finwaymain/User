@@ -27,28 +27,26 @@ import '../../../controller/service_history_controller.dart';
 import '../../search_services/search_all_services_screen.dart';
 
 class MainDashboard extends StatefulWidget {
-  final int initialIndex;
-  const MainDashboard({super.key, this.initialIndex = 0});
+  const MainDashboard({super.key});
 
   @override
   State<MainDashboard> createState() => _MainDashboardState();
 }
 
 class _MainDashboardState extends State<MainDashboard> {
-  late int currentIndex;
+  int currentIndex = 0;
 
   final List<Widget> _screens = [
     MainHomeScreen(),
     const SearchAllServicesScreen(isTab: true),
     InProgressScreen(),
     const ServiceHistoryScreen(showScaffold: false),
-    WalletScreen(isTab: true),
+    InProgressScreen(),
   ];
 
   @override
   void initState() {
     super.initState();
-    currentIndex = widget.initialIndex;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkActiveRideAndRedirect();
       _refreshServiceHistory();
@@ -104,6 +102,10 @@ class _MainDashboardState extends State<MainDashboard> {
   }
 
   void _onTabSelected(int index) {
+    if (index == 4) {
+      Get.to(() => WalletScreen());
+      return;
+    }
     if (index == 3) {
       final tag = 'service_history_false';
       if (Get.isRegistered<ServiceHistoryController>(tag: tag)) {

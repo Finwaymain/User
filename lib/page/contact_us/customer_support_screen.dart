@@ -10,7 +10,6 @@ import '../../themes/constant_colors.dart';
 import '../../utils/dark_theme_provider.dart';
 import 'package:provider/provider.dart';
 import 'support_chat_screen.dart';
-import '../MainDashBoard/widget/custom_bottom_navbar.dart';
 
 class CustomerSupportScreen extends StatefulWidget {
   const CustomerSupportScreen({super.key});
@@ -97,7 +96,6 @@ class _CustomerSupportScreenState extends State<CustomerSupportScreen> {
 
     return Scaffold(
       backgroundColor: bgColor,
-      bottomNavigationBar: const CustomBottomNavBar(currentIndex: -1),
       appBar: AppBar(
         backgroundColor: cardBg,
         elevation: 0,

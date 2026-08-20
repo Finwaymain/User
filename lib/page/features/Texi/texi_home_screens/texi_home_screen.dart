@@ -33,7 +33,6 @@ import 'package:finway/page/route_view_screen/route_view_screen.dart';
 import 'package:finway/page/route_view_screen/route_osm_view_screen.dart';
 import 'package:finway/page/new_ride_screens/new_ride_screen.dart';
 import 'package:finway/utils/location_picker_helper.dart';
-import 'package:finway/page/MainDashBoard/widget/custom_bottom_navbar.dart';
 
 class TexiHomeScreen extends StatefulWidget {
   final String? initialVehicleCategory;
@@ -565,7 +564,6 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
         return Scaffold(
           key: _scaffoldKey,
           drawer: buildAppDrawer(context, dashBoardController),
-          bottomNavigationBar: const CustomBottomNavBar(currentIndex: 0),
           body: Stack(
             children: [
               // Map background (interactive map showing current location and route)

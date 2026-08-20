@@ -1,40 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:finway/themes/constant_colors.dart';
-import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
 import '../../../utils/dark_theme_provider.dart';
-import '../../features/SmartValue/ScanAndTransfer/view/scanner_and_transfer_screen.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
-  final Function(int)? onTabSelected;
-  final VoidCallback? onFingerprintTap;
+  final Function(int) onTabSelected;
+  final VoidCallback onFingerprintTap;
 
   const CustomBottomNavBar({
     super.key,
     required this.currentIndex,
-    this.onTabSelected,
-    this.onFingerprintTap,
+    required this.onTabSelected,
+    required this.onFingerprintTap,
   });
-
-  void _handleTabSelected(int index) {
-    if (onTabSelected != null) {
-      onTabSelected!(index);
-    }
-  }
-
-  void _handleFingerprintTap() {
-    if (onFingerprintTap != null) {
-      onFingerprintTap!();
-      return;
-    }
-    Get.to(
-      () => ScannerAndTransferScreen(),
-      transition: Transition.rightToLeft,
-      duration: const Duration(milliseconds: 500),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -94,7 +74,7 @@ class CustomBottomNavBar extends StatelessWidget {
               ),
               child: IconButton(
                 icon: const Icon(Icons.fingerprint, color: Colors.white, size: 28),
-                onPressed: _handleFingerprintTap,
+                onPressed: onFingerprintTap,
               ),
             ),
           ),
@@ -106,7 +86,7 @@ class CustomBottomNavBar extends StatelessWidget {
   Widget _navItem(IconData icon, String label, int index, bool isDark) {
     final isActive = currentIndex == index;
     return GestureDetector(
-      onTap: () => _handleTabSelected(index),
+      onTap: () => onTabSelected(index),
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
         width: 56,

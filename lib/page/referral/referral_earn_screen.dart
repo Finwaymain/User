@@ -28,7 +28,6 @@ class ReferralEarnScreen extends StatelessWidget {
       url: url,
       title: 'Partner Dashboard',
       showAppBar: true,
-      showBottomBar: true,
     );
   }
 }
