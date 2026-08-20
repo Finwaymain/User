@@ -10,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:finway/utils/Preferences.dart';
 import 'package:finway/page/auth_screens/phone_entry_screen.dart';
+import 'package:share_plus/share_plus.dart';
 
 class WebViewScreen extends StatefulWidget {
   final String url;
@@ -131,14 +132,26 @@ class _WebViewScreenState extends State<WebViewScreen> {
             } catch (e) {
               controller.runJavaScript("window.receiveLocationError('${e.toString()}');");
             }
+          } else if (message.message.startsWith('share:')) {
+            final shareText = message.message.substring(6);
+            Share.share(shareText);
             return;
           }
 
           try {
             final data = jsonDecode(message.message);
-            if (widget.onBridgeAction != null && data is Map<String, dynamic>) {
-              data['_controller'] = controller;
-              widget.onBridgeAction!(data);
+            if (data is Map<String, dynamic>) {
+              if (data['action'] == 'share' || data['type'] == 'share') {
+                final text = data['text'] ?? data['url'] ?? '';
+                if (text.toString().isNotEmpty) {
+                  Share.share(text.toString());
+                  return;
+                }
+              }
+              if (widget.onBridgeAction != null) {
+                data['_controller'] = controller;
+                widget.onBridgeAction!(data);
+              }
             }
           } catch (_) {}
         },
