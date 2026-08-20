@@ -1107,18 +1107,19 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
                                         razorpayPayment(paymentController);
                                         return;
                                       }
+                                      String? verifiedMpin;
                                       if (method == 'wallet') {
-                                        final verified = await showMpinVerificationBottomSheet(
+                                        verifiedMpin = await showMpinVerificationBottomSheet(
                                           context,
                                           amount: paymentController.totalAmount.value,
                                           title: 'Enter MPIN to Pay'.tr,
                                           userCat: 'customer',
                                         );
-                                        if (verified != true) {
+                                        if (verifiedMpin == null || verifiedMpin.isEmpty) {
                                           return;
                                         }
                                       }
-                                      final success = await paymentController.completeSubscription();
+                                      final success = await paymentController.completeSubscription(mpin: verifiedMpin);
                                       if (!mounted) return;
                                       if (success) {
                                         setState(() => viewMode = 'activated');

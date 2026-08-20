@@ -53,7 +53,7 @@ Future<bool> verifyMpin(String enteredPin, {String userCat = 'customer'}) async 
   return false;
 }
 
-Future<bool> showMpinVerificationBottomSheet(
+Future<String?> showMpinVerificationBottomSheet(
   BuildContext context, {
   required double amount,
   String? title,
@@ -65,7 +65,7 @@ Future<bool> showMpinVerificationBottomSheet(
   String? errorMessage;
   bool isVerifying = false;
 
-  final result = await showModalBottomSheet<bool>(
+  final result = await showModalBottomSheet<String>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
@@ -113,22 +113,25 @@ Future<bool> showMpinVerificationBottomSheet(
                   ),
                   const SizedBox(height: 24),
                   // PIN Dots
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(4, (index) {
-                      final filled = index < enteredPin.length;
-                      return Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 10),
-                        width: 18,
-                        height: 18,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: filled
-                              ? AppThemeData.primary200
-                              : (isDark ? Colors.grey[700] : Colors.grey[300]),
-                        ),
-                      );
-                    }),
+                  GestureDetector(
+                    onTap: () => focusNode.requestFocus(),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(4, (index) {
+                        final filled = index < enteredPin.length;
+                        return Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 10),
+                          width: 18,
+                          height: 18,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: filled
+                                ? AppThemeData.primary200
+                                : (isDark ? Colors.grey[700] : Colors.grey[300]),
+                          ),
+                        );
+                      }),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   if (errorMessage != null) ...[
@@ -170,7 +173,7 @@ Future<bool> showMpinVerificationBottomSheet(
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: isVerifying ? null : () => Navigator.pop(ctx, false),
+                          onPressed: isVerifying ? null : () => Navigator.pop(ctx, null),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -192,7 +195,7 @@ Future<bool> showMpinVerificationBottomSheet(
 
                                   if (ok) {
                                     if (context.mounted) {
-                                      Navigator.pop(ctx, true);
+                                      Navigator.pop(ctx, enteredPin);
                                     }
                                   } else {
                                     setState(() {
@@ -230,5 +233,5 @@ Future<bool> showMpinVerificationBottomSheet(
     },
   );
 
-  return result ?? false;
+  return result;
 }

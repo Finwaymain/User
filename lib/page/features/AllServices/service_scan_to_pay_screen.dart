@@ -65,14 +65,14 @@ class _ServiceScanToPayScreenState extends State<ServiceScanToPayScreen> {
 
           if (scannedBookingId == widget.bookingId) {
             // Require MPIN verification before processing wallet payment
-            final verified = await showMpinVerificationBottomSheet(
+            final verifiedMpin = await showMpinVerificationBottomSheet(
               context,
               amount: widget.amount,
               title: 'Enter MPIN to Confirm Payment'.tr,
               userCat: 'customer',
             );
 
-            if (!verified) {
+            if (verifiedMpin == null || verifiedMpin.isEmpty) {
               ShowToastDialog.showToast('Payment cancelled: MPIN verification failed.'.tr);
               if (mounted) {
                 setState(() => isScanning = true);
