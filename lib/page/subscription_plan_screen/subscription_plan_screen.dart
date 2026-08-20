@@ -165,6 +165,27 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
   }
 
   Widget _buildCurrentView(bool isDark, SubscriptionController controller) {
+    if (controller.isLoading.value) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(
+              color: AppThemeData.primary200,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              "Loading Membership...".tr,
+              style: TextStyle(
+                color: isDark ? Colors.white70 : Colors.black54,
+                fontFamily: AppThemeData.medium,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     switch (viewMode) {
       case 'dashboard':
         return _buildDashboardScreen(isDark, controller);
