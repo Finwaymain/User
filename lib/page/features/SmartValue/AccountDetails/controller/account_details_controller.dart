@@ -115,27 +115,32 @@ class AccountDetailsController extends GetxController with GetTickerProviderStat
 
   String get earnAmount => _profile()?.earnAmount ?? "0.00";
 
+  bool get hasCashback => cashbackText.isNotEmpty;
+
   String get cashbackText {
     final profileData = _profile();
     
     // 1. Try percentage / perSender from user profile / schedules
     String rawVal = profileData?.percentage?.trim() ?? '';
-    if (rawVal.isEmpty || rawVal == '0' || rawVal == '0.0' || rawVal == '0.00') {
+    if (rawVal.isEmpty || rawVal == '0' || rawVal == '0.0' || rawVal == '0.00' || rawVal == 'null') {
       rawVal = profileData?.perSender?.trim() ?? '';
     }
     
     // 2. Check user's active consumer plan cashback
-    if (rawVal.isEmpty || rawVal == '0' || rawVal == '0.0' || rawVal == '0.00') {
+    if (rawVal.isEmpty || rawVal == '0' || rawVal == '0.0' || rawVal == '0.00' || rawVal == 'null') {
       final userPlan = Constant.getUserData().data?.consumerPlan;
       if (userPlan?.cashbackOnPurchase != null &&
           userPlan!.cashbackOnPurchase!.trim().isNotEmpty &&
-          userPlan.cashbackOnPurchase != '0') {
+          userPlan.cashbackOnPurchase != '0' &&
+          userPlan.cashbackOnPurchase != '0.0' &&
+          userPlan.cashbackOnPurchase != '0.00' &&
+          userPlan.cashbackOnPurchase != 'null') {
         rawVal = userPlan.cashbackOnPurchase!.trim();
       }
     }
 
-    if (rawVal.isEmpty || rawVal == '0' || rawVal == '0.0' || rawVal == '0.00') {
-      return '1% Cashback';
+    if (rawVal.isEmpty || rawVal == '0' || rawVal == '0.0' || rawVal == '0.00' || rawVal == 'null') {
+      return '';
     }
 
     // If already contains % symbol
@@ -153,6 +158,7 @@ class AccountDetailsController extends GetxController with GetTickerProviderStat
     // Parse numeric value
     final numVal = double.tryParse(rawVal);
     if (numVal != null) {
+      if (numVal <= 0) return '';
       final formattedNum = (numVal % 1 == 0) ? numVal.toInt().toString() : numVal.toString();
       // If admin entered a flat amount (like 50, 100, 25) or > 10
       if (numVal > 10) {
