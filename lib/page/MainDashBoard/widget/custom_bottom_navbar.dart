@@ -1,20 +1,51 @@
 import 'package:flutter/material.dart';
 import 'package:finway/themes/constant_colors.dart';
+import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
 import '../../../utils/dark_theme_provider.dart';
+import '../../features/SmartValue/ScanAndTransfer/view/scanner_and_transfer_screen.dart';
+import '../../wallet/wallet_screen.dart';
+import '../screen/main_dashboard.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
-  final Function(int) onTabSelected;
-  final VoidCallback onFingerprintTap;
+  final Function(int)? onTabSelected;
+  final VoidCallback? onFingerprintTap;
 
   const CustomBottomNavBar({
     super.key,
     required this.currentIndex,
-    required this.onTabSelected,
-    required this.onFingerprintTap,
+    this.onTabSelected,
+    this.onFingerprintTap,
   });
+
+  void _handleTabSelected(int index) {
+    if (onTabSelected != null) {
+      onTabSelected!(index);
+      return;
+    }
+
+    if (index == 4) {
+      if (currentIndex == 4) return;
+      Get.to(() => WalletScreen());
+      return;
+    }
+
+    Get.offAll(() => MainDashboard(initialIndex: index));
+  }
+
+  void _handleFingerprintTap() {
+    if (onFingerprintTap != null) {
+      onFingerprintTap!();
+      return;
+    }
+    Get.to(
+      () => ScannerAndTransferScreen(),
+      transition: Transition.rightToLeft,
+      duration: const Duration(milliseconds: 500),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +105,7 @@ class CustomBottomNavBar extends StatelessWidget {
               ),
               child: IconButton(
                 icon: const Icon(Icons.fingerprint, color: Colors.white, size: 28),
-                onPressed: onFingerprintTap,
+                onPressed: _handleFingerprintTap,
               ),
             ),
           ),
@@ -86,7 +117,7 @@ class CustomBottomNavBar extends StatelessWidget {
   Widget _navItem(IconData icon, String label, int index, bool isDark) {
     final isActive = currentIndex == index;
     return GestureDetector(
-      onTap: () => onTabSelected(index),
+      onTap: () => _handleTabSelected(index),
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
         width: 56,

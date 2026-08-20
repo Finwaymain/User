@@ -12,10 +12,15 @@ import 'package:finway/utils/Preferences.dart';
 import 'package:finway/page/auth_screens/phone_entry_screen.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../MainDashBoard/widget/custom_bottom_navbar.dart';
+
 class WebViewScreen extends StatefulWidget {
   final String url;
   final String title;
   final bool showAppBar;
+  final bool showBottomBar;
+  final int bottomBarIndex;
+  final Widget? bottomNavigationBar;
   final void Function(Map<String, dynamic> data)? onBridgeAction;
 
   const WebViewScreen({
@@ -23,6 +28,9 @@ class WebViewScreen extends StatefulWidget {
     required this.url,
     required this.title,
     this.showAppBar = true,
+    this.showBottomBar = false,
+    this.bottomBarIndex = -1,
+    this.bottomNavigationBar,
     this.onBridgeAction,
   });
 
@@ -193,6 +201,10 @@ class _WebViewScreenState extends State<WebViewScreen> {
     
     return Scaffold(
       backgroundColor: isDark ? AppThemeData.surface50Dark : AppThemeData.surface50,
+      bottomNavigationBar: widget.bottomNavigationBar ??
+          (widget.showBottomBar
+              ? CustomBottomNavBar(currentIndex: widget.bottomBarIndex)
+              : null),
       appBar: widget.showAppBar 
           ? AppBar(
               backgroundColor: Colors.transparent,

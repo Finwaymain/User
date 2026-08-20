@@ -48,6 +48,7 @@ import 'package:finway/page/features/SmartValue/AccountDetails/view/account_deta
 import 'package:finway/page/features/SmartValue/MyQR/view/my_qr_view.dart';
 import 'package:finway/page/features/SmartValue/Payout/view/payout_screen.dart';
 import 'package:finway/page/features/SmartValue/ScanAndTransfer/view/scanner_and_transfer_screen.dart';
+import 'package:finway/page/MainDashBoard/widget/custom_bottom_navbar.dart';
 
 class WalletScreen extends StatelessWidget {
   WalletScreen({super.key});
@@ -79,6 +80,7 @@ class WalletScreen extends StatelessWidget {
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
+      bottomNavigationBar: const CustomBottomNavBar(currentIndex: 4),
       appBar: CustomAppbar(
         title: 'Smart Value',
         bgColor: AppThemeData.primary200,

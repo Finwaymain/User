@@ -27,14 +27,15 @@ import '../../../controller/service_history_controller.dart';
 import '../../search_services/search_all_services_screen.dart';
 
 class MainDashboard extends StatefulWidget {
-  const MainDashboard({super.key});
+  final int initialIndex;
+  const MainDashboard({super.key, this.initialIndex = 0});
 
   @override
   State<MainDashboard> createState() => _MainDashboardState();
 }
 
 class _MainDashboardState extends State<MainDashboard> {
-  int currentIndex = 0;
+  late int currentIndex;
 
   final List<Widget> _screens = [
     MainHomeScreen(),
@@ -47,6 +48,7 @@ class _MainDashboardState extends State<MainDashboard> {
   @override
   void initState() {
     super.initState();
+    currentIndex = widget.initialIndex;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkActiveRideAndRedirect();
       _refreshServiceHistory();
