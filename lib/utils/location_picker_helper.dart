@@ -8,6 +8,7 @@ import 'package:finway/themes/constant_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:location/location.dart' as loc_pkg;
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
@@ -31,31 +32,152 @@ class PickedLocation {
 }
 
 class LocationPickerHelper {
-  static Future<bool> _ensureLocationAccess() async {
-    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      ShowToastDialog.showToast('Please enable GPS/location services'.tr);
-      await Geolocator.openLocationSettings();
+  static final loc_pkg.Location _loc = loc_pkg.Location();
+
+  /// Ensures GPS / Location services and permissions are enabled.
+  /// If not enabled, asks the user to turn on GPS via native dialog or settings handler.
+  static Future<bool> ensureLocationAccess({BuildContext? context, bool showPromptDialog = true}) async {
+    try {
+      // 1. Check & Request Location Service (GPS)
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        // Try native Google Play Services location popup first
+        try {
+          serviceEnabled = await _loc.requestService();
+        } catch (_) {}
+      }
+
+      if (!serviceEnabled) {
+        if (showPromptDialog) {
+          final shouldOpen = await _showEnableGpsDialog(context);
+          if (shouldOpen) {
+            await Geolocator.openLocationSettings();
+            // Wait briefly and re-check
+            await Future.delayed(const Duration(seconds: 1));
+            serviceEnabled = await Geolocator.isLocationServiceEnabled();
+          }
+        }
+        if (!serviceEnabled) return false;
+      }
+
+      // 2. Check & Request Permission
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        if (showPromptDialog) {
+          final shouldOpen = await _showPermissionSettingsDialog(context);
+          if (shouldOpen) {
+            await Geolocator.openAppSettings();
+          }
+        }
+        return false;
+      }
+
+      if (permission == LocationPermission.denied) {
+        ShowToastDialog.showToast('Location permission is required to detect pickup point.'.tr);
+        return false;
+      }
+
+      return true;
+    } catch (e) {
+      print("ensureLocationAccess error: $e");
       return false;
     }
+  }
 
-    var permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-    }
+  static Future<bool> _showEnableGpsDialog(BuildContext? context) async {
+    final ctx = context ?? Get.context;
+    if (ctx == null) return true;
 
-    if (permission == LocationPermission.deniedForever) {
-      ShowToastDialog.showToast('Location permission denied. Enable it in app settings.'.tr);
-      await Geolocator.openAppSettings();
-      return false;
-    }
+    final result = await showDialog<bool>(
+      context: ctx,
+      barrierDismissible: false,
+      builder: (dialogCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: Row(
+          children: [
+            Icon(Icons.location_off_rounded, color: AppThemeData.primary200, size: 28),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Enable Location / GPS'.tr,
+                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Your device location is turned off. Please turn on GPS so we can automatically set your pickup location and show available rides near you.'.tr,
+          style: const TextStyle(fontSize: 14, color: Colors.black87),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx, false),
+            child: Text('Cancel'.tr, style: TextStyle(color: Colors.grey.shade600)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppThemeData.primary200,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+            ),
+            onPressed: () => Navigator.pop(dialogCtx, true),
+            child: Text('Turn On GPS'.tr, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
 
-    if (permission == LocationPermission.denied) {
-      ShowToastDialog.showToast('Location permission is required to use GPS'.tr);
-      return false;
-    }
+    return result ?? false;
+  }
 
-    return true;
+  static Future<bool> _showPermissionSettingsDialog(BuildContext? context) async {
+    final ctx = context ?? Get.context;
+    if (ctx == null) return true;
+
+    final result = await showDialog<bool>(
+      context: ctx,
+      barrierDismissible: false,
+      builder: (dialogCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: Row(
+          children: [
+            Icon(Icons.security_rounded, color: AppThemeData.primary200, size: 28),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Location Permission Needed'.tr,
+                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Location permission is permanently denied. Please grant location access in App Settings to detect your pickup point automatically.'.tr,
+          style: const TextStyle(fontSize: 14, color: Colors.black87),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx, false),
+            child: Text('Cancel'.tr, style: TextStyle(color: Colors.grey.shade600)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppThemeData.primary200,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+            ),
+            onPressed: () => Navigator.pop(dialogCtx, true),
+            child: Text('Open Settings'.tr, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    return result ?? false;
   }
 
   static Future<String> _resolveAddress(double latitude, double longitude) async {
@@ -104,10 +226,15 @@ class LocationPickerHelper {
     return '';
   }
 
-  static Future<PickedLocation?> fetchCurrentLocation({bool showLoader = true}) async {
+  static Future<PickedLocation?> fetchCurrentLocation({
+    BuildContext? context,
+    bool showLoader = false,
+    bool showPromptDialog = true,
+  }) async {
     if (showLoader) ShowToastDialog.showLoader('Fetching your location...'.tr);
     try {
-      if (!await _ensureLocationAccess()) return null;
+      final hasAccess = await ensureLocationAccess(context: context, showPromptDialog: showPromptDialog);
+      if (!hasAccess) return null;
 
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
@@ -121,7 +248,7 @@ class LocationPickerHelper {
         address: address,
       );
     } catch (e) {
-      ShowToastDialog.showToast('Could not fetch GPS location. Try search instead.'.tr);
+      print("fetchCurrentLocation error: $e");
       return null;
     } finally {
       if (showLoader) ShowToastDialog.closeLoader();

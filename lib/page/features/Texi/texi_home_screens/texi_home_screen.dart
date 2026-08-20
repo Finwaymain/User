@@ -32,6 +32,7 @@ import 'package:finway/page/auth_screens/phone_entry_screen.dart';
 import 'package:finway/page/route_view_screen/route_view_screen.dart';
 import 'package:finway/page/route_view_screen/route_osm_view_screen.dart';
 import 'package:finway/page/new_ride_screens/new_ride_screen.dart';
+import 'package:finway/utils/location_picker_helper.dart';
 
 class TexiHomeScreen extends StatefulWidget {
   final String? initialVehicleCategory;
@@ -50,6 +51,7 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
   bool isLocationSelected = false;
   bool isPickingOnMap = false;
   bool pickingDrop = false; // true if picking drop, false if picking pickup
+  bool isDetectingLocation = false;
   LatLng mapCenter = const LatLng(9.0820, 8.6753);
   
   List<SearchHistoryItem> searchHistory = [];
@@ -77,9 +79,78 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
     selectedTabIndex = widget.initialTab ?? 0;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       checkActiveRide();
+      autoDetectPickupLocation();
     });
     loadHistory();
     fetchVehicleCategories();
+  }
+
+  /// Automatically fetches the current GPS location and sets it as the pickup location.
+  /// If location / GPS is disabled, prompts the user via dialog to enable location.
+  Future<void> autoDetectPickupLocation({bool userTriggered = false}) async {
+    final homeCtrl = Get.find<HomeController>();
+
+    // If pickup is already set and not explicitly re-triggered, don't overwrite
+    if (!userTriggered &&
+        homeCtrl.departureController.text.trim().isNotEmpty &&
+        homeCtrl.departureLatLong.value.latitude != 0.0) {
+      if (mounted) {
+        setState(() {
+          mapCenter = homeCtrl.departureLatLong.value;
+        });
+      }
+      return;
+    }
+
+    if (mounted) {
+      setState(() {
+        isDetectingLocation = true;
+      });
+    }
+
+    try {
+      final loc = await LocationPickerHelper.fetchCurrentLocation(
+        context: context,
+        showLoader: userTriggered,
+        showPromptDialog: true,
+      );
+
+      if (loc != null && mounted) {
+        setState(() {
+          homeCtrl.departureLatLong.value = LatLng(loc.latitude, loc.longitude);
+          homeCtrl.departureController.text = loc.address;
+          homeCtrl.currentLocationController.text = loc.address;
+          mapCenter = LatLng(loc.latitude, loc.longitude);
+          isDetectingLocation = false;
+        });
+
+        if (homeCtrl.mapController != null) {
+          homeCtrl.mapController!.animateCamera(
+            CameraUpdate.newLatLngZoom(LatLng(loc.latitude, loc.longitude), 15),
+          );
+        }
+
+        if (homeCtrl.destinationController.text.trim().isNotEmpty) {
+          setState(() {
+            isLocationSelected = true;
+          });
+          homeCtrl.getDirections();
+        }
+
+        fetchVehicleCategories();
+      } else if (mounted) {
+        setState(() {
+          isDetectingLocation = false;
+        });
+      }
+    } catch (e) {
+      print("autoDetectPickupLocation error: $e");
+      if (mounted) {
+        setState(() {
+          isDetectingLocation = false;
+        });
+      }
+    }
   }
 
   Future<void> checkActiveRide() async {
@@ -495,46 +566,34 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
           drawer: buildAppDrawer(context, dashBoardController),
           body: Stack(
             children: [
-              // Map background (only active when picking location or location is selected)
-              if (isPickingOnMap || isLocationSelected)
-                Positioned.fill(
-                  child: GoogleMap(
-                    zoomControlsEnabled: false,
-                    myLocationButtonEnabled: false,
-                    compassEnabled: false,
-                    initialCameraPosition: CameraPosition(
-                      target: controller.center,
-                      zoom: 14.0,
-                    ),
-                    onMapCreated: (mapcontrollerdata) async {
-                      controller.mapController = mapcontrollerdata;
-                      if (controller.departureLatLong.value.latitude != 0.0 && controller.departureLatLong.value.longitude != 0.0) {
-                        controller.mapController!.moveCamera(CameraUpdate.newLatLngZoom(
-                          controller.departureLatLong.value, 14
-                        ));
-                      } else {
-                        try {
-                          LocationData location = await controller.currentLocation.value.getLocation().timeout(const Duration(seconds: 5));
-                          controller.mapController!.moveCamera(CameraUpdate.newLatLngZoom(
-                            LatLng(location.latitude ?? 0.0, location.longitude ?? 0.0), 14
-                          ));
-                        } catch (_) {}
-                      }
-                    },
-                    onCameraMove: (pos) {
-                      mapCenter = pos.target;
-                    },
-                    polylines: Set<Polyline>.of(controller.polyLines.values),
-                    myLocationEnabled: true,
-                    markers: controller.markers.values.toSet(),
+              // Map background (interactive map showing current location and route)
+              Positioned.fill(
+                child: GoogleMap(
+                  zoomControlsEnabled: false,
+                  myLocationButtonEnabled: false,
+                  compassEnabled: false,
+                  initialCameraPosition: CameraPosition(
+                    target: controller.departureLatLong.value.latitude != 0.0
+                        ? controller.departureLatLong.value
+                        : controller.center,
+                    zoom: 14.0,
                   ),
-                )
-              else
-                Positioned.fill(
-                  child: Container(
-                    color: isDarkMode ? AppThemeData.surface50Dark : Colors.white,
-                  ),
+                  onMapCreated: (mapcontrollerdata) async {
+                    controller.mapController = mapcontrollerdata;
+                    if (controller.departureLatLong.value.latitude != 0.0 && controller.departureLatLong.value.longitude != 0.0) {
+                      controller.mapController!.moveCamera(CameraUpdate.newLatLngZoom(
+                        controller.departureLatLong.value, 15
+                      ));
+                    }
+                  },
+                  onCameraMove: (pos) {
+                    mapCenter = pos.target;
+                  },
+                  polylines: Set<Polyline>.of(controller.polyLines.values),
+                  myLocationEnabled: true,
+                  markers: controller.markers.values.toSet(),
                 ),
+              ),
 
               // Pin crosshair for map selection mode
               if (isPickingOnMap)
@@ -828,18 +887,40 @@ Widget buildTopAddressCard(HomeController controller, bool isDarkMode) {
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 2),
-                      child: Text(
-                        controller.departureController.text.isNotEmpty
-                            ? controller.departureController.text
-                            : "Enter Pickup Location".tr,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontFamily: AppThemeData.medium,
-                          fontSize: 13,
-                          color: controller.departureController.text.isNotEmpty ? textColor : Colors.grey,
-                        ),
-                      ),
+                      child: isDetectingLocation && controller.departureController.text.isEmpty
+                          ? Row(
+                              children: [
+                                SizedBox(
+                                  width: 12,
+                                  height: 12,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: AppThemeData.primary200,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  "Detecting pickup location...".tr,
+                                  style: TextStyle(
+                                    fontFamily: AppThemeData.medium,
+                                    fontSize: 13,
+                                    color: AppThemeData.primary200,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : Text(
+                              controller.departureController.text.isNotEmpty
+                                  ? controller.departureController.text
+                                  : "Enter Pickup Location".tr,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontFamily: AppThemeData.medium,
+                                fontSize: 13,
+                                color: controller.departureController.text.isNotEmpty ? textColor : Colors.grey,
+                              ),
+                            ),
                     ),
                   ),
                   const Divider(height: 8, thickness: 0.8),
@@ -893,10 +974,21 @@ Widget buildTopAddressCard(HomeController controller, bool isDarkMode) {
         ),
         const SizedBox(height: 6),
 
-        // Inline Map Selection Links
+        // Inline Location Links
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
+            InkWell(
+              onTap: () => autoDetectPickupLocation(userTriggered: true),
+              child: Row(
+                children: [
+                  Icon(Icons.my_location_rounded, size: 14, color: AppThemeData.primary200),
+                  const SizedBox(width: 4),
+                  Text("Current GPS".tr, style: TextStyle(fontSize: 11, color: AppThemeData.primary200, fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+            Container(height: 10, width: 1, color: Colors.grey.shade300),
             InkWell(
               onTap: () => startMapPicking(false),
               child: Row(

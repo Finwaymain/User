@@ -131,7 +131,10 @@ class HomeController extends GetxController with GetSingleTickerProviderStateMix
     try {
       if (isDepartureSet) {
         PermissionStatus permissionGranted = await currentLocation.value.hasPermission();
-        if (permissionGranted == PermissionStatus.granted) {
+        if (permissionGranted == PermissionStatus.denied) {
+          permissionGranted = await currentLocation.value.requestPermission();
+        }
+        if (permissionGranted == PermissionStatus.granted || permissionGranted == PermissionStatus.grantedLimited) {
           bool serviceEnabled = await currentLocation.value.serviceEnabled();
           if (!serviceEnabled) {
             serviceEnabled = await currentLocation.value.requestService();

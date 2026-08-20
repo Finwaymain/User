@@ -18,6 +18,7 @@ import 'package:finway/themes/button_them.dart';
 import 'package:finway/themes/constant_colors.dart';
 import 'package:finway/utils/Preferences.dart';
 import 'package:finway/utils/dark_theme_provider.dart';
+import 'package:finway/utils/location_picker_helper.dart';
 
 class TransportBookingScreen extends StatefulWidget {
   final String? initialVehicleLibelle;
@@ -73,6 +74,35 @@ class _TransportBookingScreenState extends State<TransportBookingScreen> {
     }
     Get.put(WalletController()).getAmount();
     fetchVehicleCategories();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      autoDetectPickupLocation();
+    });
+  }
+
+  Future<void> autoDetectPickupLocation() async {
+    final homeCtrl = Get.find<HomeController>();
+    if (homeCtrl.departureController.text.trim().isNotEmpty &&
+        homeCtrl.departureLatLong.value.latitude != 0.0) {
+      return;
+    }
+
+    try {
+      final loc = await LocationPickerHelper.fetchCurrentLocation(
+        context: context,
+        showLoader: false,
+        showPromptDialog: true,
+      );
+      if (loc != null && mounted) {
+        setState(() {
+          homeCtrl.departureLatLong.value = LatLng(loc.latitude, loc.longitude);
+          homeCtrl.departureController.text = loc.address;
+          homeCtrl.currentLocationController.text = loc.address;
+        });
+        if (homeCtrl.destinationController.text.trim().isNotEmpty) {
+          homeCtrl.getDirections();
+        }
+      }
+    } catch (_) {}
   }
 
   @override
