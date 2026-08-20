@@ -115,6 +115,56 @@ class AccountDetailsController extends GetxController with GetTickerProviderStat
 
   String get earnAmount => _profile()?.earnAmount ?? "0.00";
 
+  String get cashbackText {
+    final profileData = _profile();
+    
+    // 1. Try percentage / perSender from user profile / schedules
+    String rawVal = profileData?.percentage?.trim() ?? '';
+    if (rawVal.isEmpty || rawVal == '0' || rawVal == '0.0' || rawVal == '0.00') {
+      rawVal = profileData?.perSender?.trim() ?? '';
+    }
+    
+    // 2. Check user's active consumer plan cashback
+    if (rawVal.isEmpty || rawVal == '0' || rawVal == '0.0' || rawVal == '0.00') {
+      final userPlan = Constant.getUserData().data?.consumerPlan;
+      if (userPlan?.cashbackOnPurchase != null &&
+          userPlan!.cashbackOnPurchase!.trim().isNotEmpty &&
+          userPlan.cashbackOnPurchase != '0') {
+        rawVal = userPlan.cashbackOnPurchase!.trim();
+      }
+    }
+
+    if (rawVal.isEmpty || rawVal == '0' || rawVal == '0.0' || rawVal == '0.00') {
+      return '1% Cashback';
+    }
+
+    // If already contains % symbol
+    if (rawVal.contains('%')) {
+      final clean = rawVal.replaceAll('Cashback', '').replaceAll('cashback', '').trim();
+      return '$clean Cashback';
+    }
+
+    // If contains rupee symbol or Rs or starts with ₹
+    if (rawVal.contains('₹') || rawVal.toLowerCase().contains('rs')) {
+      final clean = rawVal.replaceAll('Cashback', '').replaceAll('cashback', '').trim();
+      return '$clean Cashback';
+    }
+
+    // Parse numeric value
+    final numVal = double.tryParse(rawVal);
+    if (numVal != null) {
+      final formattedNum = (numVal % 1 == 0) ? numVal.toInt().toString() : numVal.toString();
+      // If admin entered a flat amount (like 50, 100, 25) or > 10
+      if (numVal > 10) {
+        return '₹$formattedNum Cashback';
+      }
+      // If <= 10, by default it is a percentage (e.g. 1%, 2%, 5%)
+      return '$formattedNum% Cashback';
+    }
+
+    return '$rawVal Cashback';
+  }
+
   AccountData? _profile() {
     if (accountDetailsModel.value?.data != null) {
       return accountDetailsModel.value!.data;

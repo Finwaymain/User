@@ -341,9 +341,9 @@ class WalletFlipCard extends StatelessWidget {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              '1% Cashback',
-                              style: TextStyle(
+                            Text(
+                              controller.cashbackText,
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 10,
                                 fontFamily: AppThemeData.bold,
