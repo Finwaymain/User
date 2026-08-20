@@ -740,7 +740,7 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
                                 Get.to(() => ScannerAndTransferScreen());
                               },
                               icon: const Icon(Icons.qr_code_scanner, color: Colors.white, size: 16),
-                              label: Text("Pay via Smart Value".tr, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                              label: Text("Pay & Get Cashback".tr, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
                             ),
                           ),
                           const SizedBox(width: 8),

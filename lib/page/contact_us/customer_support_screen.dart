@@ -242,34 +242,20 @@ class _CustomerSupportScreenState extends State<CustomerSupportScreen> {
                                   Row(
                                     children: [
                                       Text(
-                                        'Chat with Support Team'.tr,
+                                        'Chat with Support'.tr,
                                         style: TextStyle(
                                           fontSize: 16,
                                           fontFamily: AppThemeData.bold,
                                           color: textColor,
                                         ),
                                       ),
-                                      const SizedBox(width: 6),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF10B981).withValues(alpha: 0.15),
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        child: Text(
-                                          'Online'.tr,
-                                          style: const TextStyle(
-                                            color: Color(0xFF10B981),
-                                            fontSize: 10,
-                                            fontFamily: AppThemeData.bold,
-                                          ),
-                                        ),
-                                      ),
+
+
                                     ],
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    'Realtime live chat • Instant answers'.tr,
+                                    'Realtime live chat'.tr,
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: mutedColor,

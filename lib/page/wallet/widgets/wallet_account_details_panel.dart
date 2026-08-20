@@ -48,7 +48,7 @@ class WalletAccountDetailsPanel extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             _detailRow('Mobile Number', controller.mobile, Icons.phone_outlined, isDark),
-            _detailRow('Account Number', controller.accountNumber, Icons.vpn_key_outlined, isDark),
+            _detailRow('Digital Credit Account', controller.accountNumber, Icons.vpn_key_outlined, isDark),
             _detailRow(
               'Balance',
               Constant().amountShow(amount: controller.amount),
@@ -61,12 +61,7 @@ class WalletAccountDetailsPanel extends StatelessWidget {
               Icons.trending_up,
               isDark,
             ),
-            _detailRow(
-              'Valid From',
-              controller.expDate,
-              Icons.calendar_today_outlined,
-              isDark,
-            ),
+           
             _detailRow('Card Status', status, Icons.verified_outlined, isDark, isStatus: true),
           ],
         ),

@@ -1896,7 +1896,7 @@ class PaymentSelectionScreen extends StatelessWidget {
               keyboardType: TextInputType.number,
               obscureText: true,
               textAlign: TextAlign.center,
-              maxLength: 6,
+              maxLength: 4,
               style: const TextStyle(
                 fontSize: 24,
                 letterSpacing: 12,
@@ -1904,7 +1904,7 @@ class PaymentSelectionScreen extends StatelessWidget {
               ),
               decoration: InputDecoration(
                 counterText: '',
-                hintText: '••••••',
+                hintText: '••••',
                 hintStyle: const TextStyle(letterSpacing: 12, color: Colors.grey),
                 filled: true,
                 fillColor: Colors.grey.shade100,

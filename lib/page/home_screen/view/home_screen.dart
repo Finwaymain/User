@@ -364,16 +364,16 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                                 greetingName,
                                 style: TextStyle(
                                   fontFamily: AppThemeData.bold,
-                                  fontSize: 21,
+                                  fontSize: 18,
                                   color: textColor,
-                                  letterSpacing: -0.5,
+                                  letterSpacing: 0.5,
                                 ),
                               ),
                             ],
                           ),
                         ),
 
-                        const SizedBox(height: 10),
+                        
 
                         // Header Row with fixed height to prevent vertical misalignment
                         Row(
@@ -384,7 +384,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                                 alignment: Alignment.bottomLeft,
                                 padding: const EdgeInsets.only(left: 22, bottom: 4),
                                 child: Text(
-                                  "Features &\nWallet",
+                                  "Features",
                                   style: TextStyle(
                                     fontFamily: AppThemeData.bold,
                                     fontSize: 13.5,
@@ -626,11 +626,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                                   Get.to(() => const PhoneEntryScreen(), transition: Transition.rightToLeftWithFade);
                                   return;
                                 }
-                                if ((Preferences.getString('user_aadhar_number') ?? '').isNotEmpty) {
-                                  Get.to(() => const ReferralScreen(), transition: Transition.rightToLeftWithFade);
-                                } else {
-                                  Get.to(() => const SubmitAadharScreen(), transition: Transition.rightToLeftWithFade);
-                                }
+                                Get.to(() => const ReferralScreen(), transition: Transition.rightToLeftWithFade);
                               },
                             ),
                           ],
