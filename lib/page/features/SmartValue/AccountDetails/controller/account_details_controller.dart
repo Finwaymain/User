@@ -113,7 +113,17 @@ class AccountDetailsController extends GetxController with GetTickerProviderStat
 
   String get amount => _profile()?.amount ?? "0.00";
 
-  String get earnAmount => _profile()?.earnAmount ?? "0.00";
+  String get earnAmount {
+    final val = _profile()?.earnAmount;
+    if (val != null && val.trim().isNotEmpty && val != 'null') {
+      return val;
+    }
+    final cached = Constant.getUserData().data?.earnAmount;
+    if (cached != null && cached.trim().isNotEmpty && cached != 'null') {
+      return cached;
+    }
+    return "0.00";
+  }
 
   bool get hasCashback => cashbackText.isNotEmpty;
 
