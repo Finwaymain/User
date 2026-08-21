@@ -7,6 +7,7 @@ import 'package:finway/page/wallet/wallet_screen.dart';
 import 'package:finway/constant/show_toast_dialog.dart';
 import 'package:finway/controller/service_booking_controller.dart';
 import 'package:finway/model/service_request_model.dart';
+import 'package:finway/themes/appbar_cust.dart';
 import 'package:finway/themes/button_them.dart';
 import 'package:finway/themes/constant_colors.dart';
 import 'package:finway/utils/dark_theme_provider.dart';
@@ -247,7 +248,9 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      booking.serviceName.isNotEmpty ? booking.serviceName : 'Home Service'.tr,
+                                      (booking.serviceName != null && booking.serviceName!.isNotEmpty)
+                                          ? booking.serviceName!
+                                          : 'Home Service'.tr,
                                       style: const TextStyle(color: Colors.white, fontFamily: AppThemeData.bold, fontSize: 16),
                                     ),
                                     const SizedBox(height: 4),
