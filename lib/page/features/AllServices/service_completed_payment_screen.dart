@@ -13,8 +13,8 @@ import 'package:finway/utils/dark_theme_provider.dart';
 import 'package:finway/controller/wallet_controller.dart';
 import 'package:finway/model/razorpay_gen_orderid_model.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
+import 'package:finway/utils/mpin_dialog.dart';
 import 'service_payment_success_screen.dart';
-import 'service_scan_to_pay_screen.dart';
 
 class ServiceCompletedPaymentScreen extends StatefulWidget {
   final int bookingId;
@@ -140,14 +140,27 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
     }
 
     if (_paymentMethod == 'wallet') {
-      final paymentSuccess = await Get.to(() => ServiceScanToPayScreen(
-            bookingId: widget.bookingId,
-            expectedDriverId: booking.driverId?.toString() ?? '',
-            amount: total,
-            controller: _controller,
-          ));
+      if (_walletBalance < total) {
+        ShowToastDialog.showToast('Insufficient wallet balance. Please add money to your wallet.'.tr);
+        return;
+      }
 
-      if (paymentSuccess == true) {
+      final verifiedMpin = await showMpinVerificationBottomSheet(
+        context,
+        amount: total,
+        title: 'Enter MPIN to Pay'.tr,
+      );
+
+      if (verifiedMpin == null || verifiedMpin.isEmpty) {
+        return;
+      }
+
+      setState(() => _paying = true);
+      final ok = await _controller.payBooking(bookingId: widget.bookingId, paymentMethod: 'wallet');
+      if (!mounted) return;
+      setState(() => _paying = false);
+
+      if (ok) {
         _goToSuccess(total, 'wallet');
       }
       return;
@@ -189,7 +202,6 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
     final visitLabel = booking?.visitingChargeLabel ?? '';
     final visitAmount = booking?.visitingChargeAmount ?? 0;
     final materialAmount = booking?.materialCostAmount ?? 0;
-    final platformFee = booking?.priceBreakdown?.platformFee ?? 0;
 
     return WillPopScope(
       onWillPop: () async => false,
@@ -286,22 +298,35 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
                                       if (_walletBalance < total && total > 0)
                                         InkWell(
                                           borderRadius: BorderRadius.circular(20),
-                                          onTap: () {
-                                            Get.to(() =>  WalletScreen());
+                                          onTap: () async {
+                                            await Get.to(() => WalletScreen());
+                                            await _load();
                                           },
                                           child: Container(
-                                            width: 34,
-                                            height: 34,
+                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                             decoration: BoxDecoration(
-                                              color: AppThemeData.primary200.withValues(
-                                                alpha: 0.10,
-                                              ),
-                                              shape: BoxShape.circle,
+                                              color: AppThemeData.primary200.withValues(alpha: 0.12),
+                                              borderRadius: BorderRadius.circular(16),
+                                              border: Border.all(color: AppThemeData.primary200.withValues(alpha: 0.3)),
                                             ),
-                                            child: Icon(
-                                              Icons.add_rounded,
-                                              size: 22,
-                                              color: AppThemeData.primary200,
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(
+                                                  Icons.add_rounded,
+                                                  size: 16,
+                                                  color: AppThemeData.primary200,
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  'Add Money'.tr,
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontFamily: AppThemeData.bold,
+                                                    color: AppThemeData.primary200,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
                                         ),
