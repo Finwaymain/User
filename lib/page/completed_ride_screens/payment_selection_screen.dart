@@ -1150,7 +1150,7 @@ class PaymentSelectionScreen extends StatelessWidget {
 
   transactionAPI() {
     paymentController.transactionAmountRequest().then((value) {
-      Get.back(); // Always dismiss the showLoadingAlert dialog first
+      ShowToastDialog.closeLoader();
       if (value != null) {
         ShowToastDialog.showToast("Payment successfully completed".tr);
         Get.back(result: true); // Pop screen and return true
@@ -1284,12 +1284,11 @@ class PaymentSelectionScreen extends StatelessWidget {
   }
 
   void _handlePaymentSuccess(PaymentSuccessResponse response) {
-    Get.back();
+    ShowToastDialog.showLoader("Processing payment...".tr);
     transactionAPI();
   }
 
   void _handleExternalWaller(ExternalWalletResponse response) {
-    Get.back();
     showSnackBarAlert(
       message: "${"Payment Processing Via".tr}\n${response.walletName!.tr}",
       color: Colors.blue.shade400,
@@ -1297,7 +1296,6 @@ class PaymentSelectionScreen extends StatelessWidget {
   }
 
   void _handlePaymentError(PaymentFailureResponse response) {
-    Get.back();
     showSnackBarAlert(
       message: "${"Payment Failed!!".tr}\n${jsonDecode(response.message!)['error']['description']}",
       color: Colors.red.shade400,

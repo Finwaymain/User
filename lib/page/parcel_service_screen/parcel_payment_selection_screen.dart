@@ -1403,12 +1403,10 @@ class ParcelPaymentSelectionScreen extends StatelessWidget {
 
   transactionAPI() {
     parcelpaymentController.transactionAmountRequest().then((value) {
+      ShowToastDialog.closeLoader();
       if (value != null) {
         ShowToastDialog.showToast("Payment successfully completed".tr);
         Get.back(result: true);
-        Get.back(result: true);
-      } else {
-        ShowToastDialog.closeLoader();
       }
     });
   }
@@ -1539,12 +1537,11 @@ class ParcelPaymentSelectionScreen extends StatelessWidget {
   }
 
   void _handlePaymentSuccess(PaymentSuccessResponse response) {
-    Get.back();
+    ShowToastDialog.showLoader("Processing payment...".tr);
     transactionAPI();
   }
 
   void _handleExternalWaller(ExternalWalletResponse response) {
-    Get.back();
     showSnackBarAlert(
       message: "Payment Processing Via\n${response.walletName!}",
       color: Colors.blue.shade400,
@@ -1552,7 +1549,6 @@ class ParcelPaymentSelectionScreen extends StatelessWidget {
   }
 
   void _handlePaymentError(PaymentFailureResponse response) {
-    Get.back();
     showSnackBarAlert(
       message: "Payment Failed!!\n "
           "${jsonDecode(response.message!)['error']['description']}",

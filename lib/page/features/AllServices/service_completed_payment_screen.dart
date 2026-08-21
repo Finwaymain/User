@@ -114,20 +114,39 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
 
   void _handleRazorpaySuccess(PaymentSuccessResponse response) async {
     setState(() => _paying = true);
+    ShowToastDialog.showLoader('Confirming payment...'.tr);
+    final ok = await _controller.payBooking(bookingId: widget.bookingId, paymentMethod: 'upi');
+    ShowToastDialog.closeLoader();
+    if (!mounted) return;
+    setState(() => _paying = false);
+    if (ok) {
+      _goToSuccess(_pendingRazorpayAmount, 'upi');
+    } else {
+      final item = await _controller.refreshBooking(widget.bookingId);
+      if (item != null && (item.isPaid || item.isCompleted)) {
+        _goToSuccess(_pendingRazorpayAmount, 'upi');
+      } else {
+        ShowToastDialog.showToast('Payment successful on Razorpay.'.tr);
+        _goToSuccess(_pendingRazorpayAmount, 'upi');
+      }
+    }
+  }
+
+  void _handleRazorpayError(PaymentFailureResponse response) {
+    ShowToastDialog.closeLoader();
+    setState(() => _paying = false);
+    ShowToastDialog.showToast('Payment failed. Please try again.'.tr);
+  }
+
+  void _handleExternalWallet(ExternalWalletResponse response) async {
+    ShowToastDialog.showToast('Payment processing via ${response.walletName ?? 'UPI'}'.tr);
+    setState(() => _paying = true);
     final ok = await _controller.payBooking(bookingId: widget.bookingId, paymentMethod: 'upi');
     if (!mounted) return;
     setState(() => _paying = false);
     if (ok) {
       _goToSuccess(_pendingRazorpayAmount, 'upi');
     }
-  }
-
-  void _handleRazorpayError(PaymentFailureResponse response) {
-    ShowToastDialog.showToast('Payment failed. Please try again.'.tr);
-  }
-
-  void _handleExternalWallet(ExternalWalletResponse response) {
-    ShowToastDialog.showToast('Payment processing via ${response.walletName ?? 'UPI'}'.tr);
   }
 
   Future<void> _pay() async {
@@ -215,7 +234,7 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
       appBar: CustomAppbar(
         title: 'Service Payment'.tr,
         bgColor: AppThemeData.primary200,
-        showBack: true,
+        textColor: Colors.white,
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
