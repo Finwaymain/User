@@ -133,21 +133,21 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
     final booking = _booking;
     if (booking == null || booking.isPaid) return;
 
-    final total = booking.payableAmount;
-    if (total <= 0) {
+    final baseTotal = booking.payableAmount;
+    if (baseTotal <= 0) {
       ShowToastDialog.showToast('Payment amount is not available. Please contact support.'.tr);
       return;
     }
 
     if (_paymentMethod == 'wallet') {
-      if (_walletBalance < total) {
+      if (_walletBalance < baseTotal) {
         ShowToastDialog.showToast('Insufficient wallet balance. Please add money to your wallet.'.tr);
         return;
       }
 
       final verifiedMpin = await showMpinVerificationBottomSheet(
         context,
-        amount: total,
+        amount: baseTotal,
         title: 'Enter MPIN to Pay'.tr,
       );
 
@@ -161,13 +161,15 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
       setState(() => _paying = false);
 
       if (ok) {
-        _goToSuccess(total, 'wallet');
+        _goToSuccess(baseTotal, 'wallet');
       }
       return;
     }
 
     if (_paymentMethod == 'upi') {
-      await _payWithRazorpay(total);
+      final totalTax = Constant.calculateTotalTaxes(baseTotal);
+      final totalWithTax = baseTotal + totalTax;
+      await _payWithRazorpay(totalWithTax);
       return;
     }
 
@@ -177,7 +179,7 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
     setState(() => _paying = false);
 
     if (ok) {
-      _goToSuccess(total, _paymentMethod);
+      _goToSuccess(baseTotal, _paymentMethod);
     }
   }
 
@@ -198,199 +200,194 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
   Widget build(BuildContext context) {
     final isDarkMode = Provider.of<DarkThemeProvider>(context).getThem();
     final booking = _booking;
-    final total = booking?.payableAmount ?? 0;
+    final baseTotal = booking?.payableAmount ?? 0.0;
+    final isUpi = _paymentMethod == 'upi';
+    final taxBreakdown = isUpi ? Constant.getTaxBreakdown(baseTotal) : <Map<String, dynamic>>[];
+    final totalTaxAmount = isUpi ? Constant.calculateTotalTaxes(baseTotal) : 0.0;
+    final finalPayableTotal = baseTotal + totalTaxAmount;
+    final visitAmount = booking?.visitingChargeAmount ?? 0.0;
     final visitLabel = booking?.visitingChargeLabel ?? '';
-    final visitAmount = booking?.visitingChargeAmount ?? 0;
-    final materialAmount = booking?.materialCostAmount ?? 0;
+    final materialAmount = booking?.materialCostAmount ?? 0.0;
 
-    return WillPopScope(
-      onWillPop: () async => false,
-      child: Scaffold(
-        backgroundColor: isDarkMode ? AppThemeData.surface50Dark : const Color(0xFFF7F8FA),
-        appBar: AppBar(
-          backgroundColor: isDarkMode ? AppThemeData.surface50Dark : Colors.white,
-          elevation: 0,
-          automaticallyImplyLeading: false,
-          title: Text(
-            'Complete Payment'.tr,
-            style: TextStyle(fontFamily: AppThemeData.bold, fontSize: 18, color: isDarkMode ? AppThemeData.grey900Dark : Colors.black),
-          ),
-        ),
-        body: _loading || booking == null
-            ? const Center(child: CircularProgressIndicator())
-            : Column(
-                children: [
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        children: [
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(vertical: 20),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(colors: [AppThemeData.primary200, AppThemeData.primary300]),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Column(
-                              children: [
-                                const Icon(Icons.celebration, color: Colors.white, size: 36),
-                                const SizedBox(height: 8),
-                                Text('Payment Required'.tr, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                                const SizedBox(height: 4),
-                                Text('Pay now so the expert can complete your booking.'.tr, style: const TextStyle(color: Colors.white70, fontSize: 12)),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          _card(
-                            isDarkMode,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Payment Summary'.tr, style: TextStyle(fontFamily: AppThemeData.semiBold, fontSize: 14)),
-                                const SizedBox(height: 10),
-                                ...booking.bookedServiceItems.map(
-                                  (e) => _priceRow(
-                                    e.name,
-                                    e.priceAvailable ? _money(e.minPrice) : (e.displayPrice.isNotEmpty ? e.displayPrice : 'Rate on visit'.tr),
-                                    isDarkMode,
-                                  ),
-                                ),
-                                if (visitAmount > 0)
-                                  _priceRow('Visiting Charge'.tr, _money(visitAmount), isDarkMode)
-                                else if (visitLabel.isNotEmpty)
-                                  _priceRow('Visiting Charge'.tr, visitLabel, isDarkMode),
-                                if (materialAmount > 0)
-                                  _priceRow('Material Cost'.tr, _money(materialAmount), isDarkMode),
-                                const Divider(height: 20),
-                                _priceRow('Total Amount'.tr, total > 0 ? _money(total) : booking.displayPayableLabel, isDarkMode, bold: true),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 14),
-                          _card(
-                            isDarkMode,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Select Payment Method'.tr, style: TextStyle(fontFamily: AppThemeData.semiBold, fontSize: 14)),
-                                const SizedBox(height: 4),
-                                Text(
-                                  '${'Wallet balance'.tr}: ${_money(_walletBalance)}',
-                                  style: TextStyle(fontSize: 12, color: isDarkMode ? AppThemeData.grey500Dark : AppThemeData.grey500),
-                                ),
-                                const SizedBox(height: 8),
-                                RadioListTile<String>(
-                                  value: 'wallet',
-                                  groupValue: _paymentMethod,
-                                  activeColor: AppThemeData.primary200,
-
-                                  title: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          'Wallet Balance'.tr,
-                                        ),
-                                      ),
-
-                                      // Show Add Money button only when balance is insufficient
-                                      if (_walletBalance < total && total > 0)
-                                        InkWell(
-                                          borderRadius: BorderRadius.circular(20),
-                                          onTap: () async {
-                                            await Get.to(() => WalletScreen());
-                                            await _load();
-                                          },
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                            decoration: BoxDecoration(
-                                              color: AppThemeData.primary200.withValues(alpha: 0.12),
-                                              borderRadius: BorderRadius.circular(16),
-                                              border: Border.all(color: AppThemeData.primary200.withValues(alpha: 0.3)),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(
-                                                  Icons.add_rounded,
-                                                  size: 16,
-                                                  color: AppThemeData.primary200,
-                                                ),
-                                                const SizedBox(width: 4),
-                                                Text(
-                                                  'Add Money'.tr,
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    fontFamily: AppThemeData.bold,
-                                                    color: AppThemeData.primary200,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
+    return Scaffold(
+      backgroundColor: isDarkMode ? AppThemeData.surface50Dark : const Color(0xFFF7F8FA),
+      appBar: CustomAppbar(
+        title: 'Service Payment'.tr,
+        bgColor: AppThemeData.primary200,
+        showBack: true,
+      ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : booking == null
+              ? Center(child: Text('Booking details not available.'.tr))
+              : Column(
+                  children: [
+                    Expanded(
+                      child: RefreshIndicator(
+                        onRefresh: _load,
+                        child: SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      AppThemeData.primary200,
+                                      AppThemeData.primary200.withValues(alpha: 0.85),
                                     ],
                                   ),
-
-                                  subtitle: _walletBalance < total && total > 0
-                                      ? Text(
-                                    'Insufficient balance'.tr,
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: Colors.orange.shade700,
-                                    ),
-                                  )
-                                      : Text(
-                                    _money(_walletBalance),
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: isDarkMode
-                                          ? AppThemeData.grey500Dark
-                                          : AppThemeData.grey500,
-                                    ),
-                                  ),
-
-                                  onChanged: booking.isPaid
-                                      ? null
-                                      : (v) => setState(
-                                        () => _paymentMethod = v ?? 'wallet',
-                                  ),
+                                  borderRadius: BorderRadius.circular(14),
                                 ),
-                                RadioListTile<String>(
-                                  value: 'upi',
-                                  groupValue: _paymentMethod,
-                                  activeColor: AppThemeData.primary200,
-                                  title: Text('UPI'.tr),
-                                  subtitle: Text('Pay via Razorpay UPI'.tr, style: TextStyle(fontSize: 11, color: isDarkMode ? AppThemeData.grey500Dark : AppThemeData.grey500)),
-                                  onChanged: booking.isPaid ? null : (v) => setState(() => _paymentMethod = v ?? 'upi'),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      booking.serviceName.isNotEmpty ? booking.serviceName : 'Home Service'.tr,
+                                      style: const TextStyle(color: Colors.white, fontFamily: AppThemeData.bold, fontSize: 16),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text('Pay now so the expert can complete your booking.'.tr, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                                  ],
                                 ),
-                              ],
-                            ),
+                              ),
+                              const SizedBox(height: 16),
+                              _card(
+                                isDarkMode,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Payment Summary'.tr, style: TextStyle(fontFamily: AppThemeData.semiBold, fontSize: 14)),
+                                    const SizedBox(height: 10),
+                                    ...booking.bookedServiceItems.map(
+                                      (e) => _priceRow(
+                                        e.name,
+                                        e.priceAvailable ? _money(e.minPrice) : (e.displayPrice.isNotEmpty ? e.displayPrice : 'Rate on visit'.tr),
+                                        isDarkMode,
+                                      ),
+                                    ),
+                                    if (visitAmount > 0)
+                                      _priceRow('Visiting Charge'.tr, _money(visitAmount), isDarkMode)
+                                    else if (visitLabel.isNotEmpty)
+                                      _priceRow('Visiting Charge'.tr, visitLabel, isDarkMode),
+                                    if (materialAmount > 0)
+                                      _priceRow('Material Cost'.tr, _money(materialAmount), isDarkMode),
+                                    if (isUpi && taxBreakdown.isNotEmpty) ...[
+                                      const Divider(height: 16),
+                                      ...taxBreakdown.map((t) => _priceRow(
+                                            t['label'] as String,
+                                            '+${_money(t['amount'] as double)}',
+                                            isDarkMode,
+                                            color: AppThemeData.primary200,
+                                          )),
+                                    ],
+                                    const Divider(height: 20),
+                                    _priceRow(
+                                      'Total Amount'.tr,
+                                      finalPayableTotal > 0 ? _money(finalPayableTotal) : booking.displayPayableLabel,
+                                      isDarkMode,
+                                      bold: true,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                              _card(
+                                isDarkMode,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Select Payment Method'.tr, style: TextStyle(fontFamily: AppThemeData.semiBold, fontSize: 14)),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${'Wallet balance'.tr}: ${_money(_walletBalance)}',
+                                      style: TextStyle(fontSize: 12, color: isDarkMode ? AppThemeData.grey500Dark : AppThemeData.grey500),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    RadioListTile<String>(
+                                      value: 'wallet',
+                                      groupValue: _paymentMethod,
+                                      activeColor: AppThemeData.primary200,
+                                      title: Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text('Wallet Balance (Zero Tax)'.tr),
+                                          ),
+                                          if (_walletBalance < baseTotal && baseTotal > 0)
+                                            InkWell(
+                                              borderRadius: BorderRadius.circular(20),
+                                              onTap: () async {
+                                                await Get.to(() => WalletScreen());
+                                                await _load();
+                                              },
+                                              child: Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                                decoration: BoxDecoration(
+                                                  color: AppThemeData.primary200.withValues(alpha: 0.12),
+                                                  borderRadius: BorderRadius.circular(16),
+                                                  border: Border.all(color: AppThemeData.primary200.withValues(alpha: 0.3)),
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    Icon(Icons.add_rounded, size: 16, color: AppThemeData.primary200),
+                                                    const SizedBox(width: 4),
+                                                    Text('Add Money'.tr, style: TextStyle(fontSize: 12, fontFamily: AppThemeData.bold, color: AppThemeData.primary200)),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                      subtitle: _walletBalance < baseTotal && baseTotal > 0
+                                          ? Text('Insufficient balance'.tr, style: TextStyle(fontSize: 11, color: Colors.orange.shade700))
+                                          : Text('Pay ${_money(baseTotal)} directly from wallet (tax-exempt)'.tr,
+                                              style: TextStyle(fontSize: 11, color: isDarkMode ? AppThemeData.grey500Dark : AppThemeData.grey500)),
+                                      onChanged: booking.isPaid ? null : (v) => setState(() => _paymentMethod = v ?? 'wallet'),
+                                    ),
+                                    RadioListTile<String>(
+                                      value: 'upi',
+                                      groupValue: _paymentMethod,
+                                      activeColor: AppThemeData.primary200,
+                                      title: Text('UPI / Online Payment'.tr),
+                                      subtitle: Text(
+                                        totalTaxAmount > 0
+                                            ? 'Pay ${_money(finalPayableTotal)} (Includes ${_money(totalTaxAmount)} taxes/fees)'.tr
+                                            : 'Pay via Razorpay UPI'.tr,
+                                        style: TextStyle(fontSize: 11, color: isDarkMode ? AppThemeData.grey500Dark : AppThemeData.grey500),
+                                      ),
+                                      onChanged: booking.isPaid ? null : (v) => setState(() => _paymentMethod = v ?? 'upi'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                    color: isDarkMode ? AppThemeData.grey100Dark : Colors.white,
-                    child: SafeArea(
-                      top: false,
-                      child: ButtonThem.buildButton(
-                        context,
-                        title: booking.isPaid
-                            ? 'Already Paid'.tr
-                            : (_paying ? 'Processing...'.tr : '${'Pay'.tr} ${total > 0 ? _money(total) : booking.displayPayableLabel}'),
-                        btnColor: AppThemeData.primary200,
-                        radius: 12,
-                        onPress: (_paying || booking.isPaid || total <= 0) ? () {} : _pay,
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                      color: isDarkMode ? AppThemeData.grey100Dark : Colors.white,
+                      child: SafeArea(
+                        top: false,
+                        child: ButtonThem.buildButton(
+                          context,
+                          title: booking.isPaid
+                              ? 'Already Paid'.tr
+                              : (_paying ? 'Processing...'.tr : '${'Pay'.tr} ${finalPayableTotal > 0 ? _money(finalPayableTotal) : booking.displayPayableLabel}'),
+                          btnColor: AppThemeData.primary200,
+                          radius: 12,
+                          onPress: (_paying || booking.isPaid || finalPayableTotal <= 0) ? () {} : _pay,
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-      ),
+                  ],
+                ),
     );
   }
 
@@ -407,13 +404,20 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
     );
   }
 
-  Widget _priceRow(String label, String value, bool isDarkMode, {bool bold = false}) {
+  Widget _priceRow(String label, String value, bool isDarkMode, {bool bold = false, Color? color}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         children: [
           Expanded(child: Text(label, style: TextStyle(fontSize: 13, fontFamily: bold ? AppThemeData.semiBold : AppThemeData.regular))),
-          Text(value, style: TextStyle(fontSize: 13, fontFamily: bold ? AppThemeData.bold : AppThemeData.semiBold, color: bold ? AppThemeData.primary200 : null)),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 13,
+              fontFamily: bold ? AppThemeData.bold : AppThemeData.semiBold,
+              color: color ?? (bold ? AppThemeData.primary200 : (isDarkMode ? Colors.white : Colors.black87)),
+            ),
+          ),
         ],
       ),
     );

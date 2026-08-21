@@ -239,7 +239,8 @@ class ParcelPaymentController extends GetxController {
     //       : 0.0;
     // }
 
-    return (subTotalAmount.value - discountAmount.value) + tipAmount.value + taxAmount.value;
+    final effectiveTax = selectedRadioTile.value == "Wallet" ? 0.0 : taxAmount.value;
+    return (subTotalAmount.value - discountAmount.value) + tipAmount.value + effectiveTax;
   }
 
   UserModel? userModel;

@@ -50,6 +50,54 @@ class Constant {
   static bool symbolAtRight = false;
   static List<TaxModel> allTaxList = [];
   static List<TaxModel> taxList = [];
+
+  /// Returns the list of active taxes from taxList or allTaxList
+  static List<TaxModel> getActiveTaxes() {
+    final list = taxList.isNotEmpty ? taxList : allTaxList;
+    return list.where((t) => t.statut == 'yes' || t.statut == null).toList();
+  }
+
+  /// Calculates the tax amount for a single tax item
+  static double calculateTaxFor(TaxModel tax, double baseAmount) {
+    if (baseAmount <= 0) return 0.0;
+    final val = double.tryParse(tax.value?.toString() ?? '0') ?? 0.0;
+    if (val <= 0) return 0.0;
+    if (tax.type?.toLowerCase() == 'percentage' || tax.type == 'Percentage') {
+      return (baseAmount * val) / 100.0;
+    }
+    return val;
+  }
+
+  /// Calculates total taxes and platform fees combined
+  static double calculateTotalTaxes(double baseAmount) {
+    if (baseAmount <= 0) return 0.0;
+    double total = 0.0;
+    for (final tax in getActiveTaxes()) {
+      total += calculateTaxFor(tax, baseAmount);
+    }
+    return total;
+  }
+
+  /// Returns breakdown of taxes: [{'label': 'GST (18%)', 'amount': 18.0, 'model': tax}]
+  static List<Map<String, dynamic>> getTaxBreakdown(double baseAmount) {
+    final List<Map<String, dynamic>> breakdown = [];
+    if (baseAmount <= 0) return breakdown;
+    for (final tax in getActiveTaxes()) {
+      final amount = calculateTaxFor(tax, baseAmount);
+      if (amount > 0) {
+        final isPct = tax.type?.toLowerCase() == 'percentage' || tax.type == 'Percentage';
+        final label = isPct
+            ? '${tax.libelle ?? "Tax"} (${tax.value}%)'
+            : '${tax.libelle ?? "Fee"}';
+        breakdown.add({
+          'label': label,
+          'amount': amount,
+          'model': tax,
+        });
+      }
+    }
+    return breakdown;
+  }
   static String liveTrackingMapType = "google";
   static String selectedMapType = 'google'; // 'osm'
 
