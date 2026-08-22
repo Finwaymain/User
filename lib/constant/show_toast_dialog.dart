@@ -30,23 +30,61 @@ class ShowToastDialog {
       return;
     }
 
+    // Auto-detect error condition from message content or explicit flag
+    bool actualError = isError ||
+        lowerMsg.contains("error") ||
+        lowerMsg.contains("fail") ||
+        lowerMsg.contains("invalid") ||
+        lowerMsg.contains("incorrect") ||
+        lowerMsg.contains("not found") ||
+        lowerMsg.contains("not match") ||
+        lowerMsg.contains("denied") ||
+        lowerMsg.contains("unauthorized") ||
+        lowerMsg.contains("rejected") ||
+        lowerMsg.contains("insufficient") ||
+        lowerMsg.contains("declined") ||
+        lowerMsg.contains("expire") ||
+        lowerMsg.contains("cancel") ||
+        lowerMsg.contains("already exist") ||
+        lowerMsg.contains("wrong") ||
+        lowerMsg.contains("blocked") ||
+        lowerMsg.contains("unable") ||
+        lowerMsg.contains("timeout") ||
+        lowerMsg.contains("could not") ||
+        lowerMsg.contains("required") ||
+        lowerMsg.contains("please enter") ||
+        lowerMsg.contains("please select") ||
+        lowerMsg.contains("something went wrong") ||
+        lowerMsg.contains("something want wrong");
+
+    bool actualWarning = isWarning ||
+        (!actualError && (lowerMsg.contains("warning") || lowerMsg.contains("caution") || lowerMsg.contains("alert") || lowerMsg.contains("attention") || lowerMsg.contains("pending")));
+
     Get.snackbar(
-      isError
-          ? "Error"
-          : isWarning
-          ? "Warning"
-          : "Success",
-      msg,
+      actualError
+          ? "Error".tr
+          : actualWarning
+          ? "Warning".tr
+          : "Success".tr,
+      msg.tr,
       snackPosition: SnackPosition.TOP,
-      backgroundColor: isError
-          ? Colors.redAccent
-          : isWarning
-          ? Colors.amber
-          : Colors.green,
+      backgroundColor: actualError
+          ? Colors.redAccent.shade700
+          : actualWarning
+          ? Colors.amber.shade700
+          : Colors.green.shade600,
       colorText: Colors.white,
+      icon: Icon(
+        actualError
+            ? Icons.error_outline_rounded
+            : actualWarning
+            ? Icons.warning_amber_rounded
+            : Icons.check_circle_outline_rounded,
+        color: Colors.white,
+      ),
       margin: const EdgeInsets.all(12),
-      borderRadius: 8,
-      duration: const Duration(seconds: 2),
+      borderRadius: 10,
+      duration: const Duration(seconds: 3),
     );
   }
 
