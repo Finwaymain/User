@@ -234,57 +234,59 @@ class _WebViewScreenState extends State<WebViewScreen> {
                 const Center(
                   child: CircularProgressIndicator(),
                 ),
-          if (hasError)
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: Image.network(
-                      'https://images.unsplash.com/photo-1529927066849-79b791a69825?w=500&auto=format&fit=crop&q=60',
-                      width: 200,
-                      height: 200,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => const Icon(Icons.pets, size: 100, color: Colors.grey),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    'Try again later'.tr,
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontFamily: AppThemeData.bold,
-                      color: isDark ? Colors.white : AppThemeData.grey900,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'We couldn\'t load the form.'.tr,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontFamily: AppThemeData.regular,
-                      color: isDark ? AppThemeData.grey400Dark : AppThemeData.grey400,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppThemeData.primary200,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+              if (hasError)
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: Image.network(
+                          'https://images.unsplash.com/photo-1529927066849-79b791a69825?w=500&auto=format&fit=crop&q=60',
+                          width: 200,
+                          height: 200,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.pets, size: 100, color: Colors.grey),
+                        ),
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                    ),
-                    onPressed: () {
-                      controller.reload();
-                    },
-                    child: Text('Retry'.tr, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                  )
-                ],
-              ),
-            ),
-        ],
+                      const SizedBox(height: 24),
+                      Text(
+                        'Try again later'.tr,
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontFamily: AppThemeData.bold,
+                          color: isDark ? Colors.white : AppThemeData.grey900,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'We couldn\'t load the form.'.tr,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontFamily: AppThemeData.regular,
+                          color: isDark ? AppThemeData.grey400Dark : AppThemeData.grey400,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppThemeData.primary200,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                        ),
+                        onPressed: () {
+                          controller.reload();
+                        },
+                        child: Text('Retry'.tr, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                      )
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
