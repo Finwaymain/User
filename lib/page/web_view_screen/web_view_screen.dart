@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:get/get.dart';
 import 'package:finway/themes/constant_colors.dart';
@@ -191,34 +192,48 @@ class _WebViewScreenState extends State<WebViewScreen> {
     final themeChange = Provider.of<DarkThemeProvider>(context);
     final isDark = themeChange.getThem();
     
-    return Scaffold(
-      backgroundColor: isDark ? AppThemeData.surface50Dark : AppThemeData.surface50,
-      appBar: widget.showAppBar 
-          ? AppBar(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              leading: IconButton(
-                icon: Icon(Icons.arrow_back_ios_new_rounded, color: isDark ? Colors.white : AppThemeData.grey900, size: 20),
-                onPressed: () => Get.back(),
-              ),
-              title: Text(
-                widget.title,
-                style: TextStyle(
-                  color: isDark ? Colors.white : AppThemeData.grey900,
-                  fontFamily: AppThemeData.bold,
-                  fontSize: 18,
+    final SystemUiOverlayStyle overlayStyle = SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+      statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+      systemNavigationBarColor: isDark ? AppThemeData.surface50Dark : AppThemeData.surface50,
+      systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+    );
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: overlayStyle,
+      child: Scaffold(
+        backgroundColor: isDark ? AppThemeData.surface50Dark : AppThemeData.surface50,
+        appBar: widget.showAppBar 
+            ? AppBar(
+                systemOverlayStyle: overlayStyle,
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                leading: IconButton(
+                  icon: Icon(Icons.arrow_back_ios_new_rounded, color: isDark ? Colors.white : AppThemeData.grey900, size: 20),
+                  onPressed: () => Get.back(),
                 ),
-              ),
-              centerTitle: true,
-            )
-          : null,
-      body: Stack(
-        children: [
-          if (!hasError) WebViewWidget(controller: controller),
-          if (isLoading && !hasError)
-            const Center(
-              child: CircularProgressIndicator(),
-            ),
+                title: Text(
+                  widget.title,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : AppThemeData.grey900,
+                    fontFamily: AppThemeData.bold,
+                    fontSize: 18,
+                  ),
+                ),
+                centerTitle: true,
+              )
+            : null,
+        body: SafeArea(
+          top: !widget.showAppBar,
+          bottom: false,
+          child: Stack(
+            children: [
+              if (!hasError) WebViewWidget(controller: controller),
+              if (isLoading && !hasError)
+                const Center(
+                  child: CircularProgressIndicator(),
+                ),
           if (hasError)
             Center(
               child: Column(
