@@ -382,7 +382,7 @@ class ParcelServiceController extends GetxController {
           isDefaultAction: false,
           onPressed: () async {
             Navigator.pop(context);
-            await ImagePicker().pickMultiImage().then((value) {
+            await ImagePicker().pickMultiImage(imageQuality: 70, maxWidth: 1024, maxHeight: 1024).then((value) {
               for (var element in value) {
                 parcelImages.add(element);
               }
@@ -394,7 +394,7 @@ class ParcelServiceController extends GetxController {
           isDestructiveAction: false,
           onPressed: () async {
             Get.back();
-            final XFile? photo = await ImagePicker().pickImage(source: ImageSource.camera);
+            final XFile? photo = await ImagePicker().pickImage(source: ImageSource.camera, imageQuality: 70, maxWidth: 1024, maxHeight: 1024);
             if (photo != null) {
               parcelImages.add(photo);
             }
