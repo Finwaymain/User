@@ -113,20 +113,22 @@ class _ServiceConfirmBookingScreenState extends State<ServiceConfirmBookingScree
     final isToday = date.year == now.year && date.month == now.month && date.day == now.day;
     return _timeSlots.where((slot) {
       if (!isToday) return true;
-      final slotStart = DateTime(date.year, date.month, date.day, slot.startHour);
       final slotEnd = DateTime(date.year, date.month, date.day, slot.endHour);
-      if (!slotEnd.isAfter(now)) return false;
-      if (slotStart.isBefore(now)) return false;
-      return true;
+      return slotEnd.isAfter(now);
     }).toList();
   }
 
   void _refreshTimeSlots({bool resetSelection = false}) {
+    if (_dateOptions.isEmpty) {
+      _availableTimeSlots = _timeSlots;
+      _selectedTimeSlotId = _timeSlots.first.id;
+      return;
+    }
     final date = _dateOptions[_selectedDateIndex].date;
     final slots = _slotsForDate(date);
-    _availableTimeSlots = slots;
-    if (resetSelection || _selectedTimeSlotId == null || !slots.any((s) => s.id == _selectedTimeSlotId)) {
-      _selectedTimeSlotId = slots.isNotEmpty ? slots.first.id : null;
+    _availableTimeSlots = slots.isNotEmpty ? slots : _timeSlots;
+    if (resetSelection || _selectedTimeSlotId == null || !_availableTimeSlots.any((s) => s.id == _selectedTimeSlotId)) {
+      _selectedTimeSlotId = _availableTimeSlots.first.id;
     }
   }
 
@@ -180,62 +182,62 @@ class _ServiceConfirmBookingScreenState extends State<ServiceConfirmBookingScree
   }
 
   List<_DateOption> _buildDateOptions() {
-  final now = DateTime.now();
-  final monthNames = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-  ];
+    final now = DateTime.now();
+    final monthNames = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
 
-  final List<_DateOption> validOptions = [];
+    final List<_DateOption> validOptions = [];
 
-  // Check next 7 days and only show dates that have available slots.
-  for (int i = 0; validOptions.length < 4 && i < 7; i++) {
-    final date = DateTime(
-      now.year,
-      now.month,
-      now.day + i,
-    );
+    // Check next 10 days and add dates with available slots
+    for (int i = 0; validOptions.length < 4 && i < 10; i++) {
+      final date = DateTime(
+        now.year,
+        now.month,
+        now.day + i,
+      );
 
-    // Get available slots for this date.
-    final slots = _slotsForDate(date);
+      final slots = _slotsForDate(date);
+      if (slots.isEmpty) continue;
 
-    // If this date has no available slots, don't show it.
-    if (slots.isEmpty) continue;
+      final isToday = i == 0;
+      final tomorrow = DateTime(now.year, now.month, now.day + 1);
+      final isTomorrow = date.year == tomorrow.year &&
+          date.month == tomorrow.month &&
+          date.day == tomorrow.day;
 
-    final isToday = i == 0;
+      String topLabel;
+      if (isToday) {
+        topLabel = 'Today';
+      } else if (isTomorrow) {
+        topLabel = 'Tomorrow';
+      } else {
+        topLabel = '${date.day} ${monthNames[date.month - 1]}';
+      }
 
-    final tomorrow = DateTime(
-      now.year,
-      now.month,
-      now.day + 1,
-    );
-
-    final isTomorrow =
-        date.year == tomorrow.year &&
-        date.month == tomorrow.month &&
-        date.day == tomorrow.day;
-
-    String topLabel;
-
-    if (isToday) {
-      topLabel = 'Today';
-    } else if (isTomorrow) {
-      topLabel = 'Tomorrow';
-    } else {
-      topLabel = '${date.day} ${monthNames[date.month - 1]}';
+      validOptions.add(
+        _DateOption(
+          date: date,
+          topLabel: topLabel,
+          bottomLabel: '${date.day} ${monthNames[date.month - 1]}',
+        ),
+      );
     }
 
-    validOptions.add(
-      _DateOption(
-        date: date,
-        topLabel: topLabel,
-        bottomLabel: '${date.day} ${monthNames[date.month - 1]}',
-      ),
-    );
-  }
+    if (validOptions.isEmpty) {
+      final tomorrow = DateTime(now.year, now.month, now.day + 1);
+      validOptions.add(
+        _DateOption(
+          date: tomorrow,
+          topLabel: 'Tomorrow',
+          bottomLabel: '${tomorrow.day} ${monthNames[tomorrow.month - 1]}',
+        ),
+      );
+    }
 
-  return validOptions;
-}
+    return validOptions;
+  }
 
   bool get _hasSelectedSubServices => widget.draft.selectedServices.isNotEmpty;
 
