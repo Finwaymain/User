@@ -103,8 +103,33 @@ class _ServicePaymentSuccessScreenState extends State<ServicePaymentSuccessScree
     final serviceItems = booking?.bookedServiceItems ?? [];
     final visitingCharge = booking?.visitingChargeAmount ?? (breakdown?.visitingCharge ?? 0);
     final materialCost = booking?.materialCostAmount ?? (breakdown?.materialCost ?? 0);
-    final platformFee = breakdown?.platformFee ?? 0;
     final totalAmount = widget.amountPaid > 0 ? widget.amountPaid : (booking?.payableAmount ?? 0);
+
+    // Platform Fee calculation
+    double platformFee = breakdown?.platformFee ?? 0;
+    if (platformFee <= 0 && totalAmount > 0) {
+      platformFee = (totalAmount >= 200) ? 19.0 : (totalAmount >= 50 ? 9.0 : 0.0);
+    }
+
+    // Taxes & GST calculation
+    double nonTaxTotal = (totalAmount - platformFee - materialCost);
+    if (nonTaxTotal < 0) nonTaxTotal = 0;
+    double baseServiceCost = nonTaxTotal > 0 ? (nonTaxTotal / 1.18) : 0;
+    double calculatedGst = nonTaxTotal - baseServiceCost;
+
+    List<Map<String, dynamic>> activeTaxList = Constant.getTaxBreakdown(baseServiceCost > 0 ? baseServiceCost : totalAmount);
+    double totalTaxAmount = 0;
+    for (var t in activeTaxList) {
+      totalTaxAmount += (t['amount'] as double? ?? 0.0);
+    }
+    if (activeTaxList.isEmpty && calculatedGst > 0) {
+      double halfGst = (calculatedGst / 2);
+      activeTaxList = [
+        {'label': 'CGST (9%)'.tr, 'amount': halfGst},
+        {'label': 'SGST (9%)'.tr, 'amount': halfGst},
+      ];
+      totalTaxAmount = calculatedGst;
+    }
 
     return WillPopScope(
       onWillPop: () async => false,
@@ -210,72 +235,72 @@ class _ServicePaymentSuccessScreenState extends State<ServicePaymentSuccessScree
                             Padding(
                               padding: const EdgeInsets.all(18),
                               child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(10),
-                                    decoration: BoxDecoration(
-                                      color: categoryStyle.bg,
-                                      borderRadius: BorderRadius.circular(14),
-                                    ),
-                                    child: Icon(categoryStyle.icon, color: categoryStyle.color, size: 24),
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: categoryStyle.bg,
+                                    borderRadius: BorderRadius.circular(14),
                                   ),
-                                  const SizedBox(width: 14),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Text(
-                                              'Booking ID'.tr,
+                                  child: Icon(categoryStyle.icon, color: categoryStyle.color, size: 24),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            'Booking ID'.tr,
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontFamily: AppThemeData.medium,
+                                              color: isDarkMode ? AppThemeData.grey400Dark : AppThemeData.grey500,
+                                            ),
+                                          ),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                            decoration: BoxDecoration(
+                                              color: AppThemeData.success300.withValues(alpha: 0.12),
+                                              borderRadius: BorderRadius.circular(20),
+                                            ),
+                                            child: Text(
+                                              'PAID'.tr,
                                               style: TextStyle(
-                                                fontSize: 11,
-                                                fontFamily: AppThemeData.medium,
-                                                color: isDarkMode ? AppThemeData.grey400Dark : AppThemeData.grey500,
+                                                fontFamily: AppThemeData.bold,
+                                                fontSize: 10,
+                                                color: AppThemeData.success300,
+                                                letterSpacing: 0.5,
                                               ),
                                             ),
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                              decoration: BoxDecoration(
-                                                color: AppThemeData.success300.withValues(alpha: 0.12),
-                                                borderRadius: BorderRadius.circular(20),
-                                              ),
-                                              child: Text(
-                                                'PAID'.tr,
-                                                style: TextStyle(
-                                                  fontFamily: AppThemeData.bold,
-                                                  fontSize: 10,
-                                                  color: AppThemeData.success300,
-                                                  letterSpacing: 0.5,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        Text(
-                                          '#${widget.bookingId}',
-                                          style: TextStyle(
-                                            fontFamily: AppThemeData.bold,
-                                            fontSize: 15,
-                                            color: isDarkMode ? Colors.white : AppThemeData.grey900,
                                           ),
+                                        ],
+                                      ),
+                                      Text(
+                                        '#${widget.bookingId}',
+                                        style: TextStyle(
+                                          fontFamily: AppThemeData.bold,
+                                          fontSize: 15,
+                                          color: isDarkMode ? Colors.white : AppThemeData.grey900,
                                         ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          cleanServiceName(booking?.serviceName).tr,
-                                          style: TextStyle(
-                                            fontFamily: AppThemeData.semiBold,
-                                            fontSize: 14,
-                                            color: categoryStyle.color,
-                                          ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        cleanServiceName(booking?.serviceName).tr,
+                                        style: TextStyle(
+                                          fontFamily: AppThemeData.semiBold,
+                                          fontSize: 14,
+                                          color: categoryStyle.color,
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
+                            ),
                             ),
 
                             _buildDottedDivider(isDarkMode),
@@ -471,7 +496,7 @@ class _ServicePaymentSuccessScreenState extends State<ServicePaymentSuccessScree
                                   ),
                                   const SizedBox(height: 12),
 
-                                  // Service Line Items
+                                  // Service Line Items or Base Service Cost
                                   if (serviceItems.isNotEmpty)
                                     ...serviceItems.map((item) {
                                       final itemPrice = item.minPrice > 0 ? item.minPrice : item.price;
@@ -481,15 +506,21 @@ class _ServicePaymentSuccessScreenState extends State<ServicePaymentSuccessScree
                                         isDarkMode,
                                       );
                                     })
+                                  else if (baseServiceCost > 0)
+                                    _buildBreakdownRow(
+                                      cleanServiceName(booking?.serviceName).tr,
+                                      _money(baseServiceCost),
+                                      isDarkMode,
+                                    )
                                   else
                                     _buildBreakdownRow(
-                                      cleanServiceName(booking?.serviceName),
+                                      cleanServiceName(booking?.serviceName).tr,
                                       _money(totalAmount),
                                       isDarkMode,
                                     ),
 
                                   // Visiting Charge
-                                  if (visitingCharge > 0)
+                                  if (visitingCharge > 0 && serviceItems.isNotEmpty)
                                     _buildBreakdownRow(
                                       'Visiting & Inspection Charge'.tr,
                                       _money(visitingCharge),
@@ -514,8 +545,22 @@ class _ServicePaymentSuccessScreenState extends State<ServicePaymentSuccessScree
                                   // Platform Fee
                                   if (platformFee > 0)
                                     _buildBreakdownRow(
-                                      'Convenience & Platform Fee'.tr,
+                                      'Platform & Convenience Fee'.tr,
                                       _money(platformFee),
+                                      isDarkMode,
+                                    ),
+
+                                  // GST and Taxes Breakdown
+                                  if (activeTaxList.isNotEmpty)
+                                    ...activeTaxList.map((tax) => _buildBreakdownRow(
+                                          tax['label'].toString().tr,
+                                          _money(tax['amount'] as double? ?? 0.0),
+                                          isDarkMode,
+                                        ))
+                                  else if (totalTaxAmount > 0)
+                                    _buildBreakdownRow(
+                                      'Taxes & GST (18%)'.tr,
+                                      _money(totalTaxAmount),
                                       isDarkMode,
                                     ),
 
