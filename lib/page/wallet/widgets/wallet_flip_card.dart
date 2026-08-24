@@ -310,60 +310,58 @@ class WalletFlipCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  if (controller.hasCashback) ...[
-                    const Spacer(),
-                    // Dynamic Cashback Pill (only rendered when cashback is set)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF047857).withOpacity(0.70),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.25),
-                          width: 1.0,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(3),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF10B981).withOpacity(0.4),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.card_giftcard_rounded,
-                              color: Color(0xFFA7F3D0),
-                              size: 13,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                controller.cashbackText,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontFamily: AppThemeData.bold,
-                                ),
-                              ),
-                              Text(
-                                'on Every Transaction',
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.85),
-                                  fontSize: 8,
-                                  fontFamily: AppThemeData.regular,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                  const Spacer(),
+                  // Total Cashback Income Pill
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF047857).withOpacity(0.70),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.25),
+                        width: 1.0,
                       ),
                     ),
-                  ],
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(3),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF10B981).withOpacity(0.4),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.trending_up_rounded,
+                            color: Color(0xFFA7F3D0),
+                            size: 13,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              Constant().amountShow(amount: controller.earnAmount),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontFamily: AppThemeData.bold,
+                              ),
+                            ),
+                            Text(
+                              'Total Cashback Income',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.85),
+                                fontSize: 8,
+                                fontFamily: AppThemeData.regular,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
 

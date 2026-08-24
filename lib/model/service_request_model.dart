@@ -147,6 +147,22 @@ class ServiceRequestData {
 
   bool get isCompleted => _normalizedStatus == 'completed';
 
+  bool get canBeCancelled {
+    if (isCancelled || isRejected || isCompleted || isPaid) return false;
+    final s = _normalizedStatus;
+    if (s == 'in progress' ||
+        s == 'in_progress' ||
+        s == 'started' ||
+        s == 'on ride' ||
+        s == 'onride' ||
+        s == 'on_ride' ||
+        s == 'awaiting payment' ||
+        s == 'awaiting_payment') {
+      return false;
+    }
+    return true;
+  }
+
   bool get isPaid {
     final p = (paymentStatus ?? '').toLowerCase();
     return p == 'paid' || p == 'paid_cash' || p == 'paid_wallet' || p == 'paid_upi' || p == 'yes';
