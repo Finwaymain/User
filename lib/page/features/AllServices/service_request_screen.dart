@@ -72,6 +72,8 @@ class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
   }
 
   Future<void> _submit() async {
+    FocusManager.instance.primaryFocus?.unfocus();
+
     if (Preferences.getInt(Preferences.userId) == 0) {
       ShowToastDialog.showToast("Please login to book a service".tr);
       return;
@@ -131,6 +133,7 @@ class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
         ),
       ),
       body: SingleChildScrollView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

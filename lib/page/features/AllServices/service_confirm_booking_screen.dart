@@ -354,11 +354,27 @@ class _ServiceConfirmBookingScreenState extends State<ServiceConfirmBookingScree
   }
 
   Future<void> _confirmBooking(Color btnColor) async {
-    if (_estimate == null) return;
-    if (_selectedTimeSlotId == null) {
-      Get.snackbar('Time Required'.tr, 'Please select an available time slot.'.tr);
-      return;
+    if (_booking) return;
+    FocusManager.instance.primaryFocus?.unfocus();
+
+    if (_estimate == null) {
+      setState(() => _loading = true);
+      await _loadEstimate();
+      if (_estimate == null) {
+        Get.snackbar('Please Wait'.tr, 'Calculating estimate. Please tap again.'.tr, snackPosition: SnackPosition.BOTTOM);
+        return;
+      }
     }
+
+    if (_selectedTimeSlotId == null) {
+      if (_availableTimeSlots.isNotEmpty) {
+        _selectedTimeSlotId = _availableTimeSlots.first.id;
+      } else {
+        Get.snackbar('Time Required'.tr, 'Please select an available time slot.'.tr, snackPosition: SnackPosition.BOTTOM);
+        return;
+      }
+    }
+
     setState(() => _booking = true);
 
     final note = _orderNoteController.text.trim();
@@ -366,26 +382,33 @@ class _ServiceConfirmBookingScreenState extends State<ServiceConfirmBookingScree
     if (note.isNotEmpty) description = '$description\n[Order Note] $note';
     if (_veryUrgent) description = '[VERY URGENT]\n$description';
 
-    final bookingId = await _controller.bookService({
-      'service_name': widget.draft.serviceName,
-      'address_type': widget.draft.addressType,
-      'service_address': _address,
-      'lat': _lat,
-      'lng': _lng,
-      'date': _selectedDateStr,
-      'time': _selectedTimeLabel,
-      'description': description,
-      'booking_frequency': widget.draft.bookingFrequency,
-      'booking_mode': widget.draft.bookingMode,
-      'amount': _estimate!.totalMin > 0 ? _estimate!.totalMin : _estimate!.payableAmountFor(includeServicePrices: true),
-      'price_breakdown': _estimate!.toBreakdownJson(),
-    });
+    try {
+      final bookingId = await _controller.bookService({
+        'service_name': widget.draft.serviceName,
+        'address_type': widget.draft.addressType,
+        'service_address': _address,
+        'lat': _lat,
+        'lng': _lng,
+        'date': _selectedDateStr,
+        'time': _selectedTimeLabel,
+        'description': description,
+        'booking_frequency': widget.draft.bookingFrequency,
+        'booking_mode': widget.draft.bookingMode,
+        'amount': _estimate!.totalMin > 0 ? _estimate!.totalMin : _estimate!.payableAmountFor(includeServicePrices: true),
+        'price_breakdown': _estimate!.toBreakdownJson(),
+      });
 
-    if (!mounted) return;
-    setState(() => _booking = false);
+      if (!mounted) return;
+      setState(() => _booking = false);
 
-    if (bookingId != null) {
-      Get.off(() => ServiceFindingExpertScreen(bookingId: bookingId));
+      if (bookingId != null) {
+        Get.off(() => ServiceFindingExpertScreen(bookingId: bookingId));
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _booking = false);
+        Get.snackbar('Booking Error'.tr, e.toString(), snackPosition: SnackPosition.BOTTOM);
+      }
     }
   }
 
@@ -446,6 +469,7 @@ class _ServiceConfirmBookingScreenState extends State<ServiceConfirmBookingScree
               children: [
                 Expanded(
                   child: SingleChildScrollView(
+                    keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                     child: Column(
                       children: [
