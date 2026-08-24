@@ -180,9 +180,7 @@ class ChangePasswordScreen extends StatelessWidget {
                             myProfileController.confirmPasswordController.value
                                 .clear();
                             Get.back();
-                            ShowToastDialog.showToast("Password Updated!!");
-                          } else {
-                            ShowToastDialog.showToast('Something went to wrong');
+                            ShowToastDialog.showToast("MPIN Updated Successfully!");
                           }
                         });
                       }
