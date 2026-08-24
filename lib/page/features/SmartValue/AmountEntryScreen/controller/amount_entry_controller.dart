@@ -162,6 +162,22 @@ class AmountEntryController extends GetxController {
       return;
     }
 
+    final currentBalance = double.tryParse(Constant.getUserData().data?.amount?.toString() ?? "0") ?? 0.0;
+    if (currentBalance >= 0 && enteredAmount > currentBalance) {
+      Get.snackbar(
+        'Insufficient Balance',
+        'Your available balance is ₹${currentBalance.toStringAsFixed(2)}. Entered amount ₹${enteredAmount.toStringAsFixed(2)} exceeds your balance.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
+      Future.delayed(const Duration(seconds: 2), () {
+        Get.back();
+      });
+      return;
+    }
+
     isLoading.value = true;
 
     try {

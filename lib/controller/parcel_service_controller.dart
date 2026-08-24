@@ -83,11 +83,12 @@ class ParcelServiceController extends GetxController {
   RxString paymentMethodType = "Select Method".obs;
   RxString paymentMethodId = "".obs;
   List<XFile> parcelImages = [];
-  RxString walletAmount = '0'.obs;
+  RxString walletAmount = (Constant.getUserData().data?.amount?.toString() ?? '0').obs;
   @override
   void onInit() {
     getParcelCategory();
     paymentSettingModel.value = Constant.getPaymentSetting();
+    walletAmount.value = Constant.getUserData().data?.amount?.toString() ?? '0';
     Constant().getAmount().then((value) {
       if (value != null) {
         walletAmount.value = value;

@@ -200,6 +200,14 @@ class HomeController extends GetxController with GetSingleTickerProviderStateMix
   }
 
   setDestinationMarker(LatLng destination) {
+    if (departureLatLong.value.latitude != 0 &&
+        destination.latitude != 0 &&
+        (departureLatLong.value.latitude - destination.latitude).abs() < 0.0001 &&
+        (departureLatLong.value.longitude - destination.longitude).abs() < 0.0001) {
+      ShowToastDialog.showToast("Pickup and Drop location cannot be the same. Please select a different location.");
+      return;
+    }
+
     destinationLatLong.value = destination;
     if (destinationIcon != null) {
       markers['Destination'] = Marker(

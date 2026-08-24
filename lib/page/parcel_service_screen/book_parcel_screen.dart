@@ -585,7 +585,24 @@ class BookParcelScreen extends StatelessWidget {
                               ShowToastDialog.showToast("Select receiver date and time.");
                             } else if (controller.parcelImages.isEmpty) {
                               ShowToastDialog.showToast("Select parcel image");
+                            } else if (controller.senderLocation == null || controller.receiverLocation == null) {
+                              ShowToastDialog.showToast("Please select valid pickup and delivery locations.");
                             } else {
+                              final sLat = controller.senderLocation!.latitude;
+                              final sLng = controller.senderLocation!.longitude;
+                              final rLat = controller.receiverLocation!.latitude;
+                              final rLng = controller.receiverLocation!.longitude;
+                              final sAddr = controller.senderAddress.value.trim().toLowerCase();
+                              final rAddr = controller.receiverAddress.value.trim().toLowerCase();
+
+                              bool isSameLocation = (sLat != 0.0 && rLat != 0.0 && (sLat - rLat).abs() < 0.0001 && (sLng - rLng).abs() < 0.0001) ||
+                                                    (sAddr.isNotEmpty && rAddr.isNotEmpty && sAddr == rAddr);
+
+                              if (isSameLocation) {
+                                ShowToastDialog.showToast("Pickup and Drop location cannot be the same. Please select different locations.");
+                                return;
+                              }
+
                               if (Constant.selectedMapType == 'google') {
                                 controller.getDurationDistance(controller.senderLocation!, controller.receiverLocation!);
                               } else {

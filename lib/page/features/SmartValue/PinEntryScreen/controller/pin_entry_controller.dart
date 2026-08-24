@@ -190,10 +190,17 @@ class PinEntryController extends GetxController {
 
                 if (!isSuccess) {
                     clearPin();
+                    final errorMsg = responseBody['msg']?.toString() ?? 'Transfer failed. Please try again.';
                     ShowToastDialog.showToast(
-                        responseBody['msg']?.toString() ?? 'Transfer failed. Please try again.',
+                        errorMsg,
                         isError: true,
                     );
+                    final lower = errorMsg.toLowerCase();
+                    if (lower.contains('insufficient') || lower.contains('balance') || lower.contains('not enough') || lower.contains('low balance')) {
+                        Future.delayed(const Duration(seconds: 2), () {
+                            Get.back();
+                        });
+                    }
                     return;
                 }
 

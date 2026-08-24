@@ -36,7 +36,10 @@ class _ServiceFindingExpertScreenState extends State<ServiceFindingExpertScreen>
   late final AnimationController _pulseController;
   late final AnimationController _sweepController;
   Timer? _stepTimer;
+  Timer? _countdownTimer;
   int _activeStep = 0;
+  int _remainingSeconds = 60;
+  bool _searchTimedOut = false;
   bool _cancelling = false;
   bool _showUrgentBanner = false;
   bool _navigatedToExpert = false;
@@ -59,14 +62,7 @@ class _ServiceFindingExpertScreenState extends State<ServiceFindingExpertScreen>
     _pulseController = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat();
     _sweepController = AnimationController(vsync: this, duration: const Duration(seconds: 3))..repeat();
 
-    _stepTimer = Timer.periodic(const Duration(seconds: 3), (_) {
-      if (!mounted) return;
-      if (_activeStep < _steps.length - 1) {
-        setState(() => _activeStep++);
-      }
-    });
-
-    _controller.startPolling(widget.bookingId, onUpdate: _handleUpdate);
+    _startSearchCountdown();
 
     _bookingWorker = ever(_controller.booking, (ServiceRequestData? item) {
       if (item != null) _handleUpdate(item);
@@ -77,9 +73,44 @@ class _ServiceFindingExpertScreenState extends State<ServiceFindingExpertScreen>
     });
   }
 
+  void _startSearchCountdown() {
+    _stepTimer?.cancel();
+    _countdownTimer?.cancel();
+    setState(() {
+      _remainingSeconds = 60;
+      _searchTimedOut = false;
+      _activeStep = 0;
+    });
+
+    _stepTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (!mounted) return;
+      if (_activeStep < _steps.length - 1) {
+        setState(() => _activeStep++);
+      }
+    });
+
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) return;
+      if (_remainingSeconds > 0) {
+        setState(() => _remainingSeconds--);
+      } else {
+        _countdownTimer?.cancel();
+        _stepTimer?.cancel();
+        _controller.stopPolling();
+        setState(() => _searchTimedOut = true);
+      }
+    });
+
+    _controller.startPolling(widget.bookingId, onUpdate: _handleUpdate);
+  }
+
+  void _retrySearch() {
+    _startSearchCountdown();
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && mounted && !_navigatedToExpert && !_cancelling) {
+    if (state == AppLifecycleState.resumed && mounted && !_navigatedToExpert && !_cancelling && !_searchTimedOut) {
       _controller.refreshBooking(widget.bookingId).then((item) {
         if (item != null) _handleUpdate(item);
       });
@@ -89,6 +120,8 @@ class _ServiceFindingExpertScreenState extends State<ServiceFindingExpertScreen>
   void _goToExpertAssigned(ServiceRequestData item) {
     if (!mounted || _navigatedToExpert || _cancelling) return;
     _navigatedToExpert = true;
+    _countdownTimer?.cancel();
+    _stepTimer?.cancel();
     _controller.stopPolling();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -107,6 +140,8 @@ class _ServiceFindingExpertScreenState extends State<ServiceFindingExpertScreen>
 
     final status = (item.status ?? '').toLowerCase();
     if (status == 'cancelled' || status == 'canceled') {
+      _countdownTimer?.cancel();
+      _stepTimer?.cancel();
       _controller.stopPolling();
       Get.offAll(() => const MainDashboard());
       return;
@@ -115,6 +150,8 @@ class _ServiceFindingExpertScreenState extends State<ServiceFindingExpertScreen>
     if (item.shouldShowExpertAssigned) {
       _goToExpertAssigned(item);
     } else if (item.needsPayment) {
+      _countdownTimer?.cancel();
+      _stepTimer?.cancel();
       _controller.stopPolling();
       Get.off(() => ServiceCompletedPaymentScreen(bookingId: widget.bookingId));
     }
@@ -135,6 +172,8 @@ class _ServiceFindingExpertScreenState extends State<ServiceFindingExpertScreen>
     if (confirm != true || !mounted) return;
 
     setState(() => _cancelling = true);
+    _countdownTimer?.cancel();
+    _stepTimer?.cancel();
     _controller.stopPolling();
     final ok = await _controller.cancelBooking(bookingId: widget.bookingId);
     if (!mounted) return;
@@ -143,7 +182,7 @@ class _ServiceFindingExpertScreenState extends State<ServiceFindingExpertScreen>
       await ServiceHistoryController.refreshAll();
       Get.offAll(() => const MainDashboard());
     } else {
-      _controller.startPolling(widget.bookingId, onUpdate: _handleUpdate);
+      _startSearchCountdown();
     }
   }
 
@@ -181,70 +220,98 @@ class _ServiceFindingExpertScreenState extends State<ServiceFindingExpertScreen>
                 style: TextStyle(fontFamily: AppThemeData.bold, fontSize: 17, color: isDarkMode ? AppThemeData.grey900Dark : AppThemeData.grey900),
               ),
               Text(
-                'We are finding the best expert for you'.tr,
+                _searchTimedOut ? 'Search window ended'.tr : 'We are finding the best expert for you'.tr,
                 style: TextStyle(fontSize: 11, color: isDarkMode ? AppThemeData.grey500Dark : AppThemeData.grey500, fontFamily: AppThemeData.regular),
               ),
             ],
           ),
+          actions: [
+            if (!_searchTimedOut)
+              Padding(
+                padding: const EdgeInsets.only(right: 16.0),
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: accent.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '${_remainingSeconds}s',
+                      style: TextStyle(
+                        fontFamily: AppThemeData.bold,
+                        fontSize: 12,
+                        color: accent,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
         body: SafeArea(
-          child: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 12),
-                      _radarWidget(accent),
-                      const SizedBox(height: 24),
-                      Text(
-                        'Finding Service Expert...'.tr,
-                        style: TextStyle(fontFamily: AppThemeData.bold, fontSize: 22, color: accent),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        'Please wait while we connect you with the best available expert near you.'.tr,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 13, color: isDarkMode ? AppThemeData.grey500Dark : AppThemeData.grey500, height: 1.45),
-                      ),
-                      const SizedBox(height: 20),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: isDarkMode ? AppThemeData.grey100Dark : Colors.white,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
-                        ),
+          child: _searchTimedOut
+              ? _buildNoExpertState(context, isDarkMode, accent)
+              : Column(
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
                         child: Column(
-                          children: List.generate(_steps.length, (index) => _stepRow(isDarkMode, accent, index)),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: AppThemeData.primary50,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: accent.withValues(alpha: 0.2)),
-                        ),
-                        child: Row(
                           children: [
-                            Icon(Icons.bolt_rounded, color: Colors.amber.shade700, size: 26),
-                            const SizedBox(width: 12),
-                            Expanded(
+                            const SizedBox(height: 12),
+                            _radarWidget(accent),
+                            const SizedBox(height: 24),
+                            Text(
+                              'Finding Service Expert...'.tr,
+                              style: TextStyle(fontFamily: AppThemeData.bold, fontSize: 22, color: accent),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              'Please wait while we connect you with the best available expert near you.'.tr,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 13, color: isDarkMode ? AppThemeData.grey500Dark : AppThemeData.grey500, height: 1.45),
+                            ),
+                            const SizedBox(height: 20),
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: isDarkMode ? AppThemeData.grey100Dark : Colors.white,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+                              ),
                               child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: List.generate(_steps.length, (index) => _stepRow(isDarkMode, accent, index)),
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: AppThemeData.primary50,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: accent.withValues(alpha: 0.2)),
+                              ),
+                              child: Row(
                                 children: [
-                                  Text('Need it very urgent?'.tr, style: TextStyle(fontFamily: AppThemeData.semiBold, fontSize: 13, color: accent)),
-                                  Text(
-                                    _showUrgentBanner
-                                        ? 'Your urgent request is prioritized for faster matching.'.tr
-                                        : 'Enable Very Urgent option for faster service.'.tr,
-                                    style: TextStyle(fontSize: 11.5, color: isDarkMode ? AppThemeData.grey500Dark : AppThemeData.grey500),
+                                  Icon(Icons.bolt_rounded, color: Colors.amber.shade700, size: 26),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text('Need it very urgent?'.tr, style: TextStyle(fontFamily: AppThemeData.semiBold, fontSize: 13, color: accent)),
+                                        Text(
+                                          _showUrgentBanner
+                                              ? 'Your urgent request is prioritized for faster matching.'.tr
+                                              : 'Enable Very Urgent option for faster service.'.tr,
+                                          style: TextStyle(fontSize: 11.5, color: isDarkMode ? AppThemeData.grey500Dark : AppThemeData.grey500),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
@@ -252,24 +319,113 @@ class _ServiceFindingExpertScreenState extends State<ServiceFindingExpertScreen>
                           ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                      child: ButtonThem.buildBorderButton(
+                        context,
+                        title: _cancelling ? 'Cancelling...'.tr : 'Cancel Booking'.tr,
+                        btnColor: Colors.white,
+                        btnBorderColor: accent,
+                        txtColor: accent,
+                        onPress: _cancelling ? () {} : _cancelBooking,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                child: ButtonThem.buildBorderButton(
-                  context,
-                  title: _cancelling ? 'Cancelling...'.tr : 'Cancel Booking'.tr,
-                  btnColor: Colors.white,
-                  btnBorderColor: accent,
-                  txtColor: accent,
-                  onPress: _cancelling ? () {} : _cancelBooking,
-                ),
-              ),
-            ],
-          ),
         ),
+    );
+  }
+
+  Widget _buildNoExpertState(BuildContext context, bool isDarkMode, Color accent) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Spacer(),
+          Center(
+            child: Container(
+              width: 130,
+              height: 130,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.amber.withValues(alpha: 0.12),
+              ),
+              child: const Icon(
+                Icons.person_search_outlined,
+                size: 64,
+                color: Colors.amber,
+              ),
+            ),
+          ),
+          const SizedBox(height: 32),
+          Text(
+            "Experts are Busy".tr,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: AppThemeData.bold,
+              fontSize: 22,
+              color: isDarkMode ? Colors.white : AppThemeData.grey900,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            "All service professionals are currently busy with other orders. Would you like to search again?".tr,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: AppThemeData.regular,
+              fontSize: 13.5,
+              height: 1.45,
+              color: isDarkMode ? Colors.white70 : AppThemeData.grey500,
+            ),
+          ),
+          const Spacer(),
+          ElevatedButton(
+            onPressed: _retrySearch,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: accent,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 0,
+            ),
+            child: Text(
+              "Retry Search".tr,
+              style: TextStyle(
+                fontFamily: AppThemeData.semiBold,
+                fontSize: 15,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextButton(
+            onPressed: _cancelBooking,
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(
+                  color: isDarkMode ? AppThemeData.grey300Dark : AppThemeData.grey300,
+                  width: 1,
+                ),
+              ),
+            ),
+            child: Text(
+              "Cancel Request".tr,
+              style: TextStyle(
+                fontFamily: AppThemeData.semiBold,
+                fontSize: 14,
+                color: isDarkMode ? Colors.white70 : AppThemeData.grey800,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
     );
   }
 
