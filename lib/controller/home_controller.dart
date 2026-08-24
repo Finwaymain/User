@@ -179,6 +179,14 @@ class HomeController extends GetxController with GetSingleTickerProviderStateMix
 
   GoogleMapController? mapController;
   setDepartureMarker(LatLng departure) {
+    if (destinationLatLong.value.latitude != 0 &&
+        departure.latitude != 0 &&
+        (destinationLatLong.value.latitude - departure.latitude).abs() < 0.0001 &&
+        (destinationLatLong.value.longitude - departure.longitude).abs() < 0.0001) {
+      ShowToastDialog.showToast("Pickup and Drop location cannot be the same. Please select a different location.");
+      return;
+    }
+
     departureLatLong.value = departure;
 
     markers.remove("Departure");
@@ -246,6 +254,13 @@ class HomeController extends GetxController with GetSingleTickerProviderStateMix
   Rx<LatLng> departureLatLong = const LatLng(0.0, 0.0).obs;
   Rx<LatLng> destinationLatLong = const LatLng(0.0, 0.0).obs;
   getDirections() async {
+    if (departureLatLong.value.latitude != 0 &&
+        destinationLatLong.value.latitude != 0 &&
+        (departureLatLong.value.latitude - destinationLatLong.value.latitude).abs() < 0.0001 &&
+        (departureLatLong.value.longitude - destinationLatLong.value.longitude).abs() < 0.0001) {
+      ShowToastDialog.showToast("Pickup and Drop location cannot be the same. Please select a different location.");
+      return;
+    }
     List<PolylineWayPoint> wayPointList = [];
     for (var i = 0; i < multiStopList.length; i++) {
       wayPointList.add(PolylineWayPoint(location: multiStopList[i].editingController.text));
@@ -745,6 +760,24 @@ class HomeController extends GetxController with GetSingleTickerProviderStateMix
 
   Future<dynamic> bookRide(Map<String, dynamic> bodyParams) async {
     try {
+      final lat1 = double.tryParse(bodyParams['lat1']?.toString() ?? '') ?? 0.0;
+      final lng1 = double.tryParse(bodyParams['lng1']?.toString() ?? '') ?? 0.0;
+      final lat2 = double.tryParse(bodyParams['lat2']?.toString() ?? '') ?? 0.0;
+      final lng2 = double.tryParse(bodyParams['lng2']?.toString() ?? '') ?? 0.0;
+      final depAddr = bodyParams['depart_name']?.toString().trim().toLowerCase() ?? '';
+      final destAddr = bodyParams['destination_name']?.toString().trim().toLowerCase() ?? '';
+
+      bool isSame = (lat1 != 0.0 && lat2 != 0.0 && (lat1 - lat2).abs() < 0.0001 && (lng1 - lng2).abs() < 0.0001) ||
+                    (depAddr.isNotEmpty && destAddr.isNotEmpty && depAddr == destAddr);
+
+      if (isSame) {
+        ShowToastDialog.showToast("Pickup and drop location cannot be the same. Please select a different location.");
+        return {
+          'success': 'failed',
+          'error': 'Pickup and drop location cannot be the same.'
+        };
+      }
+
       ShowToastDialog.showLoader("Please wait");
       final response = await http.post(Uri.parse(API.bookRides), headers: API.header, body: jsonEncode(bodyParams));
       showLog("API :: URL :: ${API.bookRides}");

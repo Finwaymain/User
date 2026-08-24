@@ -272,6 +272,19 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
       final String addr = result.address.toString();
 
       if (isDrop) {
+        final depLat = homeCtrl.departureLatLong.value.latitude;
+        final depLng = homeCtrl.departureLatLong.value.longitude;
+        final depAddr = homeCtrl.departureController.text.trim().toLowerCase();
+        final chosenAddr = addr.trim().toLowerCase();
+
+        bool isSame = (depLat != 0.0 && lat != 0.0 && (depLat - lat).abs() < 0.0001 && (depLng - lng).abs() < 0.0001) ||
+                      (depAddr.isNotEmpty && chosenAddr.isNotEmpty && depAddr == chosenAddr);
+
+        if (isSame) {
+          ShowToastDialog.showToast("Pickup and drop location cannot be the same. Please select a different location.");
+          return;
+        }
+
         homeCtrl.destinationLatLong.value = LatLng(lat, lng);
         homeCtrl.destinationController.text = addr;
 
@@ -279,6 +292,19 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
         await DBHelper.insertSearch(addr, lat, lng);
         loadHistory();
       } else {
+        final destLat = homeCtrl.destinationLatLong.value.latitude;
+        final destLng = homeCtrl.destinationLatLong.value.longitude;
+        final destAddr = homeCtrl.destinationController.text.trim().toLowerCase();
+        final chosenAddr = addr.trim().toLowerCase();
+
+        bool isSame = (destLat != 0.0 && lat != 0.0 && (destLat - lat).abs() < 0.0001 && (destLng - lng).abs() < 0.0001) ||
+                      (destAddr.isNotEmpty && chosenAddr.isNotEmpty && destAddr == chosenAddr);
+
+        if (isSame) {
+          ShowToastDialog.showToast("Pickup and drop location cannot be the same. Please select a different location.");
+          return;
+        }
+
         homeCtrl.departureLatLong.value = LatLng(lat, lng);
         homeCtrl.departureController.text = addr;
       }
@@ -320,11 +346,37 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
       ShowToastDialog.closeLoader();
 
       if (pickingDrop) {
+        final depLat = homeCtrl.departureLatLong.value.latitude;
+        final depLng = homeCtrl.departureLatLong.value.longitude;
+        final depAddr = homeCtrl.departureController.text.trim().toLowerCase();
+        final chosenAddr = address.trim().toLowerCase();
+
+        bool isSame = (depLat != 0.0 && (depLat - mapCenter.latitude).abs() < 0.0001 && (depLng - mapCenter.longitude).abs() < 0.0001) ||
+                      (depAddr.isNotEmpty && chosenAddr.isNotEmpty && depAddr == chosenAddr);
+
+        if (isSame) {
+          ShowToastDialog.showToast("Pickup and drop location cannot be the same. Please select a different location.");
+          return;
+        }
+
         homeCtrl.destinationLatLong.value = mapCenter;
         homeCtrl.destinationController.text = address;
         await DBHelper.insertSearch(address, mapCenter.latitude, mapCenter.longitude);
         loadHistory();
       } else {
+        final destLat = homeCtrl.destinationLatLong.value.latitude;
+        final destLng = homeCtrl.destinationLatLong.value.longitude;
+        final destAddr = homeCtrl.destinationController.text.trim().toLowerCase();
+        final chosenAddr = address.trim().toLowerCase();
+
+        bool isSame = (destLat != 0.0 && (destLat - mapCenter.latitude).abs() < 0.0001 && (destLng - mapCenter.longitude).abs() < 0.0001) ||
+                      (destAddr.isNotEmpty && chosenAddr.isNotEmpty && destAddr == chosenAddr);
+
+        if (isSame) {
+          ShowToastDialog.showToast("Pickup and drop location cannot be the same. Please select a different location.");
+          return;
+        }
+
         homeCtrl.departureLatLong.value = mapCenter;
         homeCtrl.departureController.text = address;
       }
@@ -448,6 +500,21 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
     if (homeCtrl.departureLatLong.value.latitude == 0.0 ||
         homeCtrl.destinationLatLong.value.latitude == 0.0) {
       ShowToastDialog.showToast("Please set pickup and drop location");
+      return;
+    }
+
+    final depLat = homeCtrl.departureLatLong.value.latitude;
+    final depLng = homeCtrl.departureLatLong.value.longitude;
+    final destLat = homeCtrl.destinationLatLong.value.latitude;
+    final destLng = homeCtrl.destinationLatLong.value.longitude;
+    final depAddr = homeCtrl.departureController.text.trim().toLowerCase();
+    final destAddr = homeCtrl.destinationController.text.trim().toLowerCase();
+
+    bool isSame = (depLat != 0.0 && destLat != 0.0 && (depLat - destLat).abs() < 0.0001 && (depLng - destLng).abs() < 0.0001) ||
+                  (depAddr.isNotEmpty && destAddr.isNotEmpty && depAddr == destAddr);
+
+    if (isSame) {
+      ShowToastDialog.showToast("Pickup and drop location cannot be the same. Please select a different location.");
       return;
     }
 
