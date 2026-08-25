@@ -1,3 +1,4 @@
+import 'dart:convert';
 import '../constant/constant.dart';
 import 'Preferences.dart';
 
@@ -12,10 +13,23 @@ class OnboardingUrl {
 
   static String userId() {
     final fromPrefs = Preferences.getString(Preferences.userId);
-    if (fromPrefs.isNotEmpty) return fromPrefs;
+    if (fromPrefs.isNotEmpty && fromPrefs != "0") return fromPrefs;
     final intId = Preferences.getInt(Preferences.userId);
     if (intId != 0) return intId.toString();
     return Constant.getUserData().data?.id?.toString() ?? '';
+  }
+
+  static String phone() {
+    final fromUser = Constant.getUserData().data?.phone ?? '';
+    if (fromUser.isNotEmpty) return fromUser;
+    final userStr = Preferences.getString(Preferences.user);
+    if (userStr.isNotEmpty) {
+      try {
+        final map = jsonDecode(userStr);
+        return (map['phone'] ?? map['data']?['phone'] ?? '').toString();
+      } catch (_) {}
+    }
+    return '';
   }
 
   static String build(
@@ -25,6 +39,10 @@ class OnboardingUrl {
     final params = <String, String>{
       'accesstoken': accessToken(),
       'user_id': userId(),
+      'id_user': userId(),
+      'phone': phone(),
+      'user_type': 'customer',
+      'user_cat': 'customer',
       ...extra,
     };
 
