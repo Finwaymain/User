@@ -1,5 +1,5 @@
 import 'package:finway/page/web_view_screen/web_view_screen.dart';
-import 'package:finway/utils/Preferences.dart';
+import 'package:finway/utils/onboarding_url.dart';
 import 'package:flutter/material.dart';
 
 class ReferralHistoryScreen extends StatelessWidget {
@@ -7,9 +7,14 @@ class ReferralHistoryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final userId = Preferences.getInt(Preferences.userId);
-    final token = Preferences.getString(Preferences.accesstoken);
-    final url = 'https://api.fiinway.com/onboarding/referral?user_id=$userId&accesstoken=$token';
+    final url = OnboardingUrl.build(
+      '/onboarding/referral',
+      extra: {
+        'view': 'dashboard',
+        'user_type': 'customer',
+        'user_cat': 'customer',
+      },
+    );
 
     return WebViewScreen(
       url: url,
