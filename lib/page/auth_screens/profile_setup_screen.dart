@@ -1,6 +1,7 @@
 import 'package:finway/constant/show_toast_dialog.dart';
 import 'package:finway/controller/auth_otp_controller.dart';
 import 'package:finway/page/MainDashBoard/screen/main_dashboard.dart';
+import 'package:finway/page/terms_service/terms_of_service_screen.dart';
 import 'package:finway/themes/button_them.dart';
 import 'package:finway/themes/constant_colors.dart';
 import 'package:finway/utils/Preferences.dart';
@@ -21,6 +22,7 @@ class ProfileSetupScreen extends StatefulWidget {
 
 class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   bool _isSubmitting = false;
+  bool _agreeTerms = true;
 
   Future<void> _submitRegistration(BuildContext context, AuthOtpController controller) async {
     if (_isSubmitting || controller.isLoading.value) return;
@@ -35,6 +37,11 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
     if (first.isEmpty) {
       ShowToastDialog.showToast('Please enter your first name.'.tr);
+      return;
+    }
+
+    if (!_agreeTerms) {
+      ShowToastDialog.showToast('Please accept the Terms & Conditions to proceed.'.tr);
       return;
     }
 
@@ -192,7 +199,59 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 ),
               ),
 
-              const SizedBox(height: 48),
+              const SizedBox(height: 20),
+
+              // Terms & Conditions Checkbox Row
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: Checkbox(
+                      value: _agreeTerms,
+                      activeColor: ConstantColors.primary,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                      onChanged: (val) {
+                        setState(() {
+                          _agreeTerms = val ?? false;
+                        });
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        Get.to(() => const TermsOfServiceScreen());
+                      },
+                      child: Text.rich(
+                        TextSpan(
+                          text: 'I agree to the '.tr,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontFamily: AppThemeData.regular,
+                            color: subtitleColor,
+                          ),
+                          children: [
+                            TextSpan(
+                              text: 'Terms & Conditions'.tr,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontFamily: AppThemeData.semiBold,
+                                color: ConstantColors.primary,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 24),
 
               Obx(() => ButtonThem.buildButton(
                     context,
