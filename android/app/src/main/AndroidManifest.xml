@@ -41,7 +41,8 @@
         android:icon="@mipmap/launcher_icon"
         android:label="Fiinway"
         android:requestLegacyExternalStorage="true"
-        android:usesCleartextTraffic="true">
+        android:usesCleartextTraffic="true"
+        android:networkSecurityConfig="@xml/network_security_config">
 
 
         <activity
