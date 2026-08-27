@@ -117,6 +117,8 @@ class API {
   static const transferToWallet = "${baseUrl}transfer_to_wallet/smart-value";
   static const userSetMPin = "${baseUrl}user_changepasswordset/smart-value";
   static const withdrawWallet = "${baseUrl}withdrawWallet/smart-value";
+  static const addBankDetails = "${baseUrl}add-bank-details";
+  static const bankDetails = "${baseUrl}bank-details";
 
   // Marketplace API Endpoints
   static const getMarketplaceProducts = "${baseUrl}marketplace/products";

@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 import '../../../../../constant/constant.dart';
 import '../../../../../themes/constant_colors.dart';
 import '../../../../../themes/custom_base_widget.dart';
-import '../../AccountDetails/view/account_details.dart';
+import '../../../../add_bank_details/add_bank_account.dart';
 import '../controller/payout_controller.dart';
 
 class PayoutScreen extends StatelessWidget {
@@ -547,9 +547,13 @@ class PayoutScreen extends StatelessWidget {
                               const SizedBox(width: 8),
                               InkWell(
                                 onTap: () {
-                                  Get.to(() => AccountDetails())?.then((_) {
-                                    controller.getAccountDetails("${Constant.getUserData().data?.acNo}");
-                                  });
+                                  showModalBottomSheet(
+                                    isDismissible: true,
+                                    isScrollControlled: true,
+                                    context: context,
+                                    backgroundColor: isDark ? AppThemeData.grey50Dark : AppThemeData.grey50,
+                                    builder: (context) => const AddBankAccount(),
+                                  ).then((_) => controller.getAccountDetails("${Constant.getUserData().data?.acNo}"));
                                 },
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
