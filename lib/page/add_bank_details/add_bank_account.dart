@@ -99,7 +99,6 @@ class AddBankAccount extends StatelessWidget {
                             child: Column(
                               children: [
                                 TextFieldWidget(
-                                  isBorderEnable: false,
                                   prefix: IconButton(
                                     onPressed: () {},
                                     icon: SvgPicture.asset(
@@ -128,7 +127,6 @@ class AddBankAccount extends StatelessWidget {
                                 ),
                                 dividerCust(isDarkMode: themeChange.getThem()),
                                 TextFieldWidget(
-                                  isBorderEnable: false,
                                   prefix: IconButton(
                                     onPressed: () {},
                                     icon: SvgPicture.asset(
@@ -155,7 +153,6 @@ class AddBankAccount extends StatelessWidget {
                                 ),
                                 dividerCust(isDarkMode: themeChange.getThem()),
                                 TextFieldWidget(
-                                  isBorderEnable: false,
                                   prefix: IconButton(
                                     onPressed: () {},
                                     icon: SvgPicture.asset(
@@ -184,7 +181,6 @@ class AddBankAccount extends StatelessWidget {
                                 ),
                                 dividerCust(isDarkMode: themeChange.getThem()),
                                 TextFieldWidget(
-                                  isBorderEnable: false,
                                   prefix: IconButton(
                                     onPressed: () {},
                                     icon: SvgPicture.asset(
@@ -216,7 +212,6 @@ class AddBankAccount extends StatelessWidget {
                                 ),
                                 dividerCust(isDarkMode: themeChange.getThem()),
                                 TextFieldWidget(
-                                  isBorderEnable: false,
                                   prefix: IconButton(
                                     onPressed: () {},
                                     icon: SvgPicture.asset(
@@ -245,7 +240,6 @@ class AddBankAccount extends StatelessWidget {
                                 ),
                                 dividerCust(isDarkMode: themeChange.getThem()),
                                 TextFieldWidget(
-                                  isBorderEnable: false,
                                   prefix: IconButton(
                                     onPressed: () {},
                                     icon: SvgPicture.asset(
