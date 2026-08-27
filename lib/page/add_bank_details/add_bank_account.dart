@@ -29,10 +29,17 @@ class AddBankAccount extends StatelessWidget {
     final themeChange = Provider.of<DarkThemeProvider>(context);
     return GetX<BankDetailsController>(
         init: BankDetailsController(),
-        builder: (controller) {
-          return Padding(
-            padding: MediaQuery.of(context).viewInsets,
-            child: SingleChildScrollView(
+          return Container(
+            decoration: BoxDecoration(
+              color: themeChange.getThem() ? AppThemeData.grey50Dark : AppThemeData.grey50,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
+            child: Padding(
+              padding: MediaQuery.of(context).viewInsets,
+              child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -300,7 +307,6 @@ class AddBankAccount extends StatelessWidget {
                       ],
                     ),
                   )
-                ],
               ),
             ),
           );

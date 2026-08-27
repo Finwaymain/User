@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
+import 'package:provider/provider.dart';
 import '../../../../../constant/constant.dart';
 import '../../../../../themes/constant_colors.dart';
 import '../../../../../themes/custom_base_widget.dart';
+import '../../../../../utils/dark_theme_provider.dart';
 import '../../../../add_bank_details/add_bank_account.dart';
 import '../controller/payout_controller.dart';
 
@@ -14,7 +16,7 @@ class PayoutScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PayoutController controller = Get.put(PayoutController());
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isDark = Provider.of<DarkThemeProvider>(context).getThem();
     final primaryColor = AppThemeData.primary200;
 
     return CustomBaseWidget(
