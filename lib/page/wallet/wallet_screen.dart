@@ -114,12 +114,14 @@ class WalletScreen extends StatelessWidget {
                 } else {
                   addToWalletAmount(context, themeChange.getThem());
                 }
+              } else if (action == 'withdraw' || action == 'payout') {
+                Get.to(() => PayoutScreen());
+              } else if (action == 'bank' || action == 'account_details') {
+                Get.to(() => AccountDetails());
               } else if (action == 'transfer' || action == 'scan') {
                 Get.to(() => ScannerAndTransferScreen());
               } else if (action == 'my_qr') {
                 Get.to(() => MyQRScreen());
-              } else if (action == 'account_details') {
-                Get.to(() => AccountDetails());
               }
             },
           ),
