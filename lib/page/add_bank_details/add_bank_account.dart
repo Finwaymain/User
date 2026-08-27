@@ -29,6 +29,7 @@ class AddBankAccount extends StatelessWidget {
     final themeChange = Provider.of<DarkThemeProvider>(context);
     return GetX<BankDetailsController>(
         init: BankDetailsController(),
+        builder: (controller) {
           return Container(
             decoration: BoxDecoration(
               color: themeChange.getThem() ? AppThemeData.grey50Dark : AppThemeData.grey50,
@@ -307,6 +308,7 @@ class AddBankAccount extends StatelessWidget {
                       ],
                     ),
                   )
+                ],
               ),
             ),
           );
