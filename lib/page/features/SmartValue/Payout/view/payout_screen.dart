@@ -547,8 +547,8 @@ class PayoutScreen extends StatelessWidget {
                               const SizedBox(width: 8),
                               InkWell(
                                 onTap: () {
-                                  Get.to(() => const AccountDetails())?.then((_) {
-                                    controller.getAccountDetails("${Constant.getUserData().userData?.acNo}");
+                                  Get.to(() => AccountDetails())?.then((_) {
+                                    controller.getAccountDetails("${Constant.getUserData().data?.acNo}");
                                   });
                                 },
                                 child: Container(
