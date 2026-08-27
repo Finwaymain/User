@@ -116,8 +116,6 @@ class WalletScreen extends StatelessWidget {
                 }
               } else if (action == 'transfer' || action == 'scan') {
                 Get.to(() => ScannerAndTransferScreen());
-              } else if (action == 'payout') {
-                Get.to(() => PayoutScreen());
               } else if (action == 'my_qr') {
                 Get.to(() => MyQRScreen());
               } else if (action == 'account_details') {
