@@ -1,5 +1,3 @@
-// ignore_for_file: file_names
-
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Preferences {
@@ -15,23 +13,31 @@ class Preferences {
   static const themeColor = "themeColor";
   static const websiteColor = "websiteColor";
 
-  static late SharedPreferences pref;
+  static SharedPreferences? _pref;
 
-  static initPref() async {
-    pref = await SharedPreferences.getInstance();
+  static Future<void> initPref() async {
+    try {
+      _pref = await SharedPreferences.getInstance();
+    } catch (_) {}
   }
 
   static bool getBoolean(String key) {
-    return pref.getBool(key) ?? false;
+    if (_pref == null) return false;
+    try {
+      return _pref!.getBool(key) ?? false;
+    } catch (_) {
+      return false;
+    }
   }
 
   static Future<void> setBoolean(String key, bool value) async {
-    await pref.setBool(key, value);
+    if (_pref != null) await _pref!.setBool(key, value);
   }
 
   static String getString(String key) {
+    if (_pref == null) return "";
     try {
-      final val = pref.get(key);
+      final val = _pref!.get(key);
       if (val == null) return "";
       return val.toString();
     } catch (_) {
@@ -40,12 +46,13 @@ class Preferences {
   }
 
   static Future<void> setString(String key, String value) async {
-    await pref.setString(key, value);
+    if (_pref != null) await _pref!.setString(key, value);
   }
 
   static int getInt(String key) {
+    if (_pref == null) return 0;
     try {
-      final val = pref.get(key);
+      final val = _pref!.get(key);
       if (val == null) return 0;
       if (val is int) return val;
       return int.tryParse(val.toString()) ?? 0;
@@ -55,14 +62,14 @@ class Preferences {
   }
 
   static Future<void> setInt(String key, int value) async {
-    await pref.setInt(key, value);
+    if (_pref != null) await _pref!.setInt(key, value);
   }
 
   static Future<void> clearSharPreference() async {
-    await pref.clear();
+    if (_pref != null) await _pref!.clear();
   }
 
   static Future<void> clearKeyData(String key) async {
-    await pref.remove(key);
+    if (_pref != null) await _pref!.remove(key);
   }
 }
