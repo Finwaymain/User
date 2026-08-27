@@ -553,7 +553,7 @@ class PayoutScreen extends StatelessWidget {
                                     isDismissible: true,
                                     isScrollControlled: true,
                                     context: context,
-                                    backgroundColor: isDark ? AppThemeData.grey50Dark : AppThemeData.grey50,
+                                    backgroundColor: isDark ? AppThemeData.surface50Dark : AppThemeData.surface50,
                                     builder: (context) => const AddBankAccount(),
                                   ).then((_) => controller.getAccountDetails("${Constant.getUserData().data?.acNo}"));
                                 },

@@ -32,7 +32,7 @@ class AddBankAccount extends StatelessWidget {
         builder: (controller) {
           return Container(
             decoration: BoxDecoration(
-              color: themeChange.getThem() ? AppThemeData.grey50Dark : AppThemeData.grey50,
+              color: themeChange.getThem() ? AppThemeData.surface50Dark : AppThemeData.surface50,
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(20),
                 topRight: Radius.circular(20),
