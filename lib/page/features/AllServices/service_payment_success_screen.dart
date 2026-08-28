@@ -115,24 +115,19 @@ class _ServicePaymentSuccessScreenState extends State<ServicePaymentSuccessScree
       baseServiceCost = widget.amountPaid;
     }
 
-    // Platform Fee calculation
-    double platformFee = breakdown?.platformFee ?? 0;
-    if (platformFee <= 0 && baseServiceCost > 0) {
-      platformFee = (baseServiceCost >= 200) ? 19.0 : (baseServiceCost >= 50 ? 9.0 : 0.0);
-    }
-
-    // Taxes & GST calculation based on chosen payment method
+    // Dynamic Admin Taxes & Fees based on chosen payment method
+    final paymentMethod = widget.paymentMethod.isNotEmpty ? widget.paymentMethod : (booking?.paymentStatus ?? 'wallet');
     List<Map<String, dynamic>> activeTaxList = Constant.getTaxBreakdown(
       baseServiceCost + visitingCharge,
-      widget.paymentMethod.isNotEmpty ? widget.paymentMethod : (booking?.paymentStatus ?? 'wallet'),
+      paymentMethod,
     );
     double totalTaxAmount = 0;
     for (var t in activeTaxList) {
       totalTaxAmount += (t['amount'] as double? ?? 0.0);
     }
 
-    final double computedTotal = baseServiceCost + visitingCharge + materialCost + platformFee + totalTaxAmount;
-    final double totalAmount = widget.amountPaid >= computedTotal ? widget.amountPaid : computedTotal;
+    final double computedTotal = baseServiceCost + visitingCharge + materialCost + totalTaxAmount;
+    final double totalAmount = widget.amountPaid >= computedTotal && widget.amountPaid > 0 ? widget.amountPaid : computedTotal;
 
     return WillPopScope(
       onWillPop: () async => false,
@@ -542,14 +537,6 @@ class _ServicePaymentSuccessScreenState extends State<ServicePaymentSuccessScree
                                     _buildBreakdownRow(
                                       'Materials & Spare Parts'.tr,
                                       _money(materialCost),
-                                      isDarkMode,
-                                    ),
-
-                                  // Platform Fee
-                                  if (platformFee > 0)
-                                    _buildBreakdownRow(
-                                      'Platform & Convenience Fee'.tr,
-                                      _money(platformFee),
                                       isDarkMode,
                                     ),
 
