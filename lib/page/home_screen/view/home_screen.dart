@@ -618,9 +618,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                             ),
                             VerticalIconWithText(
                               icon: Icons.group_add_outlined,
-                              text: (Preferences.getString('user_aadhar_number') ?? '').isNotEmpty
-                                  ? 'Partner Dashboard'
-                                  : 'Join as a Partner',
+                              text: 'Partner Dashboard',
                               onTap: () {
                                 if (!Preferences.getBoolean(Preferences.isLogin)) {
                                   Get.to(() => const PhoneEntryScreen(), transition: Transition.rightToLeftWithFade);

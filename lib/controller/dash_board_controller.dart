@@ -132,11 +132,8 @@ class DashBoardController extends GetxController {
   //   ];
   // }
   getDrawerItems() {
-    final bool hasAadhar = (Preferences.getString('user_aadhar_number') ?? '').isNotEmpty;
-    final String partnerTitle = hasAadhar ? 'Partner Dashboard'.tr : 'Join as a Partner'.tr;
-    final String partnerDesc = hasAadhar 
-        ? 'Manage your partner team, view earnings and rewards'.tr 
-        : 'Submit Aadhaar to become a partner and earn rewards'.tr;
+    final String partnerTitle = 'Partner Dashboard'.tr;
+    final String partnerDesc = 'Manage your partner team, view earnings and rewards'.tr;
 
     drawerItems = [
       DrawerItem(
@@ -204,10 +201,7 @@ class DashBoardController extends GetxController {
     Get.back();
     if (index >= drawerItems.length) return;
     var item = drawerItems[index];
-    final bool hasAadhar = (Preferences.getString('user_aadhar_number') ?? '').isNotEmpty;
-    final String partnerTitle = hasAadhar ? 'Partner Dashboard'.tr : 'Join as a Partner'.tr;
-
-    if (item.title == 'Wallet'.tr || item.title == 'Smart Value'.tr || item.title == 'My Profile'.tr || item.title == 'Change Password'.tr || item.title == 'Join as a Partner'.tr || item.title == 'Partner Dashboard'.tr) {
+    if (item.title == 'Wallet'.tr || item.title == 'Smart Value'.tr || item.title == 'My Profile'.tr || item.title == 'Change Password'.tr || item.title == 'Partner Dashboard'.tr || item.title == 'Join as a Partner'.tr) {
       if (!isLogin) {
         Get.to(const PhoneEntryScreen());
         return;
@@ -219,7 +213,7 @@ class DashBoardController extends GetxController {
       Get.to(MyProfileScreen());
     } else if (item.title == 'Change Password'.tr) {
       Get.to(ChangePasswordScreen());
-    } else if (item.title == 'Join as a Partner'.tr || item.title == 'Partner Dashboard'.tr || item.title == partnerTitle) {
+    } else if (item.title == 'Partner Dashboard'.tr || item.title == 'Join as a Partner'.tr) {
       Get.to(const ReferralScreen());
     } else if (item.title == 'Terms & Conditions'.tr) {
       Get.to(const TermsOfServiceScreen());
