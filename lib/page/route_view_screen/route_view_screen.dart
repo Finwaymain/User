@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'dart:developer' as dev;
 import 'package:firebase_database/firebase_database.dart';
 import 'package:finway/constant/constant.dart';
@@ -69,6 +70,24 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
   /// Timestamp of the last getDirections() call — throttled to every 15 s.
   DateTime? _directionsLastFetched;
 
+  /// True once driver is ≤ 150 m from pickup — gates OTP panel visibility.
+  bool _driverArrivedAtPickup = false;
+
+  /// Returns the great-circle distance in metres between two lat/lng points.
+  double _haversineMeters(double lat1, double lng1, double lat2, double lng2) {
+    const double R = 6371000;
+    const double degToRad = 0.017453292519943295;
+    final double dLat = (lat2 - lat1) * degToRad;
+    final double dLng = (lng2 - lng1) * degToRad;
+    final double a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(lat1 * degToRad) *
+            math.cos(lat2 * degToRad) *
+            math.sin(dLng / 2) *
+            math.sin(dLng / 2);
+    final double c = 2 * math.atan2(math.sqrt(a.clamp(0.0, 1.0)), math.sqrt((1 - a).clamp(0.0, 1.0)));
+    return R * c;
+  }
+
   /// Linearly animates the driver marker from [start] to [end] over ~500 ms.
   void _animateDriverMarker(LatLng start, LatLng end, double rotation) {
     const int steps = 30;
@@ -105,10 +124,14 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
 
   @override
   void initState() {
-    getArgumentData();
-    setIcons();
-
     super.initState();
+    // ⚠️ setIcons() MUST complete before getArgumentData() starts Firebase
+    // listeners. _listenDriverLocation() creates a Marker with taxiIcon! (null
+    // check) immediately on first RTDB event — if icons haven't loaded yet it
+    // throws "Null check operator used on a null value" → blank map, no route.
+    setIcons().then((_) {
+      getArgumentData();
+    });
   }
 
   @override
@@ -138,6 +161,11 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
           final LatLng target = LatLng(dLat, dLng);
           final String markerId = rideData!.id.toString();
 
+          // Safety guard: taxiIcon must be loaded before creating markers.
+          // initState chains setIcons().then(getArgumentData) so this should
+          // always be non-null here, but guard defensively.
+          if (taxiIcon == null) return;
+
           // Ensure the marker exists before animating
           if (!_markers.containsKey(markerId) && mounted) {
             setState(() {
@@ -157,6 +185,21 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
           }
 
           departureLatLong = target;
+
+          // ─── OTP PROXIMITY DETECTION ───────────────────────────────────────
+          // Only reveal the OTP panel when the driver is ≤ 150 m from pickup,
+          // not immediately upon ride confirmation.
+          if (rideData!.statut == 'confirmed' && !_driverArrivedAtPickup) {
+            try {
+              final double pLat = double.parse(rideData!.latitudeDepart.toString());
+              final double pLng = double.parse(rideData!.longitudeDepart.toString());
+              final double dist = _haversineMeters(dLat, dLng, pLat, pLng);
+              if (dist <= 150 && mounted) {
+                setState(() { _driverArrivedAtPickup = true; });
+              }
+            } catch (_) {}
+          }
+          // ──────────────────────────────────────────────────────────────────
 
           // Throttle expensive Directions API redraw to once every 15 seconds
           final now = DateTime.now();
@@ -296,22 +339,11 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
     }
   }
 
-  setIcons() async {
-    BitmapDescriptor.fromAssetImage(const ImageConfiguration(size: Size(10, 10)), "assets/icons/pickup.png").then((value) {
-      departureIcon = value;
-    });
-
-    BitmapDescriptor.fromAssetImage(const ImageConfiguration(size: Size(10, 10)), "assets/icons/dropoff.png").then((value) {
-      destinationIcon = value;
-    });
-
-    BitmapDescriptor.fromAssetImage(const ImageConfiguration(size: Size(10, 10)), "assets/icons/ic_taxi.png").then((value) {
-      taxiIcon = value;
-    });
-
-    BitmapDescriptor.fromAssetImage(const ImageConfiguration(size: Size(10, 10)), "assets/icons/location.png").then((value) {
-      stopIcon = value;
-    });
+  Future<void> setIcons() async {
+    departureIcon = await BitmapDescriptor.fromAssetImage(const ImageConfiguration(size: Size(10, 10)), "assets/icons/pickup.png");
+    destinationIcon = await BitmapDescriptor.fromAssetImage(const ImageConfiguration(size: Size(10, 10)), "assets/icons/dropoff.png");
+    taxiIcon = await BitmapDescriptor.fromAssetImage(const ImageConfiguration(size: Size(10, 10)), "assets/icons/ic_taxi.png");
+    stopIcon = await BitmapDescriptor.fromAssetImage(const ImageConfiguration(size: Size(10, 10)), "assets/icons/location.png");
   }
 
   @override
@@ -425,10 +457,12 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
                                 ),
                               ),
                               const SizedBox(height: 2),
-                              Text(
+                               Text(
                                 rideData!.statut == "on ride"
                                     ? "Heading to your destination".tr
-                                    : "We're finding the best driver for you".tr,
+                                    : _driverArrivedAtPickup
+                                        ? "Captain has arrived at pickup point".tr
+                                        : "Captain is on the way to pickup".tr,
                                 style: TextStyle(
                                   fontFamily: AppThemeData.medium,
                                   fontSize: 12,
@@ -458,25 +492,43 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
                     ),
                     const Divider(height: 28, thickness: 1),
 
-                    // OTP Alert if active and confirmed
+                    // OTP Alert if active, confirmed and arrived (or fallback if OTP is present)
                     if (Constant.rideOtp.toString().toLowerCase() == 'yes'.toLowerCase() && rideData!.statut == 'confirmed' && rideData!.rideType != 'driver') ...[
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppThemeData.primary200.withValues(alpha: 0.08),
+                          color: _driverArrivedAtPickup
+                              ? const Color(0xFF10B981).withValues(alpha: 0.1)
+                              : AppThemeData.primary200.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppThemeData.primary200.withValues(alpha: 0.15)),
+                          border: Border.all(
+                            color: _driverArrivedAtPickup
+                                ? const Color(0xFF10B981).withValues(alpha: 0.3)
+                                : AppThemeData.primary200.withValues(alpha: 0.15),
+                          ),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              "Share this OTP to start the ride:".tr,
-                              style: TextStyle(
-                                fontFamily: AppThemeData.medium,
-                                fontSize: 13,
-                                color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
-                              ),
+                            Row(
+                              children: [
+                                Icon(
+                                  _driverArrivedAtPickup ? Icons.verified_user : Icons.pin,
+                                  color: _driverArrivedAtPickup ? const Color(0xFF10B981) : AppThemeData.primary200,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  _driverArrivedAtPickup
+                                      ? "Captain Arrived! Share OTP:".tr
+                                      : "Start OTP:".tr,
+                                  style: TextStyle(
+                                    fontFamily: AppThemeData.medium,
+                                    fontSize: 13,
+                                    color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
+                                  ),
+                                ),
+                              ],
                             ),
                             Text(
                               rideData!.otp.toString(),
@@ -484,7 +536,7 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
                                 fontFamily: AppThemeData.bold,
                                 fontSize: 16,
                                 letterSpacing: 1.5,
-                                color: AppThemeData.primary200,
+                                color: _driverArrivedAtPickup ? const Color(0xFF10B981) : AppThemeData.primary200,
                               ),
                             ),
                           ],
