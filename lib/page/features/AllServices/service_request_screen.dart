@@ -357,6 +357,11 @@ class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
       },
     ];
 
+    final titleColor = isDarkMode ? Colors.white : const Color(0xFF0F172A);
+    final descColor = isDarkMode ? const Color(0xFF94A3B8) : const Color(0xFF334155);
+    final circleBg = isDarkMode ? Colors.white.withValues(alpha: 0.12) : const Color(0xFFE2E8F0);
+    final circleTextColor = isDarkMode ? Colors.white : const Color(0xFF0F172A);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -369,8 +374,8 @@ class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDarkMode ? 0.2 : 0.03),
-            blurRadius: 8,
+            color: Colors.black.withValues(alpha: isDarkMode ? 0.2 : 0.04),
+            blurRadius: 10,
             offset: const Offset(0, 2),
           ),
         ],
@@ -393,8 +398,8 @@ class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
                 'Booking & Service Terms'.tr,
                 style: TextStyle(
                   fontFamily: AppThemeData.bold,
-                  fontSize: 14,
-                  color: isDarkMode ? Colors.white : AppThemeData.grey900,
+                  fontSize: 14.5,
+                  color: titleColor,
                 ),
               ),
             ],
@@ -408,42 +413,45 @@ class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    width: 20,
-                    height: 20,
+                    width: 22,
+                    height: 22,
                     margin: const EdgeInsets.only(top: 1),
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: isDarkMode ? Colors.white12 : const Color(0xFFF1F5F9),
+                      color: circleBg,
                       shape: BoxShape.circle,
                     ),
                     child: Text(
                       '${index + 1}',
                       style: TextStyle(
                         fontFamily: AppThemeData.bold,
-                        fontSize: 11,
-                        color: isDarkMode ? Colors.white70 : AppThemeData.grey800,
+                        fontSize: 11.5,
+                        color: circleTextColor,
                       ),
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: RichText(
-                      text: TextSpan(
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          height: 1.4,
-                          color: isDarkMode ? AppThemeData.grey400Dark : AppThemeData.grey700,
-                          fontFamily: AppThemeData.regular,
-                        ),
+                    child: Text.rich(
+                      TextSpan(
                         children: [
                           TextSpan(
                             text: '${item['title']} ',
                             style: TextStyle(
                               fontFamily: AppThemeData.bold,
-                              color: isDarkMode ? Colors.white : AppThemeData.grey900,
+                              fontSize: 12.5,
+                              color: titleColor,
                             ),
                           ),
-                          TextSpan(text: item['desc']),
+                          TextSpan(
+                            text: item['desc'],
+                            style: TextStyle(
+                              fontFamily: AppThemeData.regular,
+                              fontSize: 12.5,
+                              height: 1.4,
+                              color: descColor,
+                            ),
+                          ),
                         ],
                       ),
                     ),
