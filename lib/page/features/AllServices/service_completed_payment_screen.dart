@@ -96,7 +96,7 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
         await _walletController.createOrderRazorPay(amount: total.round(), isTopup: false);
     ShowToastDialog.closeLoader();
 
-    if (order == null || (order.id ?? '').isEmpty) {
+    if (order == null || order.id.isEmpty) {
       ShowToastDialog.showToast('Could not start UPI payment.'.tr);
       return;
     }
@@ -159,15 +159,18 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
       return;
     }
 
+    final totalTax = Constant.calculateTotalTaxes(baseTotal, _paymentMethod);
+    final totalWithTax = baseTotal + totalTax;
+
     if (_paymentMethod == 'wallet') {
-      if (_walletBalance < baseTotal) {
+      if (_walletBalance < totalWithTax) {
         ShowToastDialog.showToast('Insufficient wallet balance. Please add money to your wallet.'.tr);
         return;
       }
 
       final verifiedMpin = await showMpinVerificationBottomSheet(
         context,
-        amount: baseTotal,
+        amount: totalWithTax,
         title: 'Enter MPIN to Pay'.tr,
       );
 
@@ -181,14 +184,12 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
       setState(() => _paying = false);
 
       if (ok) {
-        _goToSuccess(baseTotal, 'wallet');
+        _goToSuccess(totalWithTax, 'wallet');
       }
       return;
     }
 
     if (_paymentMethod == 'upi') {
-      final totalTax = Constant.calculateTotalTaxes(baseTotal);
-      final totalWithTax = baseTotal + totalTax;
       await _payWithRazorpay(totalWithTax);
       return;
     }
@@ -199,7 +200,7 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
     setState(() => _paying = false);
 
     if (ok) {
-      _goToSuccess(baseTotal, _paymentMethod);
+      _goToSuccess(totalWithTax, _paymentMethod);
     }
   }
 
@@ -221,9 +222,8 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
     final isDarkMode = Provider.of<DarkThemeProvider>(context).getThem();
     final booking = _booking;
     final baseTotal = booking?.payableAmount ?? 0.0;
-    final isUpi = _paymentMethod == 'upi';
-    final taxBreakdown = isUpi ? Constant.getTaxBreakdown(baseTotal) : <Map<String, dynamic>>[];
-    final totalTaxAmount = isUpi ? Constant.calculateTotalTaxes(baseTotal) : 0.0;
+    final taxBreakdown = Constant.getTaxBreakdown(baseTotal, _paymentMethod);
+    final totalTaxAmount = Constant.calculateTotalTaxes(baseTotal, _paymentMethod);
     final finalPayableTotal = baseTotal + totalTaxAmount;
     final visitAmount = booking?.visitingChargeAmount ?? 0.0;
     final visitLabel = booking?.visitingChargeLabel ?? '';
@@ -298,7 +298,7 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
                                       _priceRow('Visiting Charge'.tr, visitLabel, isDarkMode),
                                     if (materialAmount > 0)
                                       _priceRow('Material Cost'.tr, _money(materialAmount), isDarkMode),
-                                    if (isUpi && taxBreakdown.isNotEmpty) ...[
+                                    if (taxBreakdown.isNotEmpty) ...[
                                       const Divider(height: 16),
                                       ...taxBreakdown.map((t) => _priceRow(
                                             t['label'] as String,
@@ -337,7 +337,7 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
                                       title: Row(
                                         children: [
                                           Expanded(
-                                            child: Text('Wallet Balance (Zero Tax)'.tr),
+                                            child: Text('Wallet Balance'.tr),
                                           ),
                                           if (_walletBalance < baseTotal && baseTotal > 0)
                                             InkWell(
@@ -365,10 +365,14 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
                                             ),
                                         ],
                                       ),
-                                      subtitle: _walletBalance < baseTotal && baseTotal > 0
+                                      subtitle: _walletBalance < (baseTotal + Constant.calculateTotalTaxes(baseTotal, 'wallet')) && baseTotal > 0
                                           ? Text('Insufficient balance'.tr, style: TextStyle(fontSize: 11, color: Colors.orange.shade700))
-                                          : Text('Pay ${_money(baseTotal)} directly from wallet (tax-exempt)'.tr,
-                                              style: TextStyle(fontSize: 11, color: isDarkMode ? AppThemeData.grey500Dark : AppThemeData.grey500)),
+                                          : Text(
+                                              Constant.calculateTotalTaxes(baseTotal, 'wallet') > 0
+                                                  ? 'Pay ${_money(baseTotal + Constant.calculateTotalTaxes(baseTotal, 'wallet'))} directly from wallet'
+                                                  : 'Pay ${_money(baseTotal)} directly from wallet (tax-exempt)'.tr,
+                                              style: TextStyle(fontSize: 11, color: isDarkMode ? AppThemeData.grey500Dark : AppThemeData.grey500),
+                                            ),
                                       onChanged: booking.isPaid ? null : (v) => setState(() => _paymentMethod = v ?? 'wallet'),
                                     ),
                                     RadioListTile<String>(
@@ -377,12 +381,25 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
                                       activeColor: AppThemeData.primary200,
                                       title: Text('UPI / Online Payment'.tr),
                                       subtitle: Text(
-                                        totalTaxAmount > 0
-                                            ? 'Pay ${_money(finalPayableTotal)} (Includes ${_money(totalTaxAmount)} taxes/fees)'.tr
+                                        Constant.calculateTotalTaxes(baseTotal, 'upi') > 0
+                                            ? 'Pay ${_money(baseTotal + Constant.calculateTotalTaxes(baseTotal, 'upi'))} (Includes ${_money(Constant.calculateTotalTaxes(baseTotal, 'upi'))} taxes/fees)'.tr
                                             : 'Pay via Razorpay UPI'.tr,
                                         style: TextStyle(fontSize: 11, color: isDarkMode ? AppThemeData.grey500Dark : AppThemeData.grey500),
                                       ),
                                       onChanged: booking.isPaid ? null : (v) => setState(() => _paymentMethod = v ?? 'upi'),
+                                    ),
+                                    RadioListTile<String>(
+                                      value: 'cash',
+                                      groupValue: _paymentMethod,
+                                      activeColor: AppThemeData.primary200,
+                                      title: Text('Pay Cash to Expert'.tr),
+                                      subtitle: Text(
+                                        Constant.calculateTotalTaxes(baseTotal, 'cash') > 0
+                                            ? 'Pay ${_money(baseTotal + Constant.calculateTotalTaxes(baseTotal, 'cash'))} in cash directly to expert'.tr
+                                            : 'Pay ${_money(baseTotal)} in cash directly to expert'.tr,
+                                        style: TextStyle(fontSize: 11, color: isDarkMode ? AppThemeData.grey500Dark : AppThemeData.grey500),
+                                      ),
+                                      onChanged: booking.isPaid ? null : (v) => setState(() => _paymentMethod = v ?? 'cash'),
                                     ),
                                   ],
                                 ),

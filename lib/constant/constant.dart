@@ -51,10 +51,14 @@ class Constant {
   static List<TaxModel> allTaxList = [];
   static List<TaxModel> taxList = [];
 
-  /// Returns the list of active taxes from taxList or allTaxList
-  static List<TaxModel> getActiveTaxes() {
+  /// Returns the list of active taxes from taxList or allTaxList, optionally filtered by payment method
+  static List<TaxModel> getActiveTaxes([String? paymentMethod]) {
     final list = taxList.isNotEmpty ? taxList : allTaxList;
-    return list.where((t) => t.statut == 'yes' || t.statut == null).toList();
+    return list.where((t) {
+      if (t.statut != null && t.statut != 'yes') return false;
+      if (paymentMethod == null || paymentMethod.isEmpty) return true;
+      return t.isApplicableFor(paymentMethod);
+    }).toList();
   }
 
   /// Calculates the tax amount for a single tax item
@@ -68,27 +72,27 @@ class Constant {
     return val;
   }
 
-  /// Calculates total taxes and platform fees combined
-  static double calculateTotalTaxes(double baseAmount) {
+  /// Calculates total taxes and platform fees combined, optionally for a specific payment method
+  static double calculateTotalTaxes(double baseAmount, [String? paymentMethod]) {
     if (baseAmount <= 0) return 0.0;
     double total = 0.0;
-    for (final tax in getActiveTaxes()) {
+    for (final tax in getActiveTaxes(paymentMethod)) {
       total += calculateTaxFor(tax, baseAmount);
     }
     return total;
   }
 
-  /// Returns breakdown of taxes: [{'label': 'GST (18%)', 'amount': 18.0, 'model': tax}]
-  static List<Map<String, dynamic>> getTaxBreakdown(double baseAmount) {
+  /// Returns breakdown of taxes: [{'label': 'GST (18%)', 'amount': 18.0, 'model': tax}], optionally filtered by payment method
+  static List<Map<String, dynamic>> getTaxBreakdown(double baseAmount, [String? paymentMethod]) {
     final List<Map<String, dynamic>> breakdown = [];
     if (baseAmount <= 0) return breakdown;
-    for (final tax in getActiveTaxes()) {
+    for (final tax in getActiveTaxes(paymentMethod)) {
       final amount = calculateTaxFor(tax, baseAmount);
       if (amount > 0) {
         final isPct = tax.type?.toLowerCase() == 'percentage' || tax.type == 'Percentage';
         final label = isPct
             ? '${tax.libelle ?? "Tax"} (${tax.value}%)'
-            : '${tax.libelle ?? "Fee"}';
+            : (tax.libelle ?? 'Fee');
         breakdown.add({
           'label': label,
           'amount': amount,

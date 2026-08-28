@@ -15,6 +15,8 @@ class ServiceRequestData {
   final String? createdAt;
   final int? driverId;
   final double? amount;
+  final double? taxAmount;
+  final List<dynamic>? tax;
   final String? paymentStatus;
   final String? otp;
   final ServiceDriverInfo? driver;
@@ -34,6 +36,8 @@ class ServiceRequestData {
     this.createdAt,
     this.driverId,
     this.amount,
+    this.taxAmount,
+    this.tax,
     this.paymentStatus,
     this.otp,
     this.driver,
@@ -83,6 +87,8 @@ class ServiceRequestData {
       createdAt: _parseString(json['created_at']),
       driverId: parsedDriverId,
       amount: double.tryParse(json['amount']?.toString() ?? ''),
+      taxAmount: double.tryParse(json['tax_amount']?.toString() ?? ''),
+      tax: json['tax'] is List ? (json['tax'] as List) : null,
       paymentStatus: _parseString(json['payment_status']),
       otp: _parseString(json['otp']),
       driver: driver,

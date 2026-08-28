@@ -314,9 +314,29 @@ class _ServiceConfirmBookingScreenState extends State<ServiceConfirmBookingScree
             const Divider(height: 24),
             _breakupRow(
               isDarkMode,
-              'Total Payable'.tr,
+              'Estimated Service Amount'.tr,
               _estimate!.displayTotal,
               bold: true,
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline_rounded, size: 16, color: Colors.orange.shade800),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'GST & other charges applicable based on chosen payment method.'.tr,
+                      style: TextStyle(fontSize: 11.5, color: Colors.orange.shade800, fontFamily: AppThemeData.medium),
+                    ),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 12),
           ],
@@ -494,13 +514,23 @@ class _ServiceConfirmBookingScreenState extends State<ServiceConfirmBookingScree
                               const SizedBox(height: 12),
                               Row(
                                 children: [
-                                  Text(
-                                    'Total $serviceCount ${serviceCount == 1 ? 'Service' : 'Services'}'.tr,
-                                    style: TextStyle(fontSize: 13, color: _mutedColor(isDarkMode)),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Total $serviceCount ${serviceCount == 1 ? 'Service' : 'Services'}'.tr,
+                                          style: TextStyle(fontSize: 13, color: _mutedColor(isDarkMode)),
+                                        ),
+                                        Text(
+                                          '+ GST & other charges applicable'.tr,
+                                          style: TextStyle(fontSize: 11, color: Colors.orange.shade800, fontFamily: AppThemeData.medium),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                  const Spacer(),
                                   Text(
-                                    payableTotal,
+                                    '$payableTotal +',
                                     style: TextStyle(fontFamily: AppThemeData.bold, fontSize: 15, color: accent),
                                   ),
                                 ],
@@ -715,16 +745,20 @@ class _ServiceConfirmBookingScreenState extends State<ServiceConfirmBookingScree
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Total Payable'.tr, style: TextStyle(fontSize: 12, color: _mutedColor(isDarkMode))),
+                              Text('Total Payable'.tr, style: TextStyle(fontSize: 11.5, color: _mutedColor(isDarkMode))),
                               Text(
-                                payableTotal,
-                                style: TextStyle(fontFamily: AppThemeData.bold, fontSize: 20, color: _titleColor(isDarkMode)),
+                                '$payableTotal +',
+                                style: TextStyle(fontFamily: AppThemeData.bold, fontSize: 19, color: _titleColor(isDarkMode)),
+                              ),
+                              Text(
+                                '+ GST & other charges applicable'.tr,
+                                style: TextStyle(fontSize: 10, color: Colors.orange.shade800, fontFamily: AppThemeData.medium),
                               ),
                               GestureDetector(
                                 onTap: () => _showPriceBreakup(isDarkMode),
                                 child: Text(
                                   'View Price Breakup'.tr,
-                                  style: TextStyle(fontSize: 12, color: accent, fontFamily: AppThemeData.semiBold),
+                                  style: TextStyle(fontSize: 11.5, color: accent, fontFamily: AppThemeData.semiBold),
                                 ),
                               ),
                             ],

@@ -14,6 +14,7 @@ class Preferences {
   static const websiteColor = "websiteColor";
 
   static SharedPreferences? _pref;
+  static SharedPreferences? get pref => _pref;
 
   static Future<void> initPref() async {
     try {
