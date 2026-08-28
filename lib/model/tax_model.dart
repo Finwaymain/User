@@ -23,8 +23,25 @@ class TaxModel {
     if (statut != null && statut != 'yes') return false;
     if (applicableOn == null || applicableOn!.trim().isEmpty) return true;
     final list = applicableOn!.toLowerCase().split(',').map((e) => e.trim()).toList();
-    final m = method.toLowerCase().trim();
-    return list.contains(m) || (m == 'upi' && list.contains('online')) || (m == 'online' && list.contains('upi'));
+    var m = method.toLowerCase().trim();
+    if (m.startsWith('paid_')) {
+      m = m.replaceFirst('paid_', '');
+    }
+    if (m.contains('wallet')) {
+      m = 'wallet';
+    } else if (m.contains('upi') || m.contains('razorpay')) {
+      m = 'upi';
+    } else if (m.contains('cash')) {
+      m = 'cash';
+    } else if (m.contains('online') || m.contains('stripe') || m.contains('card')) {
+      m = 'online';
+    }
+
+    if (list.contains('all') || list.contains('*')) return true;
+    if (list.contains(m)) return true;
+    if (m == 'upi' && list.contains('online')) return true;
+    if (m == 'online' && list.contains('upi')) return true;
+    return false;
   }
 
   Map<String, dynamic> toJson() {

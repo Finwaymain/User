@@ -115,19 +115,60 @@ class _ServicePaymentSuccessScreenState extends State<ServicePaymentSuccessScree
       baseServiceCost = widget.amountPaid;
     }
 
-    // Dynamic Admin Taxes & Fees based on chosen payment method
-    final paymentMethod = widget.paymentMethod.isNotEmpty ? widget.paymentMethod : (booking?.paymentStatus ?? 'wallet');
-    List<Map<String, dynamic>> activeTaxList = Constant.getTaxBreakdown(
-      baseServiceCost + visitingCharge,
-      paymentMethod,
-    );
+    // Dynamic Admin Taxes & Fees from booking record or active tax settings
+    List<Map<String, dynamic>> activeTaxList = [];
+    if (booking?.tax != null && booking!.tax!.isNotEmpty) {
+      for (var item in booking.tax!) {
+        if (item is Map) {
+          final label = item['libelle'] ?? item['name'] ?? item['label'] ?? 'Tax';
+          final val = item['value']?.toString() ?? '';
+          final type = item['type']?.toString() ?? 'Percentage';
+          final amt = double.tryParse(item['amount']?.toString() ?? '0') ?? 0.0;
+          if (amt > 0) {
+            activeTaxList.add({
+              'label': type == 'Percentage' && val.isNotEmpty ? '$label ($val%)' : label.toString(),
+              'amount': amt,
+            });
+          }
+        }
+      }
+    }
+
+    if (activeTaxList.isEmpty) {
+      final paymentMethod = widget.paymentMethod.isNotEmpty ? widget.paymentMethod : (booking?.paymentStatus ?? 'wallet');
+      activeTaxList = Constant.getTaxBreakdown(
+        baseServiceCost + visitingCharge,
+        paymentMethod,
+      );
+    }
+
     double totalTaxAmount = 0;
     for (var t in activeTaxList) {
       totalTaxAmount += (t['amount'] as double? ?? 0.0);
     }
 
-    final double computedTotal = baseServiceCost + visitingCharge + materialCost + totalTaxAmount;
-    final double totalAmount = widget.amountPaid >= computedTotal && widget.amountPaid > 0 ? widget.amountPaid : computedTotal;
+    if (totalTaxAmount <= 0 && booking?.taxAmount != null && booking!.taxAmount! > 0) {
+      totalTaxAmount = booking!.taxAmount!;
+      activeTaxList.add({
+        'label': 'Taxes & Platform Charges'.tr,
+        'amount': totalTaxAmount,
+      });
+    }
+
+    final double baseSum = baseServiceCost + visitingCharge + materialCost;
+    if (activeTaxList.isEmpty && widget.amountPaid > baseSum) {
+      final diff = widget.amountPaid - baseSum;
+      if (diff > 0) {
+        totalTaxAmount = diff;
+        activeTaxList.add({
+          'label': 'Taxes & Platform Charges'.tr,
+          'amount': diff,
+        });
+      }
+    }
+
+    final double computedTotal = baseSum + totalTaxAmount;
+    final double totalAmount = widget.amountPaid > 0 ? widget.amountPaid : computedTotal;
 
     return WillPopScope(
       onWillPop: () async => false,
