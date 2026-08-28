@@ -168,7 +168,7 @@ class _ServicePaymentSuccessScreenState extends State<ServicePaymentSuccessScree
     }
 
     final double computedTotal = baseSum + totalTaxAmount;
-    final double totalAmount = widget.amountPaid > 0 ? widget.amountPaid : computedTotal;
+    final double totalAmount = (widget.amountPaid > computedTotal) ? widget.amountPaid : computedTotal;
 
     return WillPopScope(
       onWillPop: () async => false,

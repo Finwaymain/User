@@ -16,9 +16,12 @@ void resumeServiceBookingFlow(ServiceRequestData booking) {
   }
 
   if (booking.isCompleted && booking.isPaid) {
+    final base = booking.payableAmount;
+    final taxes = booking.taxAmount ?? 0.0;
+    final total = taxes > 0 ? (base + taxes) : base;
     Get.to(() => ServicePaymentSuccessScreen(
           bookingId: id,
-          amountPaid: booking.payableAmount,
+          amountPaid: total,
           paymentMethod: booking.paymentStatus ?? 'wallet',
           initialBooking: booking,
         ));
