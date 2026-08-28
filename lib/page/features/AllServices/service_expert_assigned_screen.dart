@@ -86,14 +86,71 @@ class _ServiceExpertAssignedScreenState extends State<ServiceExpertAssignedScree
       return;
     }
 
+    final isDarkMode = Provider.of<DarkThemeProvider>(context, listen: false).getThem();
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Cancel Booking?'.tr),
-        content: Text('Are you sure you want to cancel this service request?'.tr),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        backgroundColor: isDarkMode ? AppThemeData.surface50Dark : Colors.white,
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: AppThemeData.error200, size: 24),
+            const SizedBox(width: 8),
+            Text(
+              'Cancel Booking?'.tr,
+              style: TextStyle(
+                fontFamily: AppThemeData.bold,
+                fontSize: 18,
+                color: isDarkMode ? Colors.white : AppThemeData.grey900,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppThemeData.error200.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppThemeData.error200.withValues(alpha: 0.3)),
+              ),
+              child: Text(
+                'Cancel booking due Payment add in next Bill'.tr,
+                style: TextStyle(
+                  fontFamily: AppThemeData.bold,
+                  fontSize: 13,
+                  color: AppThemeData.error200,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'If you cancel this booked service now, the platform & cancellation fee will be added as a due charge to your next service bill.'.tr,
+              style: TextStyle(
+                fontSize: 13,
+                color: isDarkMode ? AppThemeData.grey400Dark : AppThemeData.grey700,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('No'.tr)),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text('Yes, Cancel'.tr)),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Keep Service'.tr, style: TextStyle(color: AppThemeData.grey500)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppThemeData.error200,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: Text('Yes, Cancel Booking'.tr, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
         ],
       ),
     );

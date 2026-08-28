@@ -101,35 +101,38 @@ class _ServicePaymentSuccessScreenState extends State<ServicePaymentSuccessScree
 
     // Calculate itemized breakdown
     final serviceItems = booking?.bookedServiceItems ?? [];
+    double serviceItemsTotal = 0.0;
+    for (var item in serviceItems) {
+      final itemPrice = item.minPrice > 0 ? item.minPrice : item.price;
+      serviceItemsTotal += itemPrice;
+    }
+
     final visitingCharge = booking?.visitingChargeAmount ?? (breakdown?.visitingCharge ?? 0);
     final materialCost = booking?.materialCostAmount ?? (breakdown?.materialCost ?? 0);
-    final totalAmount = widget.amountPaid > 0 ? widget.amountPaid : (booking?.payableAmount ?? 0);
+    
+    double baseServiceCost = serviceItemsTotal > 0 ? serviceItemsTotal : (booking?.amount ?? 0);
+    if (baseServiceCost <= 0 && widget.amountPaid > 0) {
+      baseServiceCost = widget.amountPaid;
+    }
 
     // Platform Fee calculation
     double platformFee = breakdown?.platformFee ?? 0;
-    if (platformFee <= 0 && totalAmount > 0) {
-      platformFee = (totalAmount >= 200) ? 19.0 : (totalAmount >= 50 ? 9.0 : 0.0);
+    if (platformFee <= 0 && baseServiceCost > 0) {
+      platformFee = (baseServiceCost >= 200) ? 19.0 : (baseServiceCost >= 50 ? 9.0 : 0.0);
     }
 
-    // Taxes & GST calculation
-    double nonTaxTotal = (totalAmount - platformFee - materialCost);
-    if (nonTaxTotal < 0) nonTaxTotal = 0;
-    double baseServiceCost = nonTaxTotal > 0 ? (nonTaxTotal / 1.18) : 0;
-    double calculatedGst = nonTaxTotal - baseServiceCost;
-
-    List<Map<String, dynamic>> activeTaxList = Constant.getTaxBreakdown(baseServiceCost > 0 ? baseServiceCost : totalAmount);
+    // Taxes & GST calculation based on chosen payment method
+    List<Map<String, dynamic>> activeTaxList = Constant.getTaxBreakdown(
+      baseServiceCost + visitingCharge,
+      widget.paymentMethod.isNotEmpty ? widget.paymentMethod : (booking?.paymentStatus ?? 'wallet'),
+    );
     double totalTaxAmount = 0;
     for (var t in activeTaxList) {
       totalTaxAmount += (t['amount'] as double? ?? 0.0);
     }
-    if (activeTaxList.isEmpty && calculatedGst > 0) {
-      double halfGst = (calculatedGst / 2);
-      activeTaxList = [
-        {'label': 'CGST (9%)'.tr, 'amount': halfGst},
-        {'label': 'SGST (9%)'.tr, 'amount': halfGst},
-      ];
-      totalTaxAmount = calculatedGst;
-    }
+
+    final double computedTotal = baseServiceCost + visitingCharge + materialCost + platformFee + totalTaxAmount;
+    final double totalAmount = widget.amountPaid >= computedTotal ? widget.amountPaid : computedTotal;
 
     return WillPopScope(
       onWillPop: () async => false,
