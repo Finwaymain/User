@@ -190,27 +190,25 @@ class _ServiceExpertAssignedScreenState extends State<ServiceExpertAssignedScree
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Total Estimate'.tr, style: TextStyle(fontFamily: AppThemeData.bold, fontSize: 15)),
+                Text('Base Estimate'.tr, style: TextStyle(fontFamily: AppThemeData.bold, fontSize: 15)),
                 Text('${breakdown.displayTotal} +', style: TextStyle(fontFamily: AppThemeData.bold, fontSize: 16, color: _accent(isDarkMode))),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.amber.withValues(alpha: 0.12),
+                color: Colors.orange.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline_rounded, size: 16, color: Colors.amber.shade900),
-                  const SizedBox(width: 8),
+                  Icon(Icons.info_outline_rounded, size: 16, color: Colors.orange.shade800),
+                  const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      'GST, platform fee & payment handling charges will be applied based on your selected payment method (Wallet, UPI, or Cash) upon job completion.'.tr,
-                      style: TextStyle(fontSize: 11, color: Colors.amber.shade900, height: 1.3),
+                      'GST & other charges applicable based on chosen payment method.'.tr,
+                      style: TextStyle(fontSize: 11.5, color: Colors.orange.shade800, fontFamily: AppThemeData.medium),
                     ),
                   ),
                 ],
@@ -553,41 +551,6 @@ class _ServiceExpertAssignedScreenState extends State<ServiceExpertAssignedScree
               style: TextStyle(fontSize: 11.5, color: Colors.orange.shade800),
             ),
           ],
-          const Divider(height: 22),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: isDarkMode ? AppThemeData.surface50Dark : AppThemeData.primary50,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Estimated Amount'.tr,
-                      style: TextStyle(fontSize: 11.5, color: isDarkMode ? AppThemeData.grey500Dark : AppThemeData.grey500, fontFamily: AppThemeData.medium),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '+ GST & platform fee applicable'.tr,
-                      style: TextStyle(fontSize: 10.5, color: Colors.orange.shade800, fontFamily: AppThemeData.semiBold),
-                    ),
-                  ],
-                ),
-                Text(
-                  '${booking.displayPayableLabel} +',
-                  style: TextStyle(
-                    fontFamily: AppThemeData.bold,
-                    fontSize: 15,
-                    color: isDarkMode ? AppThemeData.grey900Dark : AppThemeData.grey900,
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );
@@ -701,15 +664,11 @@ class _ServiceExpertAssignedScreenState extends State<ServiceExpertAssignedScree
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Total Payable'.tr, style: TextStyle(fontFamily: AppThemeData.bold, fontSize: 14)),
+                    Text('Total Payable (Base)'.tr, style: TextStyle(fontFamily: AppThemeData.bold, fontSize: 14, color: isDarkMode ? AppThemeData.grey900Dark : AppThemeData.grey900)),
                     const SizedBox(height: 2),
                     Text(
-                      '+ GST & platform fee applicable'.tr,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontFamily: AppThemeData.semiBold,
-                        color: Colors.orange.shade800,
-                      ),
+                      '+ GST & other charges applicable'.tr,
+                      style: TextStyle(fontSize: 11, color: Colors.orange.shade800, fontFamily: AppThemeData.medium),
                     ),
                     if (booking.priceBreakdown != null)
                       GestureDetector(
@@ -725,18 +684,9 @@ class _ServiceExpertAssignedScreenState extends State<ServiceExpertAssignedScree
                   ],
                 ),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '$totalLabel +',
-                    style: TextStyle(fontFamily: AppThemeData.bold, fontSize: 22, color: isDarkMode ? AppThemeData.grey900Dark : AppThemeData.grey900),
-                  ),
-                  Text(
-                    '+ GST & Charges'.tr,
-                    style: TextStyle(fontSize: 10.5, color: isDarkMode ? AppThemeData.grey500Dark : AppThemeData.grey500, fontFamily: AppThemeData.medium),
-                  ),
-                ],
+              Text(
+                '$totalLabel +',
+                style: TextStyle(fontFamily: AppThemeData.bold, fontSize: 20, color: isDarkMode ? AppThemeData.grey900Dark : AppThemeData.grey900),
               ),
             ],
           ),
