@@ -324,8 +324,135 @@ class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
               radius: 10,
               onPress: _submit,
             ),
+            const SizedBox(height: 20),
+            _buildTermsCard(isDarkMode, style.color),
+            const SizedBox(height: 12),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTermsCard(bool isDarkMode, Color accentColor) {
+    final terms = [
+      {
+        'title': 'Final Price:'.tr,
+        'desc': 'After booking acceptance, pay the final price shown in the app.'.tr,
+      },
+      {
+        'title': 'Booked Service Only:'.tr,
+        'desc': 'The booking covers only the selected service.'.tr,
+      },
+      {
+        'title': 'Extra Work:'.tr,
+        'desc': 'Any additional work requires a new booking.'.tr,
+      },
+      {
+        'title': 'No Unauthorised Work:'.tr,
+        'desc': 'Extra work cannot be added to the existing booking.'.tr,
+      },
+      {
+        'title': 'Complaint & Penalty:'.tr,
+        'desc': 'Valid complaints about unauthorised extra work may result in a penalty.'.tr,
+      },
+    ];
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDarkMode ? AppThemeData.grey100Dark : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDarkMode ? Colors.white10 : const Color(0xFFE2E8F0),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDarkMode ? 0.2 : 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(Icons.shield_outlined, size: 18, color: accentColor),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'Booking & Service Terms'.tr,
+                style: TextStyle(
+                  fontFamily: AppThemeData.bold,
+                  fontSize: 14,
+                  color: isDarkMode ? Colors.white : AppThemeData.grey900,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          ...List.generate(terms.length, (index) {
+            final item = terms[index];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 20,
+                    height: 20,
+                    margin: const EdgeInsets.only(top: 1),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: isDarkMode ? Colors.white12 : const Color(0xFFF1F5F9),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      '${index + 1}',
+                      style: TextStyle(
+                        fontFamily: AppThemeData.bold,
+                        fontSize: 11,
+                        color: isDarkMode ? Colors.white70 : AppThemeData.grey800,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: RichText(
+                      text: TextSpan(
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          height: 1.4,
+                          color: isDarkMode ? AppThemeData.grey400Dark : AppThemeData.grey700,
+                          fontFamily: AppThemeData.regular,
+                        ),
+                        children: [
+                          TextSpan(
+                            text: '${item['title']} ',
+                            style: TextStyle(
+                              fontFamily: AppThemeData.bold,
+                              color: isDarkMode ? Colors.white : AppThemeData.grey900,
+                            ),
+                          ),
+                          TextSpan(text: item['desc']),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
       ),
     );
   }
