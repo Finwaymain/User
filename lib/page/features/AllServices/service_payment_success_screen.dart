@@ -76,7 +76,7 @@ class _ServicePaymentSuccessScreenState extends State<ServicePaymentSuccessScree
         .trim();
     if (method.contains('wallet')) return 'Fiinway Wallet'.tr;
     if (method.contains('upi') || method.contains('razorpay')) return 'UPI / Online'.tr;
-    if (method.contains('cash')) return 'Cash on Delivery'.tr;
+    if (method.contains('cash')) return 'Cash Paid'.tr;
     return 'Paid / Direct'.tr;
   }
 
