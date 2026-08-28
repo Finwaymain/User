@@ -600,6 +600,29 @@ class _ServicePaymentSuccessScreenState extends State<ServicePaymentSuccessScree
                       const SizedBox(height: 24),
 
                       // 5. Action Buttons
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF6AA720),
+                            foregroundColor: Colors.white,
+                            minimumSize: const Size(double.infinity, 50),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            elevation: 2,
+                          ),
+                          icon: const Icon(Icons.receipt_long_rounded, size: 20),
+                          label: Text('Download Tax Invoice'.tr, style: const TextStyle(fontFamily: AppThemeData.bold, fontSize: 14)),
+                          onPressed: () async {
+                            final uri = Uri.parse('https://api.fiinway.com/invoice/${widget.bookingId}/download?ride_id=${widget.bookingId}&amount=${widget.amountPaid}');
+                            if (await canLaunchUrl(uri)) {
+                              await launchUrl(uri, mode: LaunchMode.externalApplication);
+                            }
+                          },
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+
                       ButtonThem.buildButton(
                         context,
                         title: 'View Booking History'.tr,

@@ -388,19 +388,6 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
                                       ),
                                       onChanged: booking.isPaid ? null : (v) => setState(() => _paymentMethod = v ?? 'upi'),
                                     ),
-                                    RadioListTile<String>(
-                                      value: 'cash',
-                                      groupValue: _paymentMethod,
-                                      activeColor: AppThemeData.primary200,
-                                      title: Text('Pay Cash to Expert'.tr),
-                                      subtitle: Text(
-                                        Constant.calculateTotalTaxes(baseTotal, 'cash') > 0
-                                            ? 'Pay ${_money(baseTotal + Constant.calculateTotalTaxes(baseTotal, 'cash'))} in cash directly to expert'.tr
-                                            : 'Pay ${_money(baseTotal)} in cash directly to expert'.tr,
-                                        style: TextStyle(fontSize: 11, color: isDarkMode ? AppThemeData.grey500Dark : AppThemeData.grey500),
-                                      ),
-                                      onChanged: booking.isPaid ? null : (v) => setState(() => _paymentMethod = v ?? 'cash'),
-                                    ),
                                   ],
                                 ),
                               ),

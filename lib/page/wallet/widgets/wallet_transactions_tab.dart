@@ -6,6 +6,7 @@ import 'package:finway/themes/constant_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../utils/dark_theme_provider.dart';
 
@@ -234,6 +235,29 @@ class WalletTransactionsTab extends StatelessWidget {
               if ((data.txnId ?? '').isNotEmpty) _receiptRow('Txn ID'.tr, data.txnId!, isDark),
               if ((data.description ?? '').isNotEmpty) _receiptRow('Description'.tr, data.description!, isDark),
               if ((data.paymentMethod ?? '').isNotEmpty) _receiptRow('Payment Method'.tr, data.paymentMethod!, isDark),
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppThemeData.primary200,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  icon: const Icon(Icons.receipt_long_rounded, size: 18),
+                  label: Text('Download / View Invoice'.tr, style: const TextStyle(fontFamily: AppThemeData.bold, fontSize: 13)),
+                  onPressed: () async {
+                    final invoiceId = (data.rideId != null && data.rideId!.isNotEmpty && data.rideId != '0')
+                        ? data.rideId!
+                        : (data.id?.toString() ?? '1');
+                    final uri = Uri.parse('https://api.fiinway.com/invoice/$invoiceId/download?ride_id=${data.rideId ?? ''}&amount=${data.amount ?? ''}&payment_method=${data.paymentMethod ?? ''}');
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    }
+                  },
+                ),
+              ),
             ],
           ),
         );
