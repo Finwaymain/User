@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:finway/model/tax_model.dart';
 import 'package:finway/model/ride_model.dart';
 
