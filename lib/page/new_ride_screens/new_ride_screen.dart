@@ -769,7 +769,7 @@ class NewRideScreen extends StatelessWidget {
               ),
             ),
             Visibility(
-              visible: data.statut == "completed",
+              visible: data.statut == "completed" && data.statutPaiement != "yes",
               child: Padding(
                 padding: const EdgeInsets.only(
                   top: 5.0,
@@ -779,18 +779,14 @@ class NewRideScreen extends StatelessWidget {
                     Expanded(
                         child: ButtonThem.buildButton(context,
                             btnHeight: 50,
-                            title: data.statutPaiement == "yes" ? "Paid".tr : "Pay Now".tr,
-                            btnColor: data.statutPaiement == "yes" ? AppThemeData.info200 : AppThemeData.primary200,
+                            title: "Pay Now".tr,
+                            btnColor: AppThemeData.primary200,
                             txtColor: Colors.white, onPress: () async {
-                      if (data.statutPaiement == "yes") {
+                      await Get.to(() => PaymentSelectionScreen(), arguments: {
+                        "rideData": data,
+                      })?.then((v) {
                         controller.getNewRide();
-                      } else {
-                        await Get.to(() => PaymentSelectionScreen(), arguments: {
-                          "rideData": data,
-                        })?.then((v) {
-                          controller.getNewRide();
-                        });
-                      }
+                      });
                     })),
                   ],
                 ),

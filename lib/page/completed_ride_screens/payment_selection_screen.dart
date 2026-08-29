@@ -16,6 +16,7 @@ import 'package:finway/page/wallet/midtrans_screen.dart';
 import 'package:finway/page/wallet/orangePayScreen.dart';
 import 'package:finway/page/wallet/payStackScreen.dart';
 import 'package:finway/page/wallet/xenditScreen.dart';
+import 'package:finway/page/review_screens/add_review_screen.dart';
 import 'package:finway/service/api.dart';
 import 'package:finway/themes/appbar_cust.dart';
 import 'package:finway/themes/button_them.dart';
@@ -703,7 +704,10 @@ class PaymentSelectionScreen extends StatelessWidget {
                               controller.cashPaymentRequest(bodyParams).then((value) {
                                 if (value != null) {
                                   ShowToastDialog.showToast("Payment successfully completed");
-                                  Get.back(result: true);
+                                  Get.offAll(() => const AddReviewScreen(), arguments: {
+                                    'data': controller.data.value,
+                                    'ride_type': 'ride',
+                                  });
                                 }
                               });
                             } else if (controller.selectedRadioTile.value == "UPI") {
@@ -1156,7 +1160,10 @@ class PaymentSelectionScreen extends StatelessWidget {
       ShowToastDialog.closeLoader();
       if (value != null) {
         ShowToastDialog.showToast("Payment successfully completed".tr);
-        Get.back(result: true); // Pop screen and return true
+        Get.offAll(() => const AddReviewScreen(), arguments: {
+          'data': paymentController.data.value,
+          'ride_type': 'ride',
+        });
       }
     });
   }
@@ -1982,7 +1989,11 @@ class PaymentSelectionScreen extends StatelessWidget {
                                 controller.walletDebitAmountRequest(bodyParams).then((value) {
                                   if (value != null) {
                                     ShowToastDialog.showToast("Payment successfully completed");
-                                    Get.back(result: true);
+                                    Get.back(); // Close MPIN bottom sheet
+                                    Get.offAll(() => const AddReviewScreen(), arguments: {
+                                      'data': controller.data.value,
+                                      'ride_type': 'ride',
+                                    });
                                   }
                                 });
                               } else {
