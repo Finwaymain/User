@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:finway/model/tax_model.dart';
 
 class RideModel {
@@ -136,10 +137,23 @@ class RideData {
     List<TaxModel>? taxList = [];
     if (json['tax'] != null) {
       taxList = <TaxModel>[];
-      json['tax'].forEach((v) {
-        taxList!.add(TaxModel.fromJson(v));
-      });
+      dynamic taxes = json['tax'];
+      if (taxes is String && taxes.isNotEmpty) {
+        try {
+          taxes = jsonDecode(taxes);
+        } catch (_) {}
+      }
+      if (taxes is List) {
+        for (var v in taxes) {
+          if (v is Map<String, dynamic>) {
+            taxList.add(TaxModel.fromJson(v));
+          } else if (v is Map) {
+            taxList.add(TaxModel.fromJson(Map<String, dynamic>.from(v)));
+          }
+        }
+      }
     }
+    taxModel = taxList;
     id = json['id']?.toString();
     idUserApp = json['id_user_app']?.toString();
     departName = json['depart_name']?.toString();
@@ -159,11 +173,23 @@ class RideData {
     tripCategory = json['trip_category']?.toString();
     nom = json['nom']?.toString();
     prenom = json['prenom']?.toString();
-    if (json['stops'] != null && json['stops'].isNotEmpty && json['stops']?.toString() != "[]") {
+    if (json['stops'] != null) {
       stops = <Stops>[];
-      json['stops'].forEach((v) {
-        stops!.add(Stops.fromJson(v));
-      });
+      dynamic s = json['stops'];
+      if (s is String && s.isNotEmpty && s != "[]") {
+        try {
+          s = jsonDecode(s);
+        } catch (_) {}
+      }
+      if (s is List) {
+        for (var v in s) {
+          if (v is Map<String, dynamic>) {
+            stops!.add(Stops.fromJson(v));
+          } else if (v is Map) {
+            stops!.add(Stops.fromJson(Map<String, dynamic>.from(v)));
+          }
+        }
+      }
     } else {
       stops = [];
     }

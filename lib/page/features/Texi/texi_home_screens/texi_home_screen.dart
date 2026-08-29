@@ -1336,8 +1336,8 @@ Widget buildUnifiedBookingPanel(HomeController controller, bool isDarkMode) {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text(
-                            isLocationSelected ? Constant().amountShow(
-                                amount: calculatedPrice.toString()) : "---",
+                            isLocationSelected ? "${Constant().amountShow(
+                                amount: calculatedPrice.toString())} +" : "---",
                             style: TextStyle(
                               fontFamily: AppThemeData.bold,
                               fontSize: 13,
@@ -1512,7 +1512,7 @@ Widget buildUnifiedBookingPanel(HomeController controller, bool isDarkMode) {
                     ),
                   ),
                   Text(
-                    Constant().amountShow(amount: tripPrice.toString()),
+                    "${Constant().amountShow(amount: tripPrice.toString())} +",
                     style: TextStyle(
                       fontFamily: AppThemeData.bold,
                       fontSize: 18,

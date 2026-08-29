@@ -237,7 +237,24 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
             _driverLocationTimer?.cancel();
             _driverLocationSubscription?.cancel();
             
-            RideData completedRideData = RideData.fromJson(Map<String, dynamic>.from(rawItem));
+            RideData completedRideData;
+            try {
+              completedRideData = RideData.fromJson(Map<String, dynamic>.from(rawItem));
+            } catch (e) {
+              dev.log("RideData parse error in completed handler: $e");
+              completedRideData = RideData(
+                id: (rawItem['id'] ?? rideData!.id).toString(),
+                idUserApp: (rawItem['id_user_app'] ?? rideData!.idUserApp).toString(),
+                idConducteur: (rawItem['id_conducteur'] ?? rideData!.idConducteur).toString(),
+                montant: (rawItem['montant'] ?? rideData!.montant ?? '0').toString(),
+                statut: 'completed',
+                statutPaiement: (rawItem['statut_paiement'] ?? 'no').toString(),
+                departName: (rawItem['depart_name'] ?? rideData!.departName).toString(),
+                destinationName: (rawItem['destination_name'] ?? rideData!.destinationName).toString(),
+                payment: (rawItem['payment'] ?? rideData!.payment ?? 'Cash').toString(),
+              );
+            }
+            
             if (completedRideData.statutPaiement != 'yes') {
               Get.offAll(() => PaymentSelectionScreen(), arguments: {
                 "rideData": completedRideData
