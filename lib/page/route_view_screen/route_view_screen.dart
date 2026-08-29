@@ -224,50 +224,23 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
   }
 
   Future<void> _fetchDriverLocation() async {
+    if (rideData == null || rideData!.id == null) return;
     try {
       final response = await Dio().get(
         "${API.rideDetails}?ride_id=${rideData!.id}",
         options: Options(headers: API.header),
       );
-      if (response.statusCode == 200) {
-        RideDetailsModel rideDetails = RideDetailsModel.fromJson(response.data);
-        if (rideDetails.success == 'success' && rideDetails.rideDetailsdata != null) {
-          var data = rideDetails.rideDetailsdata!;
-          String currentStatus = data.statut.toString();
+      if (response.statusCode == 200 && response.data != null) {
+        Map<String, dynamic> rawJson = response.data is String ? jsonDecode(response.data) : Map<String, dynamic>.from(response.data);
+        dynamic rawItem = rawJson['data'] ?? rawJson['rideDetailsdata'];
+        if (rawItem != null && rawItem is Map) {
+          String currentStatus = (rawItem['statut'] ?? '').toString().toLowerCase();
           
           if (currentStatus == "completed") {
             _driverLocationTimer?.cancel();
             _driverLocationSubscription?.cancel();
-            RideData completedRideData = RideData(
-              id: data.id,
-              idUserApp: data.idUserApp,
-              departName: data.departName,
-              destinationName: data.destinationName,
-              latitudeDepart: data.latitudeDepart,
-              longitudeDepart: data.longitudeDepart,
-              latitudeArrivee: data.latitudeArrivee,
-              longitudeArrivee: data.longitudeArrivee,
-              place: data.place,
-              numberPoeple: data.numberPoeple,
-              distance: data.distance,
-              duree: data.duree,
-              montant: data.montant,
-              trajet: data.trajet,
-              statut: data.statut,
-              statutPaiement: data.statutPaiement,
-              idConducteur: data.idConducteur,
-              creer: data.creer,
-              dateRetour: data.dateRetour,
-              heureRetour: data.heureRetour,
-              statutRound: data.statutRound,
-              otp: data.otp,
-              nomConducteur: data.nomConducteur ?? "",
-              prenomConducteur: data.prenomConducteur ?? "",
-              photoPath: data.photoPath,
-              driverPhone: data.driverPhone,
-              moyenne: data.moyenne,
-              stops: data.stops,
-            );
+            
+            RideData completedRideData = RideData.fromJson(Map<String, dynamic>.from(rawItem));
             if (completedRideData.statutPaiement != 'yes') {
               Get.off(() => PaymentSelectionScreen(), arguments: {
                 "rideData": completedRideData
@@ -288,31 +261,25 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
             return;
           }
 
-          if (data.driverLatitude != null && data.driverLatitude!.isNotEmpty &&
-              data.driverLongitude != null && data.driverLongitude!.isNotEmpty) {
-            double dLat = double.parse(data.driverLatitude!);
-            double dLng = double.parse(data.driverLongitude!);
-
-            try {
-              dynamic durationResponse = await Dio().get(
-                  "https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=${rideData!.latitudeDepart},${rideData!.longitudeDepart}&destinations=$dLat,$dLng&key=${Constant.kGoogleApiKey}");
-              driverEstimateArrivalTime = durationResponse.data['rows'][0]['elements'][0]['duration']['text'].toString();
-            } catch (e) {
-              dev.log("Error fetching distance matrix: $e");
-            }
+          String? dLatStr = rawItem['driver_latitude']?.toString();
+          String? dLngStr = rawItem['driver_longitude']?.toString();
+          if (dLatStr != null && dLatStr.isNotEmpty && dLngStr != null && dLngStr.isNotEmpty) {
+            double dLat = double.parse(dLatStr);
+            double dLng = double.parse(dLngStr);
 
             if (mounted) {
               setState(() {
-                rideData!.statut = currentStatus;
+                rideData!.statut = rawItem['statut']?.toString();
                 departureLatLong = LatLng(dLat, dLng);
-                _markers[rideData!.id.toString()] = Marker(
-                  markerId: MarkerId(rideData!.id.toString()),
-                  infoWindow: InfoWindow(title: rideData!.prenomConducteur.toString()),
-                  position: departureLatLong,
-                  icon: taxiIcon!,
-                  rotation: 0.0,
-                );
-                getDirections(dLat: dLat, dLng: dLng);
+                if (taxiIcon != null) {
+                  _markers[rideData!.id.toString()] = Marker(
+                    markerId: MarkerId(rideData!.id.toString()),
+                    infoWindow: InfoWindow(title: rideData!.prenomConducteur.toString()),
+                    position: departureLatLong,
+                    icon: taxiIcon!,
+                    rotation: 0.0,
+                  );
+                }
               });
             }
           }
@@ -334,15 +301,14 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
       departureLatLong = LatLng(double.parse(rideData!.latitudeDepart.toString()), double.parse(rideData!.longitudeDepart.toString()));
       destinationLatLong = LatLng(double.parse(rideData!.latitudeArrivee.toString()), double.parse(rideData!.longitudeArrivee.toString()));
 
-      if (rideData!.statut == "on ride" || rideData!.statut == 'confirmed') {
-        _listenDriverLocation();
+      _listenDriverLocation();
+      _fetchDriverLocation();
+      _driverLocationTimer?.cancel();
+      _driverLocationTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
         _fetchDriverLocation();
-        _driverLocationTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
-          _fetchDriverLocation();
-        });
-      } else {
-        getDirections(dLat: 0.0, dLng: 0.0);
-      }
+      });
+
+      getDirections(dLat: 0.0, dLng: 0.0);
     }
   }
 

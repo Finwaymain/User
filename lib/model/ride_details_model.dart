@@ -132,10 +132,20 @@ class RideDetailsdata {
   RideDetailsdata.fromJson(Map<String, dynamic> json) {
     List<TaxModel>? taxList = [];
     if (json['tax'] != null) {
-      taxList = <TaxModel>[];
-      json['tax'].forEach((v) {
-        taxList!.add(TaxModel.fromJson(v));
-      });
+      try {
+        dynamic taxData = json['tax'];
+        if (taxData is String && taxData.isNotEmpty && taxData != "null") {
+          taxData = jsonDecode(taxData);
+        }
+        if (taxData is List) {
+          taxList = <TaxModel>[];
+          for (var v in taxData) {
+            if (v is Map) {
+              taxList.add(TaxModel.fromJson(Map<String, dynamic>.from(v)));
+            }
+          }
+        }
+      } catch (_) {}
     }
     id = json['id']?.toString();
     idUserApp = json['id_user_app']?.toString();
@@ -186,13 +196,21 @@ class RideDetailsdata {
     moyenne = json['moyenne']?.toString();
     
     List<Stops>? stopsList = [];
-    if (json['stops'] != null && json['stops'].isNotEmpty && json['stops'].toString() != "[]") {
-      stopsList = <Stops>[];
-      json['stops'].forEach((v) {
-        stopsList!.add(Stops.fromJson(v));
-      });
-    } else {
-      stopsList = [];
+    if (json['stops'] != null && json['stops'].toString() != "[]" && json['stops'].toString() != "null") {
+      try {
+        dynamic stopsData = json['stops'];
+        if (stopsData is String && stopsData.isNotEmpty) {
+          stopsData = jsonDecode(stopsData);
+        }
+        if (stopsData is List) {
+          stopsList = <Stops>[];
+          for (var v in stopsData) {
+            if (v is Map) {
+              stopsList.add(Stops.fromJson(Map<String, dynamic>.from(v)));
+            }
+          }
+        }
+      } catch (_) {}
     }
     stops = stopsList;
   }
