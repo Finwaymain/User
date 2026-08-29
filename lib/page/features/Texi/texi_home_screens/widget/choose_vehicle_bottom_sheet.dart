@@ -258,7 +258,7 @@ class ChooseVehicleBottomSheet {
                                                   mainAxisAlignment: MainAxisAlignment.start,
                                                   children: [
                                                     Text(
-                                                      Constant().amountShow(
+                                                      "${Constant().amountShow(
                                                           amount: "${controller.calculateTripPrice(
                                                             distance: controller.distance.value,
                                                             deliveryCharges: double.parse(vehicleCategoryModel.data![index].deliveryCharges ?? '0'),
@@ -266,7 +266,7 @@ class ChooseVehicleBottomSheet {
                                                             minimumDeliveryChargesWithin: double.parse(vehicleCategoryModel.data![index].minimumDeliveryChargesWithin ?? '0'),
                                                             basePrice: double.tryParse(vehicleCategoryModel.data![index].basePrice ?? ''),
                                                             perKmPrice: double.tryParse(vehicleCategoryModel.data![index].perKmPrice ?? ''),
-                                                          )}"),
+                                                          )}")} +",
                                                       textAlign: TextAlign.center,
                                                       style: TextStyle(
                                                         fontSize: 16,

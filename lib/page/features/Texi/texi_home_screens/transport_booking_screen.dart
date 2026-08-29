@@ -590,7 +590,7 @@ class _TransportBookingScreenState extends State<TransportBookingScreen> {
                         ),
                         const SizedBox(height: 5),
                         Text(
-                          Constant().amountShow(amount: fare.toStringAsFixed(0)),
+                          "${Constant().amountShow(amount: fare.toStringAsFixed(0))} +",
                           style: const TextStyle(fontFamily: 'Switzer-Bold', fontSize: 12, color: _accent),
                         ),
                       ],
