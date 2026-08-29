@@ -27,6 +27,7 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'page/chats_screen/conversation_screen.dart';
+import 'page/completed_ride_screens/payment_selection_screen.dart';
 import 'page/completed_ride_screens/trip_history_screen.dart';
 import 'page/auth_screens/phone_entry_screen.dart';
 import 'page/on_boarding_screen.dart';
@@ -104,6 +105,12 @@ class FirebaseService {
         if (Get.isRegistered<SearchingDriverController>()) {
           Get.find<SearchingDriverController>().handleFCMMessage(message);
         }
+        if (message.data['statut'] == 'completed') {
+          RideData rideData = RideData.fromJson(message.data);
+          if (rideData.statutPaiement != 'yes') {
+            Get.offAll(() => PaymentSelectionScreen(), arguments: {"rideData": rideData});
+          }
+        }
         if (message.notification != null) {
           NotificationService.display(message);
         }
@@ -171,8 +178,14 @@ class FirebaseService {
           Get.to(const RouteViewScreen(), arguments: argumentData);
         }
       } else if (message.data['statut'] == "completed") {
-        Get.to(TripHistoryScreen(),
-            arguments: {"rideData": RideData.fromJson(message.data)});
+        RideData rideData = RideData.fromJson(message.data);
+        if (rideData.statutPaiement != 'yes') {
+          Get.to(() => PaymentSelectionScreen(),
+              arguments: {"rideData": rideData});
+        } else {
+          Get.to(() => TripHistoryScreen(),
+              arguments: {"rideData": rideData});
+        }
       }
     } catch (e) {
       log('Error handling notification tap: $e');
