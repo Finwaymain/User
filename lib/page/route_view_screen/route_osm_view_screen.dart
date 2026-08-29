@@ -9,7 +9,6 @@ import 'package:finway/constant/show_toast_dialog.dart';
 import 'package:finway/controller/dash_board_controller.dart';
 import 'package:finway/controller/ride_details_controller.dart';
 import 'package:finway/model/ride_model.dart';
-import 'package:finway/model/ride_details_model.dart';
 import 'package:finway/page/chats_screen/conversation_screen.dart';
 import 'package:finway/page/completed_ride_screens/payment_selection_screen.dart';
 import 'package:finway/page/completed_ride_screens/trip_history_screen.dart';
@@ -22,7 +21,7 @@ import 'package:finway/utils/Preferences.dart';
 import 'package:finway/utils/dark_theme_provider.dart';
 import 'package:finway/widget/StarRating.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dio/dio.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_svg/svg.dart';
@@ -136,12 +135,12 @@ class _RouteOsmViewScreenState extends State<RouteOsmViewScreen> {
   Future<void> _fetchDriverLocation() async {
     if (rideData == null || rideData!.id == null) return;
     try {
-      final response = await Dio().get(
-        "${API.rideDetails}?ride_id=${rideData!.id}",
-        options: Options(headers: API.header),
-      );
-      if (response.statusCode == 200 && response.data != null) {
-        Map<String, dynamic> rawJson = response.data is String ? jsonDecode(response.data) : Map<String, dynamic>.from(response.data);
+      final response = await http.get(
+        Uri.parse("${API.rideDetails}?ride_id=${rideData!.id}"),
+        headers: API.header,
+      ).timeout(const Duration(seconds: 5));
+      if (response.statusCode == 200) {
+        Map<String, dynamic> rawJson = jsonDecode(response.body);
         dynamic rawItem = rawJson['data'] ?? rawJson['rideDetailsdata'];
         if (rawItem != null && rawItem is Map) {
           String currentStatus = (rawItem['statut'] ?? '').toString().toLowerCase();
@@ -152,11 +151,11 @@ class _RouteOsmViewScreenState extends State<RouteOsmViewScreen> {
             
             RideData completedRideData = RideData.fromJson(Map<String, dynamic>.from(rawItem));
             if (completedRideData.statutPaiement != 'yes') {
-              Get.off(() => PaymentSelectionScreen(), arguments: {
+              Get.offAll(() => PaymentSelectionScreen(), arguments: {
                 "rideData": completedRideData
               });
             } else {
-              Get.off(() => TripHistoryScreen(), arguments: {
+              Get.offAll(() => TripHistoryScreen(), arguments: {
                 "rideData": completedRideData
               });
             }
