@@ -175,6 +175,8 @@ class _RouteOsmViewScreenState extends State<RouteOsmViewScreen> {
               photoPath: data.photoPath,
               driverPhone: data.driverPhone,
               moyenne: data.moyenne,
+              stops: data.stops,
+            );
             if (completedRideData.statutPaiement != 'yes') {
               Get.off(() => PaymentSelectionScreen(), arguments: {
                 "rideData": completedRideData

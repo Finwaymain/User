@@ -266,6 +266,8 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
               photoPath: data.photoPath,
               driverPhone: data.driverPhone,
               moyenne: data.moyenne,
+              stops: data.stops,
+            );
             if (completedRideData.statutPaiement != 'yes') {
               Get.off(() => PaymentSelectionScreen(), arguments: {
                 "rideData": completedRideData
