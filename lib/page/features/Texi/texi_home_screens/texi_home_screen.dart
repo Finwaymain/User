@@ -18,6 +18,7 @@ import 'package:finway/model/driver_model.dart';
 import 'package:finway/model/vehicle_category_model.dart';
 import 'package:finway/model/ride_model.dart';
 import 'package:finway/page/features/Texi/texi_dash_board.dart';
+import 'package:finway/page/completed_ride_screens/payment_selection_screen.dart';
 import 'package:finway/page/new_ride_screens/searching_driver_screen.dart';
 import 'package:finway/page/search_location_screen.dart';
 import 'package:finway/page/in_progress_screen.dart';
@@ -163,16 +164,28 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
       if (response.statusCode == 200) {
         final body = json.decode(response.body);
         if (body['success'] == 'success' && body['data'] != null) {
-          final rides = (body['data'] as List)
+          final allRides = (body['data'] as List)
               .map((e) => RideData.fromJson(e as Map<String, dynamic>))
-              .where((r) =>
-                  r.statut == 'confirmed' ||
-                  r.statut == 'on ride' ||
-                  r.statut == 'new')
               .toList();
 
-          if (rides.isNotEmpty && mounted) {
-            final activeRide = rides.first;
+          // 1. Check if any completed ride needs payment
+          final unpaidCompleted = allRides.where((r) =>
+              r.statut == 'completed' && r.statutPaiement != 'yes').toList();
+          if (unpaidCompleted.isNotEmpty && mounted) {
+            Get.offAll(() => PaymentSelectionScreen(), arguments: {
+              'rideData': unpaidCompleted.first,
+            });
+            return;
+          }
+
+          // 2. Check for active ongoing rides
+          final activeRides = allRides.where((r) =>
+              r.statut == 'confirmed' ||
+              r.statut == 'on ride' ||
+              r.statut == 'new').toList();
+
+          if (activeRides.isNotEmpty && mounted) {
+            final activeRide = activeRides.first;
             if (activeRide.statut == 'new') {
               Get.offAll(() => const SearchingDriverScreen(), arguments: {
                 'rideData': activeRide,

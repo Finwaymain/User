@@ -22,6 +22,7 @@ import '../../route_view_screen/route_osm_view_screen.dart';
 import '../../home_screen/view/home_screen.dart';
 import '../../wallet/wallet_screen.dart';
 import '../../features/AllServices/service_history_screen.dart';
+import '../../completed_ride_screens/payment_selection_screen.dart';
 import '../../../controller/service_history_controller.dart';
 
 import '../../search_services/search_all_services_screen.dart';
@@ -71,16 +72,28 @@ class _MainDashboardState extends State<MainDashboard> {
       if (response.statusCode == 200) {
         final body = json.decode(response.body);
         if (body['success'] == 'success' && body['data'] != null) {
-          final rides = (body['data'] as List)
+          final allRides = (body['data'] as List)
               .map((e) => RideData.fromJson(e as Map<String, dynamic>))
-              .where((r) =>
-                  r.statut == 'confirmed' ||
-                  r.statut == 'on ride' ||
-                  r.statut == 'new')
               .toList();
 
-          if (rides.isNotEmpty && mounted) {
-            final activeRide = rides.first;
+          // 1. Check if any completed ride needs payment
+          final unpaidCompleted = allRides.where((r) =>
+              r.statut == 'completed' && r.statutPaiement != 'yes').toList();
+          if (unpaidCompleted.isNotEmpty && mounted) {
+            Get.offAll(() => PaymentSelectionScreen(), arguments: {
+              'rideData': unpaidCompleted.first,
+            });
+            return;
+          }
+
+          // 2. Check for active ongoing rides
+          final activeRides = allRides.where((r) =>
+              r.statut == 'confirmed' ||
+              r.statut == 'on ride' ||
+              r.statut == 'new').toList();
+
+          if (activeRides.isNotEmpty && mounted) {
+            final activeRide = activeRides.first;
             if (activeRide.statut == 'new') {
               Get.offAll(() => const SearchingDriverScreen(), arguments: {
                 'rideData': activeRide,

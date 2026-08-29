@@ -9,6 +9,7 @@ import 'package:finway/model/ride_model.dart';
 import 'package:finway/model/ride_details_model.dart';
 import 'package:finway/service/api.dart';
 import 'package:finway/utils/Preferences.dart';
+import 'package:finway/page/completed_ride_screens/payment_selection_screen.dart';
 import 'package:finway/page/route_view_screen/route_view_screen.dart';
 import 'package:finway/page/route_view_screen/route_osm_view_screen.dart';
 import 'package:get/get.dart';
@@ -149,7 +150,7 @@ class SearchingDriverController extends GetxController {
 
   void handleFCMMessage(RemoteMessage message) {
     String? status = message.data['statut']?.toString();
-    if (status == "confirmed" || status == "driver_rejected" || status == "on ride") {
+    if (status == "confirmed" || status == "driver_rejected" || status == "on ride" || status == "completed") {
       try {
         RideData updatedData = RideData.fromJson(message.data);
         handleRideStatusTransition(status!, updatedData);
@@ -161,6 +162,11 @@ class SearchingDriverController extends GetxController {
   }
 
   void handleRideStatusTransition(String status, RideData updatedRideData) {
+    if (status == "completed") {
+      stopSearchTimer();
+      Get.offAll(() => PaymentSelectionScreen(), arguments: {'rideData': updatedRideData});
+      return;
+    }
     if (status == "confirmed" || status == "on ride") {
       stopSearchTimer();
       statut.value = "confirmed";

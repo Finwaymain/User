@@ -4,6 +4,7 @@ import 'dart:developer' as dev;
 
 import 'package:finway/constant/constant.dart';
 import 'package:finway/model/ride_model.dart';
+import 'package:finway/page/completed_ride_screens/payment_selection_screen.dart';
 import 'package:finway/page/new_ride_screens/searching_driver_screen.dart';
 import 'package:finway/page/route_view_screen/route_view_screen.dart';
 import 'package:finway/page/route_view_screen/route_osm_view_screen.dart';
@@ -103,16 +104,30 @@ class _InProgressScreenState extends State<InProgressScreen> {
       if (response.statusCode == 200) {
         final body = json.decode(response.body);
         if (body['success'] == 'success' && body['data'] != null) {
-          final rides = (body['data'] as List)
+          final allRides = (body['data'] as List)
               .map((e) => RideData.fromJson(e as Map<String, dynamic>))
-              .where((r) =>
-                  r.statut == 'confirmed' ||
-                  r.statut == 'on ride' ||
-                  r.statut == 'new')
               .toList();
 
-          if (rides.isNotEmpty && mounted) {
-            final activeRide = rides.first;
+          // 1. Check if any completed ride needs payment
+          final unpaidCompleted = allRides.where((r) =>
+              r.statut == 'completed' && r.statutPaiement != 'yes').toList();
+          if (unpaidCompleted.isNotEmpty && mounted) {
+            _isRedirecting = true;
+            _refreshTimer?.cancel();
+            Get.offAll(() => PaymentSelectionScreen(), arguments: {
+              'rideData': unpaidCompleted.first,
+            });
+            return;
+          }
+
+          // 2. Check for active ongoing rides
+          final activeRides = allRides.where((r) =>
+              r.statut == 'confirmed' ||
+              r.statut == 'on ride' ||
+              r.statut == 'new').toList();
+
+          if (activeRides.isNotEmpty && mounted) {
+            final activeRide = activeRides.first;
             _isRedirecting = true;
             _refreshTimer?.cancel();
 
