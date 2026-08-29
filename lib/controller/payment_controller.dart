@@ -287,44 +287,20 @@ class PaymentController extends GetxController {
   }
 
   double calculateTax({TaxModel? taxModel}) {
-    double tax = 0.0;
-    if (taxModel != null && taxModel.statut == 'yes') {
-      if (taxModel.type.toString() == "Fixed") {
-        tax = double.parse(taxModel.value.toString());
-      } else {
-        tax = ((subTotalAmount.value - discountAmount.value) * double.parse(taxModel.value!.toString())) / 100;
-      }
-    }
-    return tax;
+    if (taxModel == null) return 0.0;
+    double base = (subTotalAmount.value - discountAmount.value);
+    return Constant.calculateTaxFor(taxModel, base > 0 ? base : 0.0);
   }
 
   double getTotalAmount() {
-    // if (Constant.taxType == "Percentage") {
-    //   taxAmount.value = Constant.taxValue != 0
-    //       ? (subTotalAmount.value - discountAmount.value) *
-    //           double.parse(Constant.taxValue.toString()) /
-    //           100
-    //       : 0.0;
-    // } else {
-    //   taxAmount.value = Constant.taxValue != 0
-    //       ? double.parse(Constant.taxValue.toString())
-    //       : 0.0;
-    // }
-    // if (paymentSettingModel.value.tax!.taxType == "percentage") {
-    //   taxAmount.value = paymentSettingModel.value.tax!.taxAmount != null
-    //       ? (subTotalAmount.value - discountAmount.value) *
-    //           double.parse(
-    //               paymentSettingModel.value.tax!.taxAmount.toString()) /
-    //           100
-    //       : 0.0;
-    // } else {
-    //   taxAmount.value = paymentSettingModel.value.tax!.taxAmount != null
-    //       ? double.parse(paymentSettingModel.value.tax!.taxAmount.toString())
-    //       : 0.0;
-    // }
-
-    final effectiveTax = selectedRadioTile.value == "Wallet" ? 0.0 : taxAmount.value;
-    return (subTotalAmount.value - discountAmount.value) + tipAmount.value + effectiveTax;
+    double base = (subTotalAmount.value - discountAmount.value);
+    if (base < 0) base = 0.0;
+    double totalTax = 0.0;
+    for (var tax in Constant.getActiveTaxes(selectedRadioTile.value.toLowerCase())) {
+      totalTax += Constant.calculateTaxFor(tax, base);
+    }
+    taxAmount.value = totalTax;
+    return base + tipAmount.value + totalTax;
   }
 
   Rx<UserModel> userModel = UserModel().obs;

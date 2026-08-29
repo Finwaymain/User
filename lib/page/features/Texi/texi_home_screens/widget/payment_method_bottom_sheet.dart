@@ -264,18 +264,95 @@ class PaymentMethodBottomSheet {
                           ],
                         ),
                       ),
+                      const SizedBox(height: 12),
+                      // Fare and Tax Breakdown Card
+                      Builder(
+                        builder: (context) {
+                          final selectedMethod = controller.paymentMethodType.value.toLowerCase();
+                          final activeTaxes = Constant.getActiveTaxes(selectedMethod);
+                          double totalTax = 0.0;
+                          for (var t in activeTaxes) {
+                            totalTax += Constant.calculateTaxFor(t, tripPrice);
+                          }
+                          final grandTotal = tripPrice + totalTax;
+
+                          return Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: isDarkMode ? AppThemeData.surface50Dark : const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: isDarkMode ? AppThemeData.grey300Dark : AppThemeData.grey200,
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text("Base Fare".tr, style: TextStyle(color: isDarkMode ? AppThemeData.grey400Dark : AppThemeData.grey700, fontSize: 13)),
+                                    Text(Constant().amountShow(amount: tripPrice.toString()), style: TextStyle(fontWeight: FontWeight.w600, color: isDarkMode ? AppThemeData.grey200Dark : AppThemeData.grey900, fontSize: 13)),
+                                  ],
+                                ),
+                                if (activeTaxes.isNotEmpty) ...[
+                                  const SizedBox(height: 6),
+                                  ...activeTaxes.map((tax) {
+                                    final tAmt = Constant.calculateTaxFor(tax, tripPrice);
+                                    final isPct = tax.type?.toLowerCase() == 'percentage';
+                                    final label = isPct ? "${tax.libelle ?? 'GST'} (${tax.value}%)" : (tax.libelle ?? 'Tax');
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 2),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(label, style: TextStyle(color: isDarkMode ? AppThemeData.grey400Dark : AppThemeData.grey600, fontSize: 12)),
+                                          Text(Constant().amountShow(amount: tAmt.toString()), style: TextStyle(color: isDarkMode ? AppThemeData.grey300Dark : AppThemeData.grey700, fontSize: 12)),
+                                        ],
+                                      ),
+                                    );
+                                  }),
+                                ],
+                                const Divider(height: 14, thickness: 0.8),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text("Total Payable".tr, style: TextStyle(fontWeight: FontWeight.bold, color: isDarkMode ? AppThemeData.grey100Dark : AppThemeData.grey900, fontSize: 14)),
+                                    Text(Constant().amountShow(amount: grandTotal.toString()), style: TextStyle(fontWeight: FontWeight.bold, color: AppThemeData.primary200, fontSize: 15)),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 12),
                       // Book Button
-                      ButtonThem.buildButton(context,
-                          btnHeight: 54,
-                          title: "${"Book".tr} ${Constant().amountShow(amount: tripPrice.toString())}",
-                          btnColor: AppThemeData.primary200,
-                          txtColor: Colors.white, onPress: () {
-                            if (controller.paymentMethodType.value == "Select Method".tr) {
-                              ShowToastDialog.showToast("Please select payment method".tr);
-                            } else {
-                              _bookRide(context, controller, driverData, tripPrice, passengerController);
-                            }
-                          }),
+                      Builder(
+                        builder: (context) {
+                          final selectedMethod = controller.paymentMethodType.value.toLowerCase();
+                          final activeTaxes = Constant.getActiveTaxes(selectedMethod);
+                          double totalTax = 0.0;
+                          for (var t in activeTaxes) {
+                            totalTax += Constant.calculateTaxFor(t, tripPrice);
+                          }
+                          final grandTotal = tripPrice + totalTax;
+
+                          return ButtonThem.buildButton(
+                            context,
+                            btnHeight: 54,
+                            title: "${"Book".tr} ${Constant().amountShow(amount: grandTotal.toString())}",
+                            btnColor: AppThemeData.primary200,
+                            txtColor: Colors.white,
+                            onPress: () {
+                              if (controller.paymentMethodType.value == "Select Method".tr) {
+                                ShowToastDialog.showToast("Please select payment method".tr);
+                              } else {
+                                _bookRide(context, controller, driverData, tripPrice, passengerController);
+                              }
+                            },
+                          );
+                        },
+                      ),
                       const SizedBox(height: 10),
                     ],
                   ),

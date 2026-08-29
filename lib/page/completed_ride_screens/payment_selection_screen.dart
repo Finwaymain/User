@@ -254,46 +254,49 @@ class PaymentSelectionScreen extends StatelessWidget {
                                           ),
                                         ),
                                       ),
-                                      Visibility(
-                                        visible: controller.selectedRadioTile.value != "Wallet",
-                                        child: ListView.builder(
-                                          itemCount: Constant.taxList.length,
-                                          shrinkWrap: true,
-                                          padding: EdgeInsets.zero,
-                                          physics: const NeverScrollableScrollPhysics(),
-                                          itemBuilder: (context, index) {
-                                            TaxModel taxModel = Constant.taxList[index];
-                                            return Column(
-                                              children: [
-                                                Padding(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                                                  child: Row(
-                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                    children: [
-                                                      Text(
-                                                          '${taxModel.libelle.toString()} (${taxModel.type == "Fixed" ? Constant().amountShow(amount: taxModel.value) : "${taxModel.value}%"})',
-                                                          style: TextStyle(
-                                                            fontFamily: AppThemeData.regular,
-                                                            color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
-                                                            fontSize: 16,
-                                                         )),
-                                                      Text(Constant().amountShow(amount: controller.calculateTax(taxModel: taxModel).toString()),
-                                                          style: TextStyle(
-                                                            fontFamily: AppThemeData.medium,
-                                                            color: themeChange.getThem() ? AppThemeData.grey500Dark : AppThemeData.grey500,
-                                                            fontSize: 16,
-                                                          ))
-                                                    ],
+                                      Builder(
+                                        builder: (context) {
+                                          final activeTaxes = Constant.getActiveTaxes(controller.selectedRadioTile.value.toLowerCase());
+                                          if (activeTaxes.isEmpty) return const SizedBox.shrink();
+                                          return ListView.builder(
+                                            itemCount: activeTaxes.length,
+                                            shrinkWrap: true,
+                                            padding: EdgeInsets.zero,
+                                            physics: const NeverScrollableScrollPhysics(),
+                                            itemBuilder: (context, index) {
+                                              TaxModel taxModel = activeTaxes[index];
+                                              return Column(
+                                                children: [
+                                                  Padding(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                                                    child: Row(
+                                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                      children: [
+                                                        Text(
+                                                            '${taxModel.libelle.toString()} (${taxModel.type == "Fixed" ? Constant().amountShow(amount: taxModel.value) : "${taxModel.value}%"})',
+                                                            style: TextStyle(
+                                                              fontFamily: AppThemeData.regular,
+                                                              color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
+                                                              fontSize: 16,
+                                                            )),
+                                                        Text(Constant().amountShow(amount: controller.calculateTax(taxModel: taxModel).toString()),
+                                                            style: TextStyle(
+                                                              fontFamily: AppThemeData.medium,
+                                                              color: themeChange.getThem() ? AppThemeData.grey500Dark : AppThemeData.grey500,
+                                                              fontSize: 16,
+                                                            ))
+                                                      ],
+                                                    ),
                                                   ),
-                                                ),
-                                                Container(
-                                                  color: themeChange.getThem() ? AppThemeData.grey300Dark : AppThemeData.grey300,
-                                                  height: 1,
-                                                )
-                                              ],
-                                            );
-                                          },
-                                        ),
+                                                  Container(
+                                                    color: themeChange.getThem() ? AppThemeData.grey300Dark : AppThemeData.grey300,
+                                                    height: 1,
+                                                  )
+                                                ],
+                                              );
+                                            },
+                                          );
+                                        },
                                       ),
                                       Visibility(
                                         visible: controller.tipAmount.value == 0 ? false : true,
