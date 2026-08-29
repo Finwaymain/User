@@ -9,6 +9,7 @@ import 'package:finway/controller/ride_details_controller.dart';
 import 'package:finway/model/ride_model.dart';
 import 'package:finway/model/ride_details_model.dart';
 import 'package:finway/page/chats_screen/conversation_screen.dart';
+import 'package:finway/page/completed_ride_screens/payment_selection_screen.dart';
 import 'package:finway/page/completed_ride_screens/trip_history_screen.dart';
 import 'package:finway/themes/button_them.dart';
 import 'package:finway/themes/constant_colors.dart';
@@ -265,11 +266,15 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
               photoPath: data.photoPath,
               driverPhone: data.driverPhone,
               moyenne: data.moyenne,
-              stops: data.stops,
-            );
-            Get.off(() => TripHistoryScreen(), arguments: {
-              "rideData": completedRideData
-            });
+            if (completedRideData.statutPaiement != 'yes') {
+              Get.off(() => PaymentSelectionScreen(), arguments: {
+                "rideData": completedRideData
+              });
+            } else {
+              Get.off(() => TripHistoryScreen(), arguments: {
+                "rideData": completedRideData
+              });
+            }
             return;
           }
           
