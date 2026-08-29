@@ -290,7 +290,7 @@ class PaymentMethodBottomSheet {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text("Base Fare".tr, style: TextStyle(color: isDarkMode ? AppThemeData.grey400Dark : AppThemeData.grey700, fontSize: 13)),
+                                    Text("Base Fare".tr, style: TextStyle(color: isDarkMode ? AppThemeData.grey400Dark : AppThemeData.grey500, fontSize: 13)),
                                     Text(Constant().amountShow(amount: tripPrice.toString()), style: TextStyle(fontWeight: FontWeight.w600, color: isDarkMode ? AppThemeData.grey200Dark : AppThemeData.grey900, fontSize: 13)),
                                   ],
                                 ),
@@ -305,8 +305,8 @@ class PaymentMethodBottomSheet {
                                       child: Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
-                                          Text(label, style: TextStyle(color: isDarkMode ? AppThemeData.grey400Dark : AppThemeData.grey600, fontSize: 12)),
-                                          Text(Constant().amountShow(amount: tAmt.toString()), style: TextStyle(color: isDarkMode ? AppThemeData.grey300Dark : AppThemeData.grey700, fontSize: 12)),
+                                          Text(label, style: TextStyle(color: isDarkMode ? AppThemeData.grey400Dark : AppThemeData.grey500, fontSize: 12)),
+                                          Text(Constant().amountShow(amount: tAmt.toString()), style: TextStyle(color: isDarkMode ? AppThemeData.grey300Dark : AppThemeData.grey900, fontSize: 12)),
                                         ],
                                       ),
                                     );
