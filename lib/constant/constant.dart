@@ -41,7 +41,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class Constant {
   static String? appName = "Fiinway";
-  static String? kGoogleApiKey = "AIzaSyBw7w6Sdryp7JAloPV0fBdAA-eFCtNv060";
+  static String? kGoogleApiKey = "AIzaSyAxZaszdbtbO75kvNjSYm1LjW2Sk59D9C8";
   static String? distanceUnit = "KM";
   static String? appVersion = "0.0";
   static String? decimal = "2";
