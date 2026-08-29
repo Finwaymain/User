@@ -130,9 +130,13 @@ class HomeOsmController extends GetxController with GetSingleTickerProviderState
         departureController.text = addressData['display_name'] ?? '';
         departureLatLong.value = GeoPoint(latitude: position.latitude, longitude: position.longitude);
         if (setMarker) {
+          Constant.taxList.clear();
           for (var i = 0; i < Constant.allTaxList.length; i++) {
-            if (addressData["address"]["county"].toString().toUpperCase() == Constant.allTaxList[i].country?.toUpperCase()) {
-              Constant.taxList.add(Constant.allTaxList[i]);
+            if (addressData["address"] != null &&
+                addressData["address"]["county"].toString().toUpperCase() == Constant.allTaxList[i].country?.toUpperCase()) {
+              if (!Constant.taxList.any((t) => t.id == Constant.allTaxList[i].id)) {
+                Constant.taxList.add(Constant.allTaxList[i]);
+              }
             }
           }
           setDepartureMarker(GeoPoint(latitude: position.latitude, longitude: position.longitude));

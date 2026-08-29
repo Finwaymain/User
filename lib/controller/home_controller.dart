@@ -148,10 +148,13 @@ class HomeController extends GetxController with GetSingleTickerProviderStateMix
           List<get_cord_address.Placemark> placeMarks = await get_cord_address.placemarkFromCoordinates(location.latitude ?? 0.0, location.longitude ?? 0.0);
 
           if (placeMarks.isNotEmpty && placeMarks.first.country != null) {
+            Constant.taxList.clear();
             for (var i = 0; i < Constant.allTaxList.length; i++) {
               if (Constant.allTaxList[i].country != null &&
                   placeMarks.first.country!.toUpperCase() == Constant.allTaxList[i].country!.toUpperCase()) {
-                Constant.taxList.add(Constant.allTaxList[i]);
+                if (!Constant.taxList.any((t) => t.id == Constant.allTaxList[i].id)) {
+                  Constant.taxList.add(Constant.allTaxList[i]);
+                }
               }
             }
           }

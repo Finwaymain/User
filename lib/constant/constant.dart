@@ -51,14 +51,19 @@ class Constant {
   static List<TaxModel> allTaxList = [];
   static List<TaxModel> taxList = [];
 
-  /// Returns the list of active taxes from taxList or allTaxList, optionally filtered by payment method
+  /// Returns the list of active taxes from taxList or allTaxList, deduplicated by id/libelle, optionally filtered by payment method
   static List<TaxModel> getActiveTaxes([String? paymentMethod]) {
     final list = taxList.isNotEmpty ? taxList : allTaxList;
-    return list.where((t) {
-      if (t.statut != null && t.statut != 'yes') return false;
-      if (paymentMethod == null || paymentMethod.isEmpty) return true;
-      return t.isApplicableFor(paymentMethod);
-    }).toList();
+    final Map<String, TaxModel> uniqueTaxes = {};
+    for (final t in list) {
+      if (t.statut != null && t.statut != 'yes') continue;
+      if (paymentMethod != null && paymentMethod.isNotEmpty && !t.isApplicableFor(paymentMethod)) continue;
+      final key = t.id?.toString() ?? t.libelle?.toString() ?? uniqueTaxes.length.toString();
+      if (!uniqueTaxes.containsKey(key)) {
+        uniqueTaxes[key] = t;
+      }
+    }
+    return uniqueTaxes.values.toList();
   }
 
   /// Calculates the tax amount for a single tax item
