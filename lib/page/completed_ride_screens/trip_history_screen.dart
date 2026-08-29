@@ -736,24 +736,36 @@ class TripHistoryScreen extends StatelessWidget {
                                           context,
                                           title: 'Track Ride'.tr,
                                           onPress: () async {
+                                            if (controller.data.value.statut == 'completed' && controller.data.value.statutPaiement != 'yes') {
+                                              Get.to(() => PaymentSelectionScreen(), arguments: {
+                                                "rideData": controller.data.value,
+                                              });
+                                              return;
+                                            }
+                                            
                                             var argumentData = {'type': controller.data.value.statut.toString(), 'data': controller.data.value};
-
-                                            if (Constant.liveTrackingMapType == "inappmap") {
-                                              if (Constant.selectedMapType == 'osm') {
-                                                Get.to(const RouteOsmViewScreen(), arguments: argumentData);
-                                              } else {
-                                                Get.to(const RouteViewScreen(), arguments: argumentData);
-                                              }
+                                            if (Constant.selectedMapType == 'osm') {
+                                              Get.to(() => const RouteOsmViewScreen(), arguments: argumentData);
                                             } else {
-                                              Constant.redirectMap(
-                                                latitude: double.parse(controller.data.value.latitudeArrivee!), //orderModel.destinationLocationLAtLng!.latitude!,
-                                                longLatitude: double.parse(controller.data.value.longitudeArrivee!), //orderModel.destinationLocationLAtLng!.longitude!,
-                                                name: controller.data.value.destinationName!,
-                                              ); //orderModel.destinationLocationName.toString());
+                                              Get.to(() => const RouteViewScreen(), arguments: argumentData);
                                             }
                                           },
                                         ))),
                               ],
+                            ),
+                          if (controller.data.value.statut == "completed" && controller.data.value.statutPaiement != "yes")
+                            Padding(
+                              padding: const EdgeInsets.only(top: 10),
+                              child: ButtonThem.buildButton(
+                                context,
+                                title: 'Pay Now'.tr,
+                                btnWidthRatio: 1,
+                                onPress: () async {
+                                  Get.to(() => PaymentSelectionScreen(), arguments: {
+                                    "rideData": controller.data.value,
+                                  });
+                                },
+                              ),
                             ),
                           if (controller.data.value.statut == "completed" || controller.data.value.statut == "rejected")
                             Column(

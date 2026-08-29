@@ -3,7 +3,10 @@ import 'package:finway/constant/show_toast_dialog.dart';
 import 'package:finway/controller/new_ride_controller.dart';
 import 'package:finway/model/ride_model.dart';
 import 'package:finway/page/complaint/add_complaint_screen.dart';
+import 'package:finway/page/completed_ride_screens/payment_selection_screen.dart';
 import 'package:finway/page/completed_ride_screens/trip_history_screen.dart';
+import 'package:finway/page/route_view_screen/route_view_screen.dart';
+import 'package:finway/page/route_view_screen/route_osm_view_screen.dart';
 import 'package:finway/page/review_screens/add_review_screen.dart';
 import 'package:finway/themes/appbar_cust.dart';
 import 'package:finway/themes/button_them.dart';
@@ -205,11 +208,30 @@ class NewRideScreen extends StatelessWidget {
     final themeChange = Provider.of<DarkThemeProvider>(context);
     return InkWell(
       onTap: () async {
-        await Get.to(TripHistoryScreen(), arguments: {
-          "rideData": data,
-        })?.then((v) {
-          controller.getNewRide();
-        });
+        if (data.statut == 'completed' && data.statutPaiement != 'yes') {
+          await Get.to(() => PaymentSelectionScreen(), arguments: {
+            "rideData": data,
+          })?.then((v) {
+            controller.getNewRide();
+          });
+        } else if (data.statut == 'confirmed' || data.statut == 'on ride') {
+          var argumentData = {'type': data.statut.toString(), 'data': data};
+          if (Constant.selectedMapType == 'osm') {
+            await Get.to(() => const RouteOsmViewScreen(), arguments: argumentData)?.then((v) {
+              controller.getNewRide();
+            });
+          } else {
+            await Get.to(() => const RouteViewScreen(), arguments: argumentData)?.then((v) {
+              controller.getNewRide();
+            });
+          }
+        } else {
+          await Get.to(() => TripHistoryScreen(), arguments: {
+            "rideData": data,
+          })?.then((v) {
+            controller.getNewRide();
+          });
+        }
       },
       child: Container(
         decoration: BoxDecoration(
@@ -763,7 +785,7 @@ class NewRideScreen extends StatelessWidget {
                       if (data.statutPaiement == "yes") {
                         controller.getNewRide();
                       } else {
-                        await Get.to(TripHistoryScreen(), arguments: {
+                        await Get.to(() => PaymentSelectionScreen(), arguments: {
                           "rideData": data,
                         })?.then((v) {
                           controller.getNewRide();
