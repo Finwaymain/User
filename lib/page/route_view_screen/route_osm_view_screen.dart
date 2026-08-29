@@ -166,15 +166,9 @@ class _RouteOsmViewScreenState extends State<RouteOsmViewScreen> {
               );
             }
             
-            if (completedRideData.statutPaiement != 'yes') {
-              Get.offAll(() => PaymentSelectionScreen(), arguments: {
-                "rideData": completedRideData
-              });
-            } else {
-              Get.offAll(() => TripHistoryScreen(), arguments: {
-                "rideData": completedRideData
-              });
-            }
+            Get.offAll(() => PaymentSelectionScreen(), arguments: {
+              "rideData": completedRideData
+            });
             return;
           }
           

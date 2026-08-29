@@ -179,13 +179,8 @@ class FirebaseService {
         }
       } else if (message.data['statut'] == "completed") {
         RideData rideData = RideData.fromJson(message.data);
-        if (rideData.statutPaiement != 'yes') {
-          Get.to(() => PaymentSelectionScreen(),
-              arguments: {"rideData": rideData});
-        } else {
-          Get.to(() => TripHistoryScreen(),
-              arguments: {"rideData": rideData});
-        }
+        Get.offAll(() => PaymentSelectionScreen(),
+            arguments: {"rideData": rideData});
       }
     } catch (e) {
       log('Error handling notification tap: $e');
