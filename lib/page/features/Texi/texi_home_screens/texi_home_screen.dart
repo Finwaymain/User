@@ -302,6 +302,7 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
 
         homeCtrl.destinationLatLong.value = LatLng(lat, lng);
         homeCtrl.destinationController.text = addr;
+        homeCtrl.setDestinationMarker(LatLng(lat, lng));
 
         // Save to SQLite search history
         await DBHelper.insertSearch(addr, lat, lng);
@@ -322,6 +323,7 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
 
         homeCtrl.departureLatLong.value = LatLng(lat, lng);
         homeCtrl.departureController.text = addr;
+        homeCtrl.setDepartureMarker(LatLng(lat, lng));
       }
 
       if (homeCtrl.departureController.text.isNotEmpty && homeCtrl.destinationController.text.isNotEmpty) {
@@ -376,6 +378,7 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
 
         homeCtrl.destinationLatLong.value = mapCenter;
         homeCtrl.destinationController.text = address;
+        homeCtrl.setDestinationMarker(mapCenter);
         await DBHelper.insertSearch(address, mapCenter.latitude, mapCenter.longitude);
         loadHistory();
       } else {
@@ -394,6 +397,7 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
 
         homeCtrl.departureLatLong.value = mapCenter;
         homeCtrl.departureController.text = address;
+        homeCtrl.setDepartureMarker(mapCenter);
       }
 
       setState(() {
@@ -650,30 +654,32 @@ class _TexiHomeScreenState extends State<TexiHomeScreen> {
             children: [
               // Map background (interactive map showing current location and route)
               Positioned.fill(
-                child: GoogleMap(
-                  zoomControlsEnabled: false,
-                  myLocationButtonEnabled: false,
-                  compassEnabled: false,
-                  initialCameraPosition: CameraPosition(
-                    target: controller.departureLatLong.value.latitude != 0.0
-                        ? controller.departureLatLong.value
-                        : controller.center,
-                    zoom: 14.0,
+                child: Obx(
+                  () => GoogleMap(
+                    zoomControlsEnabled: false,
+                    myLocationButtonEnabled: false,
+                    compassEnabled: false,
+                    initialCameraPosition: CameraPosition(
+                      target: controller.departureLatLong.value.latitude != 0.0
+                          ? controller.departureLatLong.value
+                          : controller.center,
+                      zoom: 14.0,
+                    ),
+                    onMapCreated: (mapcontrollerdata) async {
+                      controller.mapController = mapcontrollerdata;
+                      if (controller.departureLatLong.value.latitude != 0.0 && controller.departureLatLong.value.longitude != 0.0) {
+                        controller.mapController!.moveCamera(CameraUpdate.newLatLngZoom(
+                          controller.departureLatLong.value, 15
+                        ));
+                      }
+                    },
+                    onCameraMove: (pos) {
+                      mapCenter = pos.target;
+                    },
+                    polylines: Set<Polyline>.of(controller.polyLines.values),
+                    myLocationEnabled: true,
+                    markers: controller.markers.values.toSet(),
                   ),
-                  onMapCreated: (mapcontrollerdata) async {
-                    controller.mapController = mapcontrollerdata;
-                    if (controller.departureLatLong.value.latitude != 0.0 && controller.departureLatLong.value.longitude != 0.0) {
-                      controller.mapController!.moveCamera(CameraUpdate.newLatLngZoom(
-                        controller.departureLatLong.value, 15
-                      ));
-                    }
-                  },
-                  onCameraMove: (pos) {
-                    mapCenter = pos.target;
-                  },
-                  polylines: Set<Polyline>.of(controller.polyLines.values),
-                  myLocationEnabled: true,
-                  markers: controller.markers.values.toSet(),
                 ),
               ),
 

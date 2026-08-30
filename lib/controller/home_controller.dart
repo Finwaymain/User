@@ -305,16 +305,27 @@ class HomeController extends GetxController with GetSingleTickerProviderStateMix
 
   RxMap<PolylineId, Polyline> polyLines = <PolylineId, Polyline>{}.obs;
   addPolyLine(List<LatLng> polylineCoordinates) {
-    PolylineId id = const PolylineId("poly");
-    Polyline polyline = Polyline(
-      polylineId: id,
-      color: AppThemeData.primary200,
-      points: polylineCoordinates,
-      width: 6,
-      geodesic: true,
-    );
-    polyLines[id] = polyline;
-    updateCameraLocation(polylineCoordinates.first, polylineCoordinates.last, mapController);
+    if (polylineCoordinates.isEmpty) {
+      if (departureLatLong.value.latitude != 0.0 && destinationLatLong.value.latitude != 0.0) {
+        polylineCoordinates = [departureLatLong.value, destinationLatLong.value];
+      }
+    }
+    if (polylineCoordinates.isNotEmpty) {
+      PolylineId id = const PolylineId("poly");
+      Polyline polyline = Polyline(
+        polylineId: id,
+        color: AppThemeData.primary200,
+        points: polylineCoordinates,
+        width: 6,
+        geodesic: true,
+      );
+      polyLines[id] = polyline;
+      polyLines.refresh();
+      update();
+      if (mapController != null && polylineCoordinates.length >= 2) {
+        updateCameraLocation(polylineCoordinates.first, polylineCoordinates.last, mapController);
+      }
+    }
   }
 
   Future<void> updateCameraLocation(

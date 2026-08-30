@@ -1081,18 +1081,24 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
   }
 
   addPolyLine(List<LatLng> polylineCoordinates) {
-    PolylineId id = const PolylineId("poly");
-    Polyline polyline = Polyline(
-      polylineId: id,
-      color: AppThemeData.primary200,
-      points: polylineCoordinates,
-      width: 6,
-      geodesic: true,
-    );
-    polyLines[id] = polyline;
-    updateCameraLocation(polylineCoordinates.first, polylineCoordinates.last, _controller);
-
-    setState(() {});
+    if (polylineCoordinates.isEmpty) {
+      polylineCoordinates = [departureLatLong, destinationLatLong];
+    }
+    if (polylineCoordinates.isNotEmpty) {
+      PolylineId id = const PolylineId("poly");
+      Polyline polyline = Polyline(
+        polylineId: id,
+        color: AppThemeData.primary200,
+        points: polylineCoordinates,
+        width: 6,
+        geodesic: true,
+      );
+      polyLines[id] = polyline;
+      if (_controller != null && polylineCoordinates.length >= 2) {
+        updateCameraLocation(polylineCoordinates.first, polylineCoordinates.last, _controller);
+      }
+      setState(() {});
+    }
   }
 
   Future<void> updateCameraLocation(
