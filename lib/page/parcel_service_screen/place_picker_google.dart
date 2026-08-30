@@ -214,6 +214,7 @@ class _GoogleLocationPickerState extends State<GoogleLocationPicker> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: null,
         onPressed: _setUserLocation,
         child: const Icon(Icons.my_location),
       ),

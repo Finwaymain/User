@@ -192,6 +192,7 @@ class _InProgressScreenState extends State<InProgressScreen> {
                   right: 16,
                   bottom: 240,
                   child: FloatingActionButton(
+                    heroTag: null,
                     mini: true,
                     backgroundColor: isDark ? AppThemeData.grey800 : Colors.white,
                     child: Icon(

@@ -216,6 +216,7 @@ class _LocationPickerState extends State<LocationPicker> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: null,
         onPressed: _setUserLocation,
         child: const Icon(Icons.my_location),
       ),
