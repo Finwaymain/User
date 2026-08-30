@@ -83,6 +83,8 @@ class NewRideScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: TabBar(
+                      padding: EdgeInsets.zero,
+                      labelPadding: const EdgeInsets.symmetric(horizontal: 2),
                       indicator: BoxDecoration(
                         color: AppThemeData.primary200,
                         borderRadius: BorderRadius.circular(10),
@@ -100,77 +102,89 @@ class NewRideScreen extends StatelessWidget {
                       unselectedLabelColor: isDark ? Colors.white60 : const Color(0xFF64748B),
                       labelStyle: const TextStyle(
                         fontFamily: AppThemeData.bold,
-                        fontSize: 14,
+                        fontSize: 13,
                       ),
                       unselectedLabelStyle: const TextStyle(
                         fontFamily: AppThemeData.medium,
-                        fontSize: 14,
+                        fontSize: 13,
                       ),
                       tabs: [
                         Tab(
-                          child: Obx(() => Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text('New'.tr),
-                              if (controller.newRideList.isNotEmpty) ...[
-                                const SizedBox(width: 5),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: Colors.amber.shade700,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Text(
-                                    '${controller.newRideList.length}',
-                                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                                  ),
-                                )
-                              ]
-                            ],
+                          child: Obx(() => FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text('New'.tr),
+                                if (controller.newRideList.isNotEmpty) ...[
+                                  const SizedBox(width: 4),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                    decoration: BoxDecoration(
+                                      color: Colors.amber.shade700,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      '${controller.newRideList.length}',
+                                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                                    ),
+                                  )
+                                ]
+                              ],
+                            ),
                           )),
                         ),
                         Tab(
-                          child: Obx(() => Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text('Pending'.tr),
-                              if (controller.pendingRideList.isNotEmpty) ...[
-                                const SizedBox(width: 5),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue.shade600,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Text(
-                                    '${controller.pendingRideList.length}',
-                                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                                  ),
-                                )
-                              ]
-                            ],
+                          child: Obx(() => FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text('Pending'.tr),
+                                if (controller.pendingRideList.isNotEmpty) ...[
+                                  const SizedBox(width: 4),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue.shade600,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      '${controller.pendingRideList.length}',
+                                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                                    ),
+                                  )
+                                ]
+                              ],
+                            ),
                           )),
                         ),
                         Tab(
-                          child: Obx(() => Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text('Completed'.tr),
-                              if (controller.completedRideList.isNotEmpty) ...[
-                                const SizedBox(width: 5),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: isDark ? Colors.white24 : Colors.grey.shade400,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Text(
-                                    '${controller.completedRideList.length}',
-                                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                                  ),
-                                )
-                              ]
-                            ],
+                          child: Obx(() => FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text('Completed'.tr),
+                                if (controller.completedRideList.isNotEmpty) ...[
+                                  const SizedBox(width: 4),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                    decoration: BoxDecoration(
+                                      color: isDark ? Colors.white24 : Colors.grey.shade400,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      '${controller.completedRideList.length}',
+                                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                                    ),
+                                  )
+                                ]
+                              ],
+                            ),
                           )),
                         ),
                       ],
@@ -448,25 +462,28 @@ class NewRideScreen extends StatelessWidget {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
                     decoration: BoxDecoration(
                       color: statusBg,
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(statusIcon, color: statusText, size: 13),
-                        const SizedBox(width: 4),
-                        Text(
-                          statusLabel,
-                          style: TextStyle(
-                            fontFamily: AppThemeData.bold,
-                            fontSize: 11,
-                            color: statusText,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(statusIcon, color: statusText, size: 13),
+                          const SizedBox(width: 4),
+                          Text(
+                            statusLabel,
+                            style: TextStyle(
+                              fontFamily: AppThemeData.bold,
+                              fontSize: 11,
+                              color: statusText,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ],
