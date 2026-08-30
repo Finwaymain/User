@@ -112,7 +112,7 @@ class _MainDashboardState extends State<MainDashboard> {
         }
       }
     } catch (e) {
-      log('Check active ride error: $e');
+      debugPrint('Check active ride error: $e');
     }
   }
 
