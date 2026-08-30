@@ -121,15 +121,16 @@ class NewRideController extends GetxController {
             completedRideList.removeWhere((r) => r.id == ride.id);
 
             final status = (ride.statut ?? '').toLowerCase().trim();
+            final paymentStatus = (ride.statutPaiement ?? '').toLowerCase().trim();
 
             if (status == "new") {
               // Awaiting driver acceptance
               newRideList.add(ride);
-            } else if (status == "confirmed" || status == "on ride" || status == "arrived" || status == "in progress") {
-              // In progress / active rides
+            } else if (status == "confirmed" || status == "on ride" || status == "arrived" || status == "in progress" || (status == "completed" && paymentStatus != "yes")) {
+              // In progress / payment awaited rides
               pendingRideList.add(ride);
-            } else if (status == "completed" || status == "rejected" || status == "canceled" || status == "cancelled") {
-              // Completed & Rejected / Cancelled rides
+            } else if ((status == "completed" && paymentStatus == "yes") || status == "rejected" || status == "canceled" || status == "cancelled") {
+              // Fully completed & Rejected / Cancelled rides
               completedRideList.add(ride);
             } else {
               // Default fallback

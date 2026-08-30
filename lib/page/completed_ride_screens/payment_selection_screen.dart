@@ -96,29 +96,30 @@ class PaymentSelectionScreen extends StatelessWidget {
                               Container(
                                 decoration: BoxDecoration(
                                   color: themeChange.getThem() ? AppThemeData.surface50Dark : AppThemeData.surface50,
+                                  borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
                                     color: themeChange.getThem() ? AppThemeData.grey200Dark : AppThemeData.grey200,
                                   ),
                                 ),
                                 child: Padding(
-                                  padding: const EdgeInsets.all(10.0),
+                                  padding: const EdgeInsets.all(12.0),
                                   child: Row(
                                     children: [
                                       Image.asset(
                                         'assets/images/promo_code.png',
-                                        width: 50,
-                                        height: 50,
+                                        width: 48,
+                                        height: 48,
                                       ),
                                       Expanded(
                                         child: Padding(
-                                          padding: const EdgeInsets.only(left: 10),
+                                          padding: const EdgeInsets.only(left: 12),
                                           child: Column(
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
                                               Text(
                                                 "Promo Code".tr,
                                                 style: TextStyle(
-                                                  fontSize: 16,
+                                                  fontSize: 15,
                                                   fontFamily: AppThemeData.semiBold,
                                                   color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
                                                 ),
@@ -137,8 +138,6 @@ class PaymentSelectionScreen extends StatelessWidget {
                                       ),
                                       GestureDetector(
                                           onTap: () {
-                                            // controller.couponCodeController =
-                                            //     TextEditingController();
                                             showModalBottomSheet(
                                               isScrollControlled: true,
                                               isDismissible: true,
@@ -156,9 +155,9 @@ class PaymentSelectionScreen extends StatelessWidget {
                                               borderRadius: BorderRadius.circular(30),
                                               boxShadow: <BoxShadow>[
                                                 BoxShadow(
-                                                  color: Colors.black.withValues(alpha: 0.2),
-                                                  blurRadius: 2,
-                                                  offset: const Offset(2, 2),
+                                                  color: Colors.black.withValues(alpha: 0.15),
+                                                  blurRadius: 3,
+                                                  offset: const Offset(1, 2),
                                                 ),
                                               ],
                                             ),
@@ -177,6 +176,7 @@ class PaymentSelectionScreen extends StatelessWidget {
                                 child: Container(
                                   decoration: BoxDecoration(
                                       color: themeChange.getThem() ? AppThemeData.surface50Dark : AppThemeData.surface50,
+                                      borderRadius: BorderRadius.circular(16),
                                       border: Border.all(
                                         color: themeChange.getThem() ? AppThemeData.grey300Dark : AppThemeData.grey300,
                                         width: 1,
@@ -391,16 +391,10 @@ class PaymentSelectionScreen extends StatelessWidget {
                                                         height: 40,
                                                         decoration: BoxDecoration(
                                                           color: controller.tipAmount.value == 5 ? AppThemeData.primary200 : Colors.white,
+                                                          borderRadius: BorderRadius.circular(10),
                                                           border: Border.all(
                                                             color: controller.tipAmount.value == 5 ? Colors.transparent : Colors.black.withValues(alpha: 0.20),
                                                           ),
-                                                          boxShadow: <BoxShadow>[
-                                                            BoxShadow(
-                                                              color: Colors.black.withValues(alpha: 0.3),
-                                                              blurRadius: 2,
-                                                              offset: const Offset(2, 2),
-                                                            ),
-                                                          ],
                                                         ),
                                                         child: Center(
                                                             child: Text(
@@ -411,7 +405,7 @@ class PaymentSelectionScreen extends StatelessWidget {
                                                     ),
                                                   ),
                                                   const SizedBox(
-                                                    width: 5,
+                                                    width: 8,
                                                   ),
                                                   Expanded(
                                                     child: GestureDetector(
@@ -426,16 +420,10 @@ class PaymentSelectionScreen extends StatelessWidget {
                                                         height: 40,
                                                         decoration: BoxDecoration(
                                                           color: controller.tipAmount.value == 10 ? AppThemeData.primary200 : Colors.white,
+                                                          borderRadius: BorderRadius.circular(10),
                                                           border: Border.all(
                                                             color: controller.tipAmount.value == 10 ? Colors.transparent : Colors.black.withValues(alpha: 0.20),
                                                           ),
-                                                          boxShadow: <BoxShadow>[
-                                                            BoxShadow(
-                                                              color: Colors.black.withValues(alpha: 0.3),
-                                                              blurRadius: 2,
-                                                              offset: const Offset(2, 2),
-                                                            ),
-                                                          ],
                                                         ),
                                                         child: Center(
                                                             child: Text(
@@ -446,7 +434,7 @@ class PaymentSelectionScreen extends StatelessWidget {
                                                     ),
                                                   ),
                                                   const SizedBox(
-                                                    width: 5,
+                                                    width: 8,
                                                   ),
                                                   Expanded(
                                                     child: GestureDetector(
@@ -461,16 +449,10 @@ class PaymentSelectionScreen extends StatelessWidget {
                                                         height: 40,
                                                         decoration: BoxDecoration(
                                                           color: controller.tipAmount.value == 15 ? AppThemeData.primary200 : Colors.white,
+                                                          borderRadius: BorderRadius.circular(10),
                                                           border: Border.all(
                                                             color: controller.tipAmount.value == 15 ? Colors.transparent : Colors.black.withValues(alpha: 0.20),
                                                           ),
-                                                          boxShadow: <BoxShadow>[
-                                                            BoxShadow(
-                                                              color: Colors.black.withValues(alpha: 0.3),
-                                                              blurRadius: 2,
-                                                              offset: const Offset(2, 2),
-                                                            ),
-                                                          ],
                                                         ),
                                                         child: Center(
                                                             child: Text(
@@ -481,7 +463,7 @@ class PaymentSelectionScreen extends StatelessWidget {
                                                     ),
                                                   ),
                                                   const SizedBox(
-                                                    width: 5,
+                                                    width: 8,
                                                   ),
                                                   Expanded(
                                                     child: GestureDetector(
@@ -496,16 +478,10 @@ class PaymentSelectionScreen extends StatelessWidget {
                                                         height: 40,
                                                         decoration: BoxDecoration(
                                                           color: controller.tipAmount.value == 20 ? AppThemeData.primary200 : Colors.white,
+                                                          borderRadius: BorderRadius.circular(10),
                                                           border: Border.all(
                                                             color: controller.tipAmount.value == 20 ? Colors.transparent : Colors.black.withValues(alpha: 0.20),
                                                           ),
-                                                          boxShadow: <BoxShadow>[
-                                                            BoxShadow(
-                                                              color: Colors.black.withValues(alpha: 0.3),
-                                                              blurRadius: 2,
-                                                              offset: const Offset(2, 2),
-                                                            ),
-                                                          ],
                                                         ),
                                                         child: Center(
                                                             child: Text(
@@ -516,7 +492,7 @@ class PaymentSelectionScreen extends StatelessWidget {
                                                     ),
                                                   ),
                                                   const SizedBox(
-                                                    width: 5,
+                                                    width: 8,
                                                   ),
                                                   Expanded(
                                                     child: InkWell(
@@ -531,21 +507,15 @@ class PaymentSelectionScreen extends StatelessWidget {
                                                         height: 40,
                                                         decoration: BoxDecoration(
                                                           color: Colors.white,
+                                                          borderRadius: BorderRadius.circular(10),
                                                           border: Border.all(
                                                             color: Colors.black.withValues(alpha: 0.20),
                                                           ),
-                                                          boxShadow: <BoxShadow>[
-                                                            BoxShadow(
-                                                              color: Colors.black.withValues(alpha: 0.3),
-                                                              blurRadius: 2,
-                                                              offset: const Offset(2, 2),
-                                                            ),
-                                                          ],
                                                         ),
                                                         child: Center(
                                                           child: Text(
                                                             "Other".tr,
-                                                            style: TextStyle(color: Colors.black),
+                                                            style: const TextStyle(color: Colors.black, fontSize: 12),
                                                           ),
                                                         ),
                                                       ),
@@ -561,130 +531,147 @@ class PaymentSelectionScreen extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 20),
                               Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                                 Text("Select Payment Option".tr,
                                     style: TextStyle(
-                                      fontFamily: AppThemeData.medium,
+                                      fontFamily: AppThemeData.semiBold,
                                       color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
                                       fontSize: 16,
                                     )),
                               ]),
-                              const SizedBox(height: 10),
-                              Container(
-                                decoration: BoxDecoration(
-                                    color: themeChange.getThem() ? AppThemeData.surface50Dark : AppThemeData.surface50,
-                                    border: Border.all(
-                                      color: themeChange.getThem() ? AppThemeData.grey300Dark : AppThemeData.grey300,
-                                    )),
-                                child: Column(
-                                  children: [
-                                    RadioButtonCustom(
-                                      image: "assets/icons/cash.png",
-                                      name: "Cash",
-                                      groupValue: controller.selectedRadioTile.value,
-                                      isEnabled: controller.paymentSettingModel.value.cash!.isEnabled == "true" ? true : false,
-                                      isSelected: controller.cash.value,
-                                      onClick: (String? value) {
-                                        controller.stripe = false.obs;
-                                        controller.wallet = false.obs;
-                                        controller.cash = true.obs;
-                                        controller.razorPay = false.obs;
+                              const SizedBox(height: 12),
 
-                                        controller.paypal = false.obs;
-                                        controller.payStack = false.obs;
-                                        controller.flutterWave = false.obs;
-                                        controller.mercadoPago = false.obs;
-                                        controller.payFast = false.obs;
-                                        controller.xendit = false.obs;
-                                        controller.midtrans = false.obs;
-                                        controller.orangePay = false.obs;
-                                        controller.upi = false.obs;
-                                        controller.selectedRadioTile.value = value!;
-                                        controller.paymentMethodId.value = controller.paymentSettingModel.value.cash!.idPaymentMethod.toString();
-                                      },
+                              // 1. Cash Option
+                              _buildModernPaymentOptionCard(
+                                isDark: themeChange.getThem(),
+                                title: "Cash".tr,
+                                subtitle: "Pay directly in cash to the driver".tr,
+                                isSelected: controller.selectedRadioTile.value == "Cash",
+                                icon: Icons.payments_rounded,
+                                onTap: () {
+                                  controller.selectedRadioTile.value = "Cash";
+                                  controller.cash.value = true;
+                                  controller.wallet.value = false;
+                                  controller.upi.value = false;
+                                  controller.stripe.value = false;
+                                  controller.razorPay.value = false;
+                                  controller.paypal.value = false;
+                                  controller.payStack.value = false;
+                                  controller.flutterWave.value = false;
+                                  controller.mercadoPago.value = false;
+                                  controller.payFast.value = false;
+                                  controller.xendit.value = false;
+                                  controller.midtrans.value = false;
+                                  controller.orangePay.value = false;
+                                  controller.paymentMethodId.value = controller.paymentSettingModel.value.cash?.idPaymentMethod?.toString() ?? "cash";
+                                },
+                              ),
+
+                              // 2. Fiinway Wallet Option (Always Clickable)
+                              _buildModernPaymentOptionCard(
+                                isDark: themeChange.getThem(),
+                                title: "Fiinway Wallet".tr,
+                                subtitle: "Pay seamlessly with your Fiinway Wallet".tr,
+                                isSelected: controller.selectedRadioTile.value == "Wallet",
+                                icon: Icons.account_balance_wallet_rounded,
+                                onTap: () {
+                                  controller.selectedRadioTile.value = "Wallet";
+                                  controller.wallet.value = true;
+                                  controller.cash.value = false;
+                                  controller.upi.value = false;
+                                  controller.stripe.value = false;
+                                  controller.razorPay.value = false;
+                                  controller.paypal.value = false;
+                                  controller.payStack.value = false;
+                                  controller.flutterWave.value = false;
+                                  controller.mercadoPago.value = false;
+                                  controller.payFast.value = false;
+                                  controller.xendit.value = false;
+                                  controller.midtrans.value = false;
+                                  controller.orangePay.value = false;
+                                  controller.paymentMethodId.value = controller.paymentSettingModel.value.myWallet?.idPaymentMethod?.toString() ?? "wallet";
+                                },
+                                trailing: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: (double.tryParse(controller.walletAmount.value) ?? 0.0) >= controller.getTotalAmount()
+                                        ? AppThemeData.success300.withValues(alpha: 0.12)
+                                        : Colors.amber.shade700.withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    "Balance: ${Constant().amountShow(amount: controller.walletAmount.value)}",
+                                    style: TextStyle(
+                                      fontFamily: AppThemeData.semiBold,
+                                      fontSize: 11.5,
+                                      color: (double.tryParse(controller.walletAmount.value) ?? 0.0) >= controller.getTotalAmount()
+                                          ? AppThemeData.success300
+                                          : Colors.amber.shade800,
                                     ),
-                                    RadioButtonCustom(
-                                      subName: Constant().amountShow(amount: controller.userModel.value.data?.amount ?? '0'),
-                                      image: "assets/icons/walltet_icons.png",
-                                      name: "Wallet",
-                                      groupValue: controller.selectedRadioTile.value,
-                                      isEnabled: controller.paymentSettingModel.value.myWallet!.isEnabled == "true" ? true : false,
-                                      isSelected: controller.wallet.value,
-                                      onClick: (String? value) {
-                                        controller.stripe = false.obs;
-                                        if (double.parse(controller.walletAmount.toString()) >= controller.getTotalAmount()) {
-                                          controller.wallet = true.obs;
-                                          controller.selectedRadioTile.value = value!;
-                                          controller.paymentMethodId = controller.paymentSettingModel.value.myWallet!.idPaymentMethod.toString().obs;
-                                        } else {
-                                          controller.wallet = false.obs;
-                                        }
-
-                                        controller.cash = false.obs;
-                                        controller.razorPay = false.obs;
-
-                                        controller.paypal = false.obs;
-                                        controller.payStack = false.obs;
-                                        controller.flutterWave = false.obs;
-                                        controller.mercadoPago = false.obs;
-                                        controller.payFast = false.obs;
-                                        controller.xendit = false.obs;
-                                        controller.midtrans = false.obs;
-                                        controller.orangePay = false.obs;
-                                        controller.upi = false.obs;
-                                      },
-                                    ),
-                                    RadioButtonCustom(
-                                      image: "assets/icons/paytm_@3x.png",
-                                      name: "UPI",
-                                      groupValue: controller.selectedRadioTile.value,
-                                      isEnabled: true,
-                                      isSelected: controller.upi.value,
-                                      onClick: (String? value) {
-                                        controller.stripe = false.obs;
-                                        controller.wallet = false.obs;
-                                        controller.cash = false.obs;
-                                        controller.razorPay = false.obs;
-
-                                        controller.paypal = false.obs;
-                                        controller.payStack = false.obs;
-                                        controller.flutterWave = false.obs;
-                                        controller.mercadoPago = false.obs;
-                                        controller.payFast = false.obs;
-                                        controller.xendit = false.obs;
-                                        controller.midtrans = false.obs;
-                                        controller.orangePay = false.obs;
-                                        controller.upi = true.obs;
-                                        controller.selectedRadioTile.value = value!;
-                                        controller.paymentMethodId.value = controller.paymentSettingModel.value.cash!.idPaymentMethod.toString();
-                                      },
-                                    ),
-                                  ],
+                                  ),
                                 ),
                               ),
+
+                              // 3. UPI Option
+                              _buildModernPaymentOptionCard(
+                                isDark: themeChange.getThem(),
+                                title: "UPI / Online Payment".tr,
+                                subtitle: "Pay via Google Pay, PhonePe, Paytm or BHIM".tr,
+                                isSelected: controller.selectedRadioTile.value == "UPI",
+                                icon: Icons.qr_code_2_rounded,
+                                onTap: () {
+                                  controller.selectedRadioTile.value = "UPI";
+                                  controller.upi.value = true;
+                                  controller.wallet.value = false;
+                                  controller.cash.value = false;
+                                  controller.stripe.value = false;
+                                  controller.razorPay.value = false;
+                                  controller.paypal.value = false;
+                                  controller.payStack.value = false;
+                                  controller.flutterWave.value = false;
+                                  controller.mercadoPago.value = false;
+                                  controller.payFast.value = false;
+                                  controller.xendit.value = false;
+                                  controller.midtrans.value = false;
+                                  controller.orangePay.value = false;
+                                  controller.paymentMethodId.value = controller.paymentSettingModel.value.cash?.idPaymentMethod?.toString() ?? "upi";
+                                },
+                              ),
+                              const SizedBox(height: 10),
                             ],
                           ),
                         ),
                       ),
                     ),
                     Padding(
-                        padding: EdgeInsets.only(left: 16, right: 16, bottom: 10),
-                        child: ButtonThem.buildButton(context, title: "Pay ${Constant().amountShow(amount: controller.getTotalAmount().toString())}".tr, onPress: () async {
-                          if (controller.selectedRadioTile.value == "Wallet") {
-                            if (double.parse(controller.walletAmount.toString()) >= controller.getTotalAmount()) {
-                              List taxList = [];
-
-                              for (var v in Constant.taxList) {
-                                taxList.add(v.toJson());
+                      padding: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppThemeData.primary200,
+                            elevation: 2,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          onPressed: () async {
+                            final total = controller.getTotalAmount();
+                            if (controller.selectedRadioTile.value == "Wallet") {
+                              final balance = double.tryParse(controller.walletAmount.value) ?? 0.0;
+                              if (balance >= total) {
+                                List taxList = [];
+                                for (var v in Constant.taxList) {
+                                  taxList.add(v.toJson());
+                                }
+                                _showWalletMpinDialog(context, controller, taxList);
+                              } else {
+                                ShowToastDialog.showToast("Insufficient wallet balance. Available: ${Constant().amountShow(amount: balance.toString())}. Total: ${Constant().amountShow(amount: total.toString())}");
                               }
-                              _showWalletMpinDialog(context, controller, taxList);
-                            } else {
-                              ShowToastDialog.showToast("Insufficient wallet balance");
-                            }
-                          } else if (controller.selectedRadioTile.value == "Cash") {
-                            List taxList = [];
-
+                            } else if (controller.selectedRadioTile.value == "Cash") {
+                              List taxList = [];
                               for (var v in Constant.taxList) {
                                 taxList.add(v.toJson());
                               }
@@ -693,7 +680,7 @@ class PaymentSelectionScreen extends StatelessWidget {
                                 'id_driver': controller.data.value.idConducteur.toString(),
                                 'id_user_app': controller.data.value.idUserApp.toString(),
                                 'amount': controller.subTotalAmount.value.toString(),
-                                'paymethod': controller.selectedRadioTile.value,
+                                'paymethod': "Cash",
                                 'discount': controller.discountAmount.value.toString(),
                                 'tip': controller.tipAmount.value.toString(),
                                 'tax': taxList,
@@ -703,7 +690,7 @@ class PaymentSelectionScreen extends StatelessWidget {
                               };
                               controller.cashPaymentRequest(bodyParams).then((value) {
                                 if (value != null) {
-                                  ShowToastDialog.showToast("Payment successfully completed");
+                                  ShowToastDialog.showToast("Payment successfully completed".tr);
                                   Get.offAll(() => const AddReviewScreen(), arguments: {
                                     'data': controller.data.value,
                                     'ride_type': 'ride',
@@ -715,8 +702,21 @@ class PaymentSelectionScreen extends StatelessWidget {
                                 showLoadingAlert(context);
                                 transactionAPI();
                               });
+                            } else {
+                              ShowToastDialog.showToast("Please select a payment option".tr);
                             }
-                          })),
+                          },
+                          child: Text(
+                            "Pay ${Constant().amountShow(amount: controller.getTotalAmount().toString())}".tr,
+                            style: const TextStyle(
+                              fontFamily: AppThemeData.bold,
+                              fontSize: 16,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -751,6 +751,99 @@ class PaymentSelectionScreen extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildModernPaymentOptionCard({
+    required bool isDark,
+    required String title,
+    required String subtitle,
+    required bool isSelected,
+    required IconData icon,
+    required VoidCallback onTap,
+    Widget? trailing,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppThemeData.primary200.withValues(alpha: isDark ? 0.18 : 0.08)
+              : (isDark ? AppThemeData.surface50Dark : Colors.white),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected
+                ? AppThemeData.primary200
+                : (isDark ? AppThemeData.grey300Dark : AppThemeData.grey300),
+            width: isSelected ? 1.8 : 1.0,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: isSelected
+                  ? AppThemeData.primary200.withValues(alpha: 0.12)
+                  : Colors.black.withValues(alpha: isDark ? 0.12 : 0.02),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(11),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? AppThemeData.primary200.withValues(alpha: 0.2)
+                    : (isDark ? Colors.white10 : Colors.grey.shade100),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                icon,
+                color: isSelected ? AppThemeData.primary200 : (isDark ? Colors.white70 : AppThemeData.grey700),
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontFamily: AppThemeData.bold,
+                      fontSize: 14.5,
+                      color: isDark ? Colors.white : AppThemeData.grey900,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontFamily: AppThemeData.regular,
+                      fontSize: 12,
+                      color: isDark ? AppThemeData.grey500Dark : AppThemeData.grey500,
+                    ),
+                  ),
+                  if (trailing != null) ...[
+                    const SizedBox(height: 5),
+                    trailing,
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+              color: isSelected ? AppThemeData.primary200 : (isDark ? Colors.white38 : Colors.grey.shade400),
+              size: 22,
+            ),
+          ],
+        ),
+      ),
     );
   }
 

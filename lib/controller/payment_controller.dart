@@ -189,6 +189,10 @@ class PaymentController extends GetxController {
         paypal.value = true;
       } else if (selectedRadioTile.value == "UPI" || selectedRadioTile.value == "upi") {
         upi.value = true;
+        selectedRadioTile.value = "UPI";
+      } else {
+        selectedRadioTile.value = "Cash";
+        cash.value = true;
       }
     }
     getAmount();
