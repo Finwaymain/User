@@ -594,37 +594,44 @@ class NewRideScreen extends StatelessWidget {
             // ── METRICS BAR: Distance, Duration, Passengers, Fare ─────────────
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 14),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildMetricCell(
-                    label: 'Distance'.tr,
-                    value: '${double.tryParse(data.distance?.toString() ?? "0")?.toStringAsFixed(1) ?? "0"} ${data.distanceUnit ?? "km"}',
-                    isDark: isDark,
+                  Expanded(
+                    child: _buildMetricCell(
+                      label: 'Distance'.tr,
+                      value: '${double.tryParse(data.distance?.toString() ?? "0")?.toStringAsFixed(1) ?? "0"} ${data.distanceUnit ?? "km"}',
+                      isDark: isDark,
+                    ),
                   ),
                   _buildMetricDivider(isDark),
-                  _buildMetricCell(
-                    label: 'Duration'.tr,
-                    value: data.duree?.toString() ?? 'N/A',
-                    isDark: isDark,
+                  Expanded(
+                    child: _buildMetricCell(
+                      label: 'Duration'.tr,
+                      value: data.duree?.toString() ?? 'N/A',
+                      isDark: isDark,
+                    ),
                   ),
                   _buildMetricDivider(isDark),
-                  _buildMetricCell(
-                    label: 'Passengers'.tr,
-                    value: '${data.numberPoeple ?? 1}',
-                    isDark: isDark,
+                  Expanded(
+                    child: _buildMetricCell(
+                      label: 'Passengers'.tr,
+                      value: '${data.numberPoeple ?? 1}',
+                      isDark: isDark,
+                    ),
                   ),
                   _buildMetricDivider(isDark),
-                  _buildMetricCell(
-                    label: 'Price'.tr,
-                    value: Constant().amountShow(amount: data.montant?.toString() ?? "0"),
-                    isDark: isDark,
-                    isPrice: true,
+                  Expanded(
+                    child: _buildMetricCell(
+                      label: 'Price'.tr,
+                      value: Constant().amountShow(amount: data.montant?.toString() ?? "0"),
+                      isDark: isDark,
+                      isPrice: true,
+                    ),
                   ),
                 ],
               ),
@@ -813,7 +820,10 @@ class NewRideScreen extends StatelessWidget {
                       }
                     },
                     icon: const Icon(Icons.map_rounded, size: 18, color: Colors.white),
-                    label: Text('Track Live Ride'.tr, style: const TextStyle(fontFamily: AppThemeData.bold, fontSize: 13, color: Colors.white)),
+                    label: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text('Track Live Ride'.tr, style: const TextStyle(fontFamily: AppThemeData.bold, fontSize: 13, color: Colors.white)),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppThemeData.primary200,
                       elevation: 0,
@@ -834,7 +844,10 @@ class NewRideScreen extends StatelessWidget {
                       })?.then((v) => controller.getNewRide());
                     },
                     icon: const Icon(Icons.payment_rounded, size: 18, color: Colors.white),
-                    label: Text('Pay Now (${Constant().amountShow(amount: data.montant?.toString() ?? "0")})'.tr, style: const TextStyle(fontFamily: AppThemeData.bold, fontSize: 13, color: Colors.white)),
+                    label: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text('Pay Now (${Constant().amountShow(amount: data.montant?.toString() ?? "0")})'.tr, style: const TextStyle(fontFamily: AppThemeData.bold, fontSize: 13, color: Colors.white)),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFE67E22),
                       elevation: 0,
@@ -851,18 +864,28 @@ class NewRideScreen extends StatelessWidget {
                     Expanded(
                       child: SizedBox(
                         height: 38,
-                        child: OutlinedButton.icon(
+                        child: OutlinedButton(
                           onPressed: () async {
                             Get.to(const AddReviewScreen(), arguments: {
                               "data": data,
                               "ride_type": "ride",
                             })?.then((value) => controller.getNewRide());
                           },
-                          icon: const Icon(Icons.star_outline_rounded, size: 16, color: Color(0xFFE67E22)),
-                          label: Text('Rate Driver'.tr, style: const TextStyle(fontFamily: AppThemeData.bold, fontSize: 12, color: Color(0xFFE67E22))),
                           style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 6),
                             side: const BorderSide(color: Color(0xFFE67E22), width: 1.2),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.star_outline_rounded, size: 16, color: Color(0xFFE67E22)),
+                                const SizedBox(width: 4),
+                                Text('Rate Driver'.tr, style: const TextStyle(fontFamily: AppThemeData.bold, fontSize: 12, color: Color(0xFFE67E22))),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -871,18 +894,28 @@ class NewRideScreen extends StatelessWidget {
                     Expanded(
                       child: SizedBox(
                         height: 38,
-                        child: OutlinedButton.icon(
+                        child: OutlinedButton(
                           onPressed: () async {
                             Get.to(AddComplaintScreen(), arguments: {
                               "data": data,
                               "ride_type": "ride",
                             })?.then((value) => controller.getNewRide());
                           },
-                          icon: Icon(Icons.report_problem_outlined, size: 16, color: isDark ? Colors.white70 : const Color(0xFF64748B)),
-                          label: Text('Complaint'.tr, style: TextStyle(fontFamily: AppThemeData.medium, fontSize: 12, color: isDark ? Colors.white70 : const Color(0xFF64748B))),
                           style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 6),
                             side: BorderSide(color: isDark ? Colors.white24 : const Color(0xFFCBD5E1), width: 1.2),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.report_problem_outlined, size: 16, color: isDark ? Colors.white70 : const Color(0xFF64748B)),
+                                const SizedBox(width: 4),
+                                Text('Complaint'.tr, style: TextStyle(fontFamily: AppThemeData.medium, fontSize: 12, color: isDark ? Colors.white70 : const Color(0xFF64748B))),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -903,27 +936,35 @@ class NewRideScreen extends StatelessWidget {
     required bool isDark,
     bool isPrice = false,
   }) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          value,
-          style: TextStyle(
-            fontFamily: AppThemeData.bold,
-            fontSize: isPrice ? 14 : 12,
-            color: isPrice ? const Color(0xFF16A34A) : (isDark ? Colors.white : const Color(0xFF0F172A)),
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              maxLines: 1,
+              style: TextStyle(
+                fontFamily: AppThemeData.bold,
+                fontSize: isPrice ? 13 : 12,
+                color: isPrice ? const Color(0xFF16A34A) : (isDark ? Colors.white : const Color(0xFF0F172A)),
+              ),
+            ),
           ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: TextStyle(
-            fontFamily: AppThemeData.regular,
-            fontSize: 10,
-            color: isDark ? Colors.white60 : const Color(0xFF64748B),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontFamily: AppThemeData.regular,
+              fontSize: 10,
+              color: isDark ? Colors.white60 : const Color(0xFF64748B),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -931,6 +972,7 @@ class NewRideScreen extends StatelessWidget {
     return Container(
       width: 1,
       height: 20,
+      margin: const EdgeInsets.symmetric(horizontal: 2),
       color: isDark ? Colors.white10 : const Color(0xFFE2E8F0),
     );
   }
