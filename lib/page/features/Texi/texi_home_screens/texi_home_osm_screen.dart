@@ -309,27 +309,69 @@ class _TexiHomeOSMScreenState extends State<TexiHomeOSMScreen> {
       controller: controller,
       onBack: () =>
           _showChooseVehicleBottomSheet(context, isDarkMode, controller),
-      onSelectPayment: () => _showPaymentMethodBottomSheet(context,
-          vehicleCategoryModel, tripPrice, driverModel, isDarkMode, controller),
-    );
-  }
+      onSelectPayment: () {
+        List stopsList = [];
+        for (var i = 0; i < controller.multiStopListNew.length; i++) {
+          stopsList.add({
+            "latitude": controller.multiStopListNew[i].latitude.toString(),
+            "longitude": controller.multiStopListNew[i].longitude.toString(),
+            "location": controller.multiStopListNew[i].editingController.text.toString()
+          });
+        }
 
-  void _showPaymentMethodBottomSheet(
-      BuildContext context,
-      VehicleCategoryModel vehicleCategoryModel,
-      double tripPrice,
-      DriverData driverData,
-      bool isDarkMode,
-      HomeOsmController controller) {
-    PaymentMethodBottomSheet.show(
-      context: context,
-      vehicleCategoryModel: vehicleCategoryModel,
-      tripPrice: tripPrice,
-      driverData: driverData,
-      isDarkMode: isDarkMode,
-      controller: controller,
-      onBack: () => _showConfirmDataBottomSheet(context, vehicleCategoryModel,
-          driverData, tripPrice, isDarkMode, controller),
+        final paymentId = controller.paymentSettingModel.value.cash?.idPaymentMethod?.toString() ?? "1";
+
+        Map<String, dynamic> bodyParams = {
+          'user_id': Preferences.getInt(Preferences.userId).toString(),
+          'lat1': controller.departureLatLong.value.latitude.toString(),
+          'lng1': controller.departureLatLong.value.longitude.toString(),
+          'lat2': controller.destinationLatLong.value.latitude.toString(),
+          'lng2': controller.destinationLatLong.value.longitude.toString(),
+          'cout': tripPrice.toString(),
+          'distance': controller.distance.toString(),
+          'distance_unit': Constant.distanceUnit.toString(),
+          'duree': controller.duration.toString(),
+          'id_conducteur': '0', // Broadcast mode
+          'id_type_vehicule': controller.vehicleData.value.id.toString(),
+          'id_payment': paymentId,
+          'depart_name': controller.departureController.text,
+          'destination_name': controller.destinationController.text,
+          'stops': stopsList,
+          'place': '',
+          'number_poeple': '1',
+          'image': '',
+          'image_name': "",
+          'statut_round': 'no',
+          'trip_objective': controller.tripOptionCategory.value,
+          'age_children1': controller.addChildList[0].editingController.text,
+          'age_children2': controller.addChildList.length == 2 ? controller.addChildList[1].editingController.text : "",
+          'age_children3': controller.addChildList.length == 3 ? controller.addChildList[2].editingController.text : "",
+        };
+
+        controller.bookRide(bodyParams).then((value) async {
+          if (value != null) {
+            if (value['success'] == "success") {
+              controller.departureController.clear();
+              controller.destinationController.clear();
+              controller.departureLatLong.value = GeoPoint(latitude: 0, longitude: 0);
+              controller.destinationLatLong.value = GeoPoint(latitude: 0, longitude: 0);
+
+              if (Constant.homeScreenType == 'UberHome') {
+                controller.mapController.removeLastRoad();
+                List<GeoPoint> allGeoPoints = controller.markers.values.toList();
+                controller.mapController.removeMarkers(allGeoPoints);
+                controller.getDirections();
+              } else {
+                controller.clearData();
+              }
+              Get.to(() => const SearchingDriverScreen(), arguments: {
+                'rideData': RideData.fromJson(value['data']),
+                'bookingBodyParams': bodyParams,
+              });
+            }
+          }
+        });
+      },
     );
   }
 

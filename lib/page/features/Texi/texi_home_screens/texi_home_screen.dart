@@ -1367,54 +1367,6 @@ Widget buildUnifiedBookingPanel(HomeController controller, bool isDarkMode) {
         ),
         const SizedBox(height: 8),
 
-        // Compact Payment Method Selector
-        if (selectedVehicle != null) ...[
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: isDarkMode ? AppThemeData.grey100Dark : Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.account_balance_wallet_outlined,
-                    color: AppThemeData.primary200, size: 18),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    selectedPaymentMethod == "wallet"
-                        ? "Wallet Balance (₹1,250)".tr
-                        : selectedPaymentMethod == "upi"
-                        ? "UPI Payment".tr
-                        : "Cash Payment".tr,
-                    style: TextStyle(
-                      fontFamily: AppThemeData.semiBold,
-                      fontSize: 12,
-                      color: isDarkMode ? AppThemeData.grey900Dark : AppThemeData.grey900,
-                    ),
-                  ),
-                ),
-                DropdownButton<String>(
-                  value: selectedPaymentMethod,
-                  underline: const SizedBox(),
-                  isDense: true,
-                  icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 18),
-                  items: [
-                    DropdownMenuItem(value: "cash", child: Text("Cash".tr, style: const TextStyle(fontSize: 12))),
-                    DropdownMenuItem(value: "wallet", child: Text("Wallet".tr, style: const TextStyle(fontSize: 12))),
-                    DropdownMenuItem(value: "upi", child: Text("UPI".tr, style: const TextStyle(fontSize: 12))),
-                  ],
-                  onChanged: (val) {
-                    if (val != null) setState(() => selectedPaymentMethod = val);
-                  },
-                )
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-        ],
-
         // Footer Fare & Action Button
         if (!isLocationSelected)
           Text(

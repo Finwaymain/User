@@ -261,17 +261,22 @@ class ConfirmDataBottomSheet {
                             ),
                           ),
                         ),
-                        // Select Payment Button
+                        // Book Ride Button (Payment is done at ride completion)
                         Padding(
                             padding: const EdgeInsets.symmetric(vertical: 20),
-                            child: ButtonThem.buildButton(context, title: "Select Payment Method".tr, onPress: () async {
-                              var amount = await Constant().getAmount();
-                              if (amount != null) {
-                                controller.walletAmount.value = amount;
-                              }
-                              Get.back();
-                              onSelectPayment();
-                            })),
+                            child: ButtonThem.buildButton(
+                              context,
+                              title: "${"Book Ride".tr} • ${Constant().amountShow(amount: tripPrice.toString())}",
+                              btnColor: AppThemeData.primary200,
+                              onPress: () async {
+                                var amount = await Constant().getAmount();
+                                if (amount != null) {
+                                  controller.walletAmount.value = amount;
+                                }
+                                Get.back();
+                                onSelectPayment();
+                              },
+                            )),
                       ],
                     ),
                   ),

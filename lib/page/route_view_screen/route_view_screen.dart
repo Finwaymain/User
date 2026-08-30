@@ -711,7 +711,7 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                "Payment Method".tr,
+                                "Payment Status".tr,
                                 style: TextStyle(
                                   fontFamily: AppThemeData.regular,
                                   fontSize: 11,
@@ -720,11 +720,11 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                rideData!.payment ?? "Cash",
+                                (rideData!.statutPaiement == "yes") ? "Paid".tr : "Pay at Drop".tr,
                                 style: TextStyle(
                                   fontFamily: AppThemeData.bold,
                                   fontSize: 14,
-                                  color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
+                                  color: (rideData!.statutPaiement == "yes") ? AppThemeData.success300 : AppThemeData.primary200,
                                 ),
                               ),
                             ],
