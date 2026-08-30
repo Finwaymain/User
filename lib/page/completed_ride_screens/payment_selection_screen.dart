@@ -649,10 +649,7 @@ class PaymentSelectionScreen extends StatelessWidget {
                                 });
                               }
                             } else if (controller.selectedRadioTile.value == "UPI") {
-                              controller.simulateUPILaunch(() {
-                                showLoadingAlert(context);
-                                transactionAPI();
-                              });
+                              startRazorpayPayment(amount: controller.getTotalAmount().toString());
                             } else {
                               ShowToastDialog.showToast("Please select a payment option".tr);
                             }
@@ -1287,10 +1284,16 @@ class PaymentSelectionScreen extends StatelessWidget {
   final Razorpay razorPayController = Razorpay();
 
   startRazorpayPayment({required String amount}) {
-    log(double.parse(amount).toStringAsFixed(0));
-
     try {
-      walletController.createOrderRazorPay(amount: int.parse(double.parse(amount).toStringAsFixed(0))).then((value) {
+      final numAmount = double.tryParse(amount.toString()) ?? 0.0;
+      final intAmount = numAmount.round();
+      if (intAmount <= 0) {
+        ShowToastDialog.showToast("Invalid payment amount".tr);
+        return;
+      }
+      ShowToastDialog.showLoader("Opening Razorpay...".tr);
+      walletController.createOrderRazorPay(amount: intAmount).then((value) {
+        ShowToastDialog.closeLoader();
         if (value != null) {
           CreateRazorPayOrderModel result = value;
           openCheckout(
@@ -1298,7 +1301,6 @@ class PaymentSelectionScreen extends StatelessWidget {
             orderId: result.id,
           );
         } else {
-          Get.back();
           showSnackBarAlert(
             message: "Something went wrong, please contact admin.".tr,
             color: Colors.red.shade400,
@@ -1306,7 +1308,7 @@ class PaymentSelectionScreen extends StatelessWidget {
         }
       });
     } catch (e) {
-      Get.back();
+      ShowToastDialog.closeLoader();
       showSnackBarAlert(
         message: e.toString(),
         color: Colors.red.shade400,
@@ -1315,16 +1317,23 @@ class PaymentSelectionScreen extends StatelessWidget {
   }
 
   void openCheckout({required amount, required orderId}) async {
+    final razorpayKey = walletController.paymentSettingModel.value.razorpay?.key ?? Constant.getPaymentSetting().razorpay?.key ?? '';
+    final userPhone = Preferences.getString(Preferences.userPhone);
+    final userEmail = Preferences.getString(Preferences.userEmail);
+
     var options = {
-      'key': walletController.paymentSettingModel.value.razorpay!.key,
-      'amount': amount * 100,
-      'name': 'Cabme',
+      'key': razorpayKey,
+      'amount': (double.parse(amount.toString()) * 100).toInt(),
+      'name': 'Fiinway',
       'order_id': orderId,
       "currency": "INR",
-      'description': 'wallet Topup',
+      'description': 'Ride Payment',
       'retry': {'enabled': true, 'max_count': 1},
       'send_sms_hash': true,
-      'prefill': {'contact': "8888888888", 'email': "demo@demo.com"},
+      'prefill': {
+        'contact': userPhone.isNotEmpty ? userPhone : "9999999999",
+        'email': userEmail.isNotEmpty ? userEmail : "user@fiinway.com",
+      },
       'external': {
         'wallets': ['paytm']
       }
