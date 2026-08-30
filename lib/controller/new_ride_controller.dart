@@ -14,9 +14,9 @@ import 'package:http/http.dart' as http;
 
 class NewRideController extends GetxController {
   var isLoading = true.obs;
-  var newRideList = <RideData>[].obs;
-  var completedRideList = <RideData>[].obs;
-  var rejectedRideList = <RideData>[].obs;
+  var newRideList = <RideData>[].obs;         // Awaiting driver acceptance (statut == 'new')
+  var pendingRideList = <RideData>[].obs;     // In-progress / active (confirmed, on ride, arrived)
+  var completedRideList = <RideData>[].obs;   // Finished & rejected (completed, rejected, canceled)
   Timer? timer;
 
   var currentPage = 1;
@@ -24,8 +24,8 @@ class NewRideController extends GetxController {
   var isLoadMoreRunning = false.obs;
 
   final ScrollController scrollControllerNew = ScrollController();
+  final ScrollController scrollControllerPending = ScrollController();
   final ScrollController scrollControllerCompleted = ScrollController();
-  final ScrollController scrollControllerRejected = ScrollController();
 
   @override
   void onInit() {
@@ -41,13 +41,13 @@ class NewRideController extends GetxController {
           loadMoreRides();
         }
       });
-      scrollControllerCompleted.addListener(() {
-        if (scrollControllerCompleted.position.pixels == scrollControllerCompleted.position.maxScrollExtent) {
+      scrollControllerPending.addListener(() {
+        if (scrollControllerPending.position.pixels == scrollControllerPending.position.maxScrollExtent) {
           loadMoreRides();
         }
       });
-      scrollControllerRejected.addListener(() {
-        if (scrollControllerRejected.position.pixels == scrollControllerRejected.position.maxScrollExtent) {
+      scrollControllerCompleted.addListener(() {
+        if (scrollControllerCompleted.position.pixels == scrollControllerCompleted.position.maxScrollExtent) {
           loadMoreRides();
         }
       });
@@ -61,8 +61,8 @@ class NewRideController extends GetxController {
   void onClose() {
     timer?.cancel();
     scrollControllerNew.dispose();
+    scrollControllerPending.dispose();
     scrollControllerCompleted.dispose();
-    scrollControllerRejected.dispose();
     super.onClose();
   }
 
@@ -86,8 +86,8 @@ class NewRideController extends GetxController {
         currentPage = 1;
         isMoreDataAvailable.value = true;
         newRideList.clear();
+        pendingRideList.clear();
         completedRideList.clear();
-        rejectedRideList.clear();
       }
 
       final response = await http.get(
@@ -117,29 +117,37 @@ class NewRideController extends GetxController {
           for (var ride in model.data!) {
             // Remove first to avoid duplication, then add
             newRideList.removeWhere((r) => r.id == ride.id);
+            pendingRideList.removeWhere((r) => r.id == ride.id);
             completedRideList.removeWhere((r) => r.id == ride.id);
-            rejectedRideList.removeWhere((r) => r.id == ride.id);
 
-            if (ride.statut == "new" || ride.statut == "on ride" || ride.statut == "confirmed") {
+            final status = (ride.statut ?? '').toLowerCase().trim();
+
+            if (status == "new") {
+              // Awaiting driver acceptance
               newRideList.add(ride);
-            } else if (ride.statut == "completed") {
+            } else if (status == "confirmed" || status == "on ride" || status == "arrived" || status == "in progress") {
+              // In progress / active rides
+              pendingRideList.add(ride);
+            } else if (status == "completed" || status == "rejected" || status == "canceled" || status == "cancelled") {
+              // Completed & Rejected / Cancelled rides
               completedRideList.add(ride);
-            } else if (ride.statut == "rejected") {
-              rejectedRideList.add(ride);
+            } else {
+              // Default fallback
+              completedRideList.add(ride);
             }
           }
 
           // Sort lists in descending order of ID (most recent first)
-          newRideList.sort((a, b) => int.parse(b.id!).compareTo(int.parse(a.id!)));
-          completedRideList.sort((a, b) => int.parse(b.id!).compareTo(int.parse(a.id!)));
-          rejectedRideList.sort((a, b) => int.parse(b.id!).compareTo(int.parse(a.id!)));
+          newRideList.sort((a, b) => int.parse(b.id ?? '0').compareTo(int.parse(a.id ?? '0')));
+          pendingRideList.sort((a, b) => int.parse(b.id ?? '0').compareTo(int.parse(a.id ?? '0')));
+          completedRideList.sort((a, b) => int.parse(b.id ?? '0').compareTo(int.parse(a.id ?? '0')));
         }
         ShowToastDialog.closeLoader();
       } else {
         if (page == 1) {
           newRideList.clear();
+          pendingRideList.clear();
           completedRideList.clear();
-          rejectedRideList.clear();
         }
         ShowToastDialog.closeLoader();
         isLoading.value = false;
@@ -154,7 +162,7 @@ class NewRideController extends GetxController {
       ShowToastDialog.closeLoader();
       isLoading.value = false;
     } catch (e) {
-      log('FireStoreUtils.getCurrencys Parse error $e');
+      log('NewRideController getNewRide error $e');
       ShowToastDialog.closeLoader();
       ShowToastDialog.showToast(e.toString());
     }

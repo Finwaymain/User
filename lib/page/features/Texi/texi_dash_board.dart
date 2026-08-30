@@ -286,6 +286,90 @@ class _TexiDashboardState extends State<TexiDashboard> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 16),
+
+                  // Prominent "My Rides & Booking History" Button
+                  InkWell(
+                    onTap: () {
+                      if (!Preferences.getBoolean(Preferences.isLogin)) {
+                        Get.to(() => const PhoneEntryScreen(), transition: Transition.rightToLeftWithFade);
+                        return;
+                      }
+                      Get.to(() => const NewRideScreen(), transition: Transition.rightToLeftWithFade);
+                    },
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: isDarkMode ? const Color(0xFF1E293B) : Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: const Color(0xFF2E7D32).withValues(alpha: 0.25),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF2E7D32).withValues(alpha: isDarkMode ? 0.15 : 0.06),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2E7D32).withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.history_rounded,
+                              color: Color(0xFF2E7D32),
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "My Rides & Booking History".tr,
+                                  style: TextStyle(
+                                    fontFamily: AppThemeData.bold,
+                                    fontSize: 15,
+                                    color: isDarkMode ? Colors.white : AppThemeData.grey900,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  "Track active rides, pending & completed trips".tr,
+                                  style: TextStyle(
+                                    fontFamily: AppThemeData.medium,
+                                    fontSize: 12,
+                                    color: isDarkMode ? Colors.white60 : AppThemeData.grey500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2E7D32),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              color: Colors.white,
+                              size: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 28),
 
                   // Logistics & Delivery Section
