@@ -14,6 +14,7 @@ import 'package:finway/model/user_model.dart';
 import 'package:finway/service/api.dart';
 import 'package:finway/utils/Preferences.dart';
 import 'package:finway/themes/constant_colors.dart';
+import 'package:finway/page/review_screens/add_review_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -72,7 +73,7 @@ class PaymentController extends GetxController {
               _paymentPollTimer?.cancel();
               isRedirectingToReview.value = true;
               ShowToastDialog.showToast("Payment confirmed".tr);
-              Get.offAll(() => const AddReviewScreen(), arguments: {
+              Get.offAll(() => AddReviewScreen(), arguments: {
                 'data': data.value,
                 'ride_type': 'ride',
               });

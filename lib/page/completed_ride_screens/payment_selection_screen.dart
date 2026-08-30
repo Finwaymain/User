@@ -40,6 +40,7 @@ import '../../model/payment_setting_model.dart';
 import '../wallet/MercadoPagoScreen.dart';
 import '../wallet/PayFastScreen.dart';
 import '../wallet/paystack_url_genrater.dart';
+import '../wallet/wallet_screen.dart';
 
 // ignore: must_be_immutable
 class PaymentSelectionScreen extends StatelessWidget {
@@ -1203,7 +1204,7 @@ class PaymentSelectionScreen extends StatelessWidget {
       ShowToastDialog.closeLoader();
       if (value != null) {
         ShowToastDialog.showToast("Payment successfully completed".tr);
-        Get.offAll(() => const AddReviewScreen(), arguments: {
+        Get.offAll(() => AddReviewScreen(), arguments: {
           'data': paymentController.data.value,
           'ride_type': 'ride',
         });
@@ -2033,7 +2034,7 @@ class PaymentSelectionScreen extends StatelessWidget {
                                   if (value != null) {
                                     ShowToastDialog.showToast("Payment successfully completed");
                                     Get.back(); // Close MPIN bottom sheet
-                                    Get.offAll(() => const AddReviewScreen(), arguments: {
+                                    Get.offAll(() => AddReviewScreen(), arguments: {
                                       'data': controller.data.value,
                                       'ride_type': 'ride',
                                     });
