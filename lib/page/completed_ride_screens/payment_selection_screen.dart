@@ -1318,8 +1318,9 @@ class PaymentSelectionScreen extends StatelessWidget {
 
   void openCheckout({required amount, required orderId}) async {
     final razorpayKey = walletController.paymentSettingModel.value.razorpay?.key ?? Constant.getPaymentSetting().razorpay?.key ?? '';
-    final userPhone = Preferences.getString(Preferences.userPhone);
-    final userEmail = Preferences.getString(Preferences.userEmail);
+    final userData = Constant.getUserData();
+    final userPhone = userData?.data?.phone ?? "9999999999";
+    final userEmail = userData?.data?.email ?? "user@fiinway.com";
 
     var options = {
       'key': razorpayKey,
