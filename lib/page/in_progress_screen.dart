@@ -98,7 +98,7 @@ class _InProgressScreenState extends State<InProgressScreen> {
     try {
       final userId = Preferences.getInt(Preferences.userId);
       final response = await http.get(
-        Uri.parse('${API.newRide}?id_user_app=$userId'),
+        Uri.parse('${API.userAllRides}?id_user_app=$userId&page=1&limit=10'),
         headers: API.header,
       );
       if (response.statusCode == 200) {
@@ -124,6 +124,8 @@ class _InProgressScreenState extends State<InProgressScreen> {
           final activeRides = allRides.where((r) =>
               r.statut == 'confirmed' ||
               r.statut == 'on ride' ||
+              r.statut == 'arrived' ||
+              r.statut == 'in progress' ||
               r.statut == 'new').toList();
 
           if (activeRides.isNotEmpty && mounted) {

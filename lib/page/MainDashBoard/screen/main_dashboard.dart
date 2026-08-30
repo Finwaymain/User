@@ -66,7 +66,7 @@ class _MainDashboardState extends State<MainDashboard> {
       if (!Preferences.getBoolean(Preferences.isLogin)) return;
       final userId = Preferences.getInt(Preferences.userId);
       final response = await http.get(
-        Uri.parse('${API.newRide}?id_user_app=$userId'),
+        Uri.parse('${API.userAllRides}?id_user_app=$userId&page=1&limit=10'),
         headers: API.header,
       ).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
@@ -90,6 +90,8 @@ class _MainDashboardState extends State<MainDashboard> {
           final activeRides = allRides.where((r) =>
               r.statut == 'confirmed' ||
               r.statut == 'on ride' ||
+              r.statut == 'arrived' ||
+              r.statut == 'in progress' ||
               r.statut == 'new').toList();
 
           if (activeRides.isNotEmpty && mounted) {
@@ -110,7 +112,7 @@ class _MainDashboardState extends State<MainDashboard> {
         }
       }
     } catch (e) {
-      debugPrint('MainDashboard check active ride error: $e');
+      log('Check active ride error: $e');
     }
   }
 
