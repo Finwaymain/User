@@ -162,30 +162,16 @@ class NewRideScreen extends StatelessWidget {
                           )),
                         ),
                         Tab(
-                          child: Obx(() => FittedBox(
+                          child: FittedBox(
                             fit: BoxFit.scaleDown,
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text('Completed'.tr),
-                                if (controller.completedRideList.isNotEmpty) ...[
-                                  const SizedBox(width: 4),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-                                    decoration: BoxDecoration(
-                                      color: isDark ? Colors.white24 : Colors.grey.shade400,
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Text(
-                                      '${controller.completedRideList.length}',
-                                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                                    ),
-                                  )
-                                ]
                               ],
                             ),
-                          )),
+                          ),
                         ),
                       ],
                     ),
@@ -380,25 +366,53 @@ class NewRideScreen extends StatelessWidget {
       statusIcon = Icons.cancel_rounded;
     }
 
-    return InkWell(
-      onTap: () async {
-        if (isPaymentAwaited) {
-          await Get.to(() => PaymentSelectionScreen(), arguments: {
-            "rideData": data,
-          })?.then((v) => controller.getNewRide());
-        } else if (isInProgress) {
-          var argumentData = {'type': data.statut.toString(), 'data': data};
-          if (Constant.selectedMapType == 'osm') {
-            await Get.to(() => const RouteOsmViewScreen(), arguments: argumentData)?.then((v) => controller.getNewRide());
+    // Total price calculation including applicable taxes
+    double baseFare = double.tryParse(data.montant?.toString() ?? "0") ?? 0.0;
+    double totalTax = 0.0;
+    if (data.taxModel != null && data.taxModel!.isNotEmpty) {
+      for (var tax in data.taxModel!) {
+        if (tax.statut == 'yes') {
+          if (tax.type == 'Fixed') {
+            totalTax += double.tryParse(tax.value?.toString() ?? '0') ?? 0.0;
           } else {
-            await Get.to(() => const RouteViewScreen(), arguments: argumentData)?.then((v) => controller.getNewRide());
+            totalTax += (baseFare * (double.tryParse(tax.value?.toString() ?? '0') ?? 0.0)) / 100.0;
           }
-        } else {
-          await Get.to(() => TripHistoryScreen(), arguments: {
-            "rideData": data,
-          })?.then((v) => controller.getNewRide());
         }
-      },
+      }
+    } else {
+      for (var tax in Constant.taxList) {
+        if (tax.statut == 'yes') {
+          if (tax.type == 'Fixed') {
+            totalTax += double.tryParse(tax.value?.toString() ?? '0') ?? 0.0;
+          } else {
+            totalTax += (baseFare * (double.tryParse(tax.value?.toString() ?? '0') ?? 0.0)) / 100.0;
+          }
+        }
+      }
+    }
+    double finalFare = baseFare + totalTax;
+
+    return InkWell(
+      onTap: (isCompleted && !isPaymentAwaited)
+          ? null
+          : () async {
+              if (isPaymentAwaited) {
+                await Get.to(() => PaymentSelectionScreen(), arguments: {
+                  "rideData": data,
+                })?.then((v) => controller.getNewRide());
+              } else if (isInProgress) {
+                var argumentData = {'type': data.statut.toString(), 'data': data};
+                if (Constant.selectedMapType == 'osm') {
+                  await Get.to(() => const RouteOsmViewScreen(), arguments: argumentData)?.then((v) => controller.getNewRide());
+                } else {
+                  await Get.to(() => const RouteViewScreen(), arguments: argumentData)?.then((v) => controller.getNewRide());
+                }
+              } else {
+                await Get.to(() => TripHistoryScreen(), arguments: {
+                  "rideData": data,
+                })?.then((v) => controller.getNewRide());
+              }
+            },
       borderRadius: BorderRadius.circular(18),
       child: Container(
         decoration: BoxDecoration(
@@ -645,7 +659,7 @@ class NewRideScreen extends StatelessWidget {
                   Expanded(
                     child: _buildMetricCell(
                       label: 'Price'.tr,
-                      value: Constant().amountShow(amount: data.montant?.toString() ?? "0"),
+                      value: Constant().amountShow(amount: finalFare > 0 ? finalFare.toStringAsFixed(2) : (data.montant?.toString() ?? "0")),
                       isDark: isDark,
                       isPrice: true,
                     ),
@@ -863,7 +877,7 @@ class NewRideScreen extends StatelessWidget {
                     icon: const Icon(Icons.payment_rounded, size: 18, color: Colors.white),
                     label: FittedBox(
                       fit: BoxFit.scaleDown,
-                      child: Text('Pay Now (${Constant().amountShow(amount: data.montant?.toString() ?? "0")})'.tr, style: const TextStyle(fontFamily: AppThemeData.bold, fontSize: 13, color: Colors.white)),
+                      child: Text('Pay Now (${Constant().amountShow(amount: finalFare > 0 ? finalFare.toStringAsFixed(2) : (data.montant?.toString() ?? "0"))})'.tr, style: const TextStyle(fontFamily: AppThemeData.bold, fontSize: 13, color: Colors.white)),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFE67E22),
@@ -876,68 +890,30 @@ class NewRideScreen extends StatelessWidget {
             ] else if (isCompleted) ...[
               Padding(
                 padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: SizedBox(
-                        height: 38,
-                        child: OutlinedButton(
-                          onPressed: () async {
-                            Get.to(const AddReviewScreen(), arguments: {
-                              "data": data,
-                              "ride_type": "ride",
-                            })?.then((value) => controller.getNewRide());
-                          },
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 6),
-                            side: const BorderSide(color: Color(0xFFE67E22), width: 1.2),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          ),
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.star_outline_rounded, size: 16, color: Color(0xFFE67E22)),
-                                const SizedBox(width: 4),
-                                Text('Rate Driver'.tr, style: const TextStyle(fontFamily: AppThemeData.bold, fontSize: 12, color: Color(0xFFE67E22))),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
+                child: SizedBox(
+                  height: 38,
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () async {
+                      Get.to(AddComplaintScreen(), arguments: {
+                        "data": data,
+                        "ride_type": "ride",
+                      })?.then((value) => controller.getNewRide());
+                    },
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      side: BorderSide(color: isDark ? Colors.white24 : const Color(0xFFCBD5E1), width: 1.2),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: SizedBox(
-                        height: 38,
-                        child: OutlinedButton(
-                          onPressed: () async {
-                            Get.to(AddComplaintScreen(), arguments: {
-                              "data": data,
-                              "ride_type": "ride",
-                            })?.then((value) => controller.getNewRide());
-                          },
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 6),
-                            side: BorderSide(color: isDark ? Colors.white24 : const Color(0xFFCBD5E1), width: 1.2),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          ),
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.report_problem_outlined, size: 16, color: isDark ? Colors.white70 : const Color(0xFF64748B)),
-                                const SizedBox(width: 4),
-                                Text('Complaint'.tr, style: TextStyle(fontFamily: AppThemeData.medium, fontSize: 12, color: isDark ? Colors.white70 : const Color(0xFF64748B))),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.report_problem_outlined, size: 16, color: isDark ? Colors.white70 : const Color(0xFF64748B)),
+                        const SizedBox(width: 6),
+                        Text('Complaint'.tr, style: TextStyle(fontFamily: AppThemeData.medium, fontSize: 12, color: isDark ? Colors.white70 : const Color(0xFF64748B))),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               )
             ]
