@@ -366,30 +366,26 @@ class NewRideScreen extends StatelessWidget {
       statusIcon = Icons.cancel_rounded;
     }
 
-    // Total price calculation including applicable taxes
+    // Total price calculation including applicable taxes & platform charges
     double baseFare = double.tryParse(data.montant?.toString() ?? "0") ?? 0.0;
+    if (baseFare <= 0) {
+      baseFare = double.tryParse(data.distance?.toString() ?? "0") ?? 0.0;
+    }
+
     double totalTax = 0.0;
     if (data.taxModel != null && data.taxModel!.isNotEmpty) {
       for (var tax in data.taxModel!) {
         if (tax.statut == 'yes') {
-          if (tax.type == 'Fixed') {
-            totalTax += double.tryParse(tax.value?.toString() ?? '0') ?? 0.0;
-          } else {
-            totalTax += (baseFare * (double.tryParse(tax.value?.toString() ?? '0') ?? 0.0)) / 100.0;
-          }
-        }
-      }
-    } else {
-      for (var tax in Constant.taxList) {
-        if (tax.statut == 'yes') {
-          if (tax.type == 'Fixed') {
-            totalTax += double.tryParse(tax.value?.toString() ?? '0') ?? 0.0;
-          } else {
-            totalTax += (baseFare * (double.tryParse(tax.value?.toString() ?? '0') ?? 0.0)) / 100.0;
-          }
+          totalTax += Constant.calculateTaxFor(tax, baseFare);
         }
       }
     }
+    
+    // If no tax list attached in ride data, calculate from active taxes in Constant (allTaxList / taxList)
+    if (totalTax == 0.0 && baseFare > 0) {
+      totalTax = Constant.calculateTotalTaxes(baseFare);
+    }
+    
     double finalFare = baseFare + totalTax;
 
     return InkWell(

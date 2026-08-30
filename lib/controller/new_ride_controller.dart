@@ -4,8 +4,10 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:finway/constant/constant.dart';
 import 'package:finway/constant/logdata.dart';
 import 'package:finway/constant/show_toast_dialog.dart';
+import 'package:finway/controller/settings_controller.dart';
 import 'package:finway/model/ride_model.dart';
 import 'package:finway/service/api.dart';
 import 'package:finway/utils/Preferences.dart';
@@ -30,6 +32,9 @@ class NewRideController extends GetxController {
   @override
   void onInit() {
     if (Preferences.getBoolean(Preferences.isLogin)) {
+      if (Constant.allTaxList.isEmpty) {
+        SettingsController().getSettingsData();
+      }
       getNewRide(isinit: true);
       timer = Timer.periodic(const Duration(seconds: 15), (timer) {
         // Periodic check fetches page 1 to check for updates or new rides
