@@ -15,6 +15,9 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:location/location.dart';
 import 'package:provider/provider.dart';
+import 'package:finway/utils/Preferences.dart';
+import 'package:finway/model/ride_model.dart';
+import 'package:finway/page/new_ride_screens/searching_driver_screen.dart';
 import 'loading_screen.dart';
 import 'widget/app_bar_widget.dart';
 import 'widget/choose_vehicle_bottom_sheet.dart';
@@ -364,7 +367,7 @@ class _TexiHomeOSMScreenState extends State<TexiHomeOSMScreen> {
               } else {
                 controller.clearData();
               }
-              Get.to(() => const SearchingDriverScreen(), arguments: {
+              Get.to(() => SearchingDriverScreen(), arguments: {
                 'rideData': RideData.fromJson(value['data']),
                 'bookingBodyParams': bodyParams,
               });
