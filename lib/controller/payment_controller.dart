@@ -39,6 +39,8 @@ class PaymentController extends GetxController {
   RxBool upi = false.obs;
   RxBool isSimulatingUPI = false.obs;
   RxString upiStepText = "".obs;
+  Timer? _paymentPollTimer;
+  RxBool isRedirectingToReview = false.obs;
 
   @override
   void onInit() {
@@ -46,8 +48,45 @@ class PaymentController extends GetxController {
     getCoupanCodeData();
     getUsrData();
     paymentSettingModel.value = Constant.getPaymentSetting();
+    startPaymentStatusPolling();
 
     super.onInit();
+  }
+
+  void startPaymentStatusPolling() {
+    _paymentPollTimer?.cancel();
+    _paymentPollTimer = Timer.periodic(const Duration(seconds: 2), (_) async {
+      if (data.value.id == null || isRedirectingToReview.value) return;
+      try {
+        final response = await http.get(
+          Uri.parse("${API.rideDetails}?ride_id=${data.value.id}"),
+          headers: API.header,
+        ).timeout(const Duration(seconds: 4));
+
+        if (response.statusCode == 200) {
+          Map<String, dynamic> rawJson = jsonDecode(response.body);
+          dynamic rawItem = rawJson['data'] ?? rawJson['rideDetailsdata'];
+          if (rawItem != null && rawItem is Map) {
+            String paymentStatus = (rawItem['statut_paiement'] ?? '').toString().toLowerCase();
+            if (paymentStatus == "yes" || paymentStatus == "paid") {
+              _paymentPollTimer?.cancel();
+              isRedirectingToReview.value = true;
+              ShowToastDialog.showToast("Payment confirmed".tr);
+              Get.offAll(() => const AddReviewScreen(), arguments: {
+                'data': data.value,
+                'ride_type': 'ride',
+              });
+            }
+          }
+        }
+      } catch (_) {}
+    });
+  }
+
+  @override
+  void onClose() {
+    _paymentPollTimer?.cancel();
+    super.onClose();
   }
 
   Future<dynamic> feelNotSafe(Map<String, dynamic> bodyParams) async {
@@ -171,28 +210,12 @@ class PaymentController extends GetxController {
 
       if (selectedRadioTile.value == "Wallet") {
         wallet.value = true;
-      } else if (selectedRadioTile.value == "Cash") {
-        cash.value = true;
-      } else if (selectedRadioTile.value == "Stripe") {
-        stripe.value = true;
-      } else if (selectedRadioTile.value == "PayStack") {
-        payStack.value = true;
-      } else if (selectedRadioTile.value == "FlutterWave") {
-        flutterWave.value = true;
-      } else if (selectedRadioTile.value == "RazorPay") {
-        razorPay.value = true;
-      } else if (selectedRadioTile.value == "PayFast") {
-        payFast.value = true;
-      } else if (selectedRadioTile.value == "MercadoPago") {
-        mercadoPago.value = true;
-      } else if (selectedRadioTile.value == "PayPal") {
-        paypal.value = true;
       } else if (selectedRadioTile.value == "UPI" || selectedRadioTile.value == "upi") {
         upi.value = true;
         selectedRadioTile.value = "UPI";
       } else {
-        selectedRadioTile.value = "Cash";
-        cash.value = true;
+        selectedRadioTile.value = "Wallet";
+        wallet.value = true;
       }
     }
     getAmount();

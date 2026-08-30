@@ -542,33 +542,7 @@ class PaymentSelectionScreen extends StatelessWidget {
                               ]),
                               const SizedBox(height: 12),
 
-                              // 1. Cash Option
-                              _buildModernPaymentOptionCard(
-                                isDark: themeChange.getThem(),
-                                title: "Cash".tr,
-                                subtitle: "Pay directly in cash to the driver".tr,
-                                isSelected: controller.selectedRadioTile.value == "Cash",
-                                icon: Icons.payments_rounded,
-                                onTap: () {
-                                  controller.selectedRadioTile.value = "Cash";
-                                  controller.cash.value = true;
-                                  controller.wallet.value = false;
-                                  controller.upi.value = false;
-                                  controller.stripe.value = false;
-                                  controller.razorPay.value = false;
-                                  controller.paypal.value = false;
-                                  controller.payStack.value = false;
-                                  controller.flutterWave.value = false;
-                                  controller.mercadoPago.value = false;
-                                  controller.payFast.value = false;
-                                  controller.xendit.value = false;
-                                  controller.midtrans.value = false;
-                                  controller.orangePay.value = false;
-                                  controller.paymentMethodId.value = controller.paymentSettingModel.value.cash?.idPaymentMethod?.toString() ?? "cash";
-                                },
-                              ),
-
-                              // 2. Fiinway Wallet Option (Always Clickable)
+                              // 1. Fiinway Wallet Option (Always Clickable)
                               _buildModernPaymentOptionCard(
                                 isDark: themeChange.getThem(),
                                 title: "Fiinway Wallet".tr,
@@ -613,7 +587,7 @@ class PaymentSelectionScreen extends StatelessWidget {
                                 ),
                               ),
 
-                              // 3. UPI Option
+                              // 2. UPI Option
                               _buildModernPaymentOptionCard(
                                 isDark: themeChange.getThem(),
                                 title: "UPI / Online Payment".tr,
@@ -668,35 +642,11 @@ class PaymentSelectionScreen extends StatelessWidget {
                                 }
                                 _showWalletMpinDialog(context, controller, taxList);
                               } else {
-                                ShowToastDialog.showToast("Insufficient wallet balance. Available: ${Constant().amountShow(amount: balance.toString())}. Total: ${Constant().amountShow(amount: total.toString())}");
+                                ShowToastDialog.showToast("Insufficient wallet balance. Redirecting to Wallet to Top Up...".tr);
+                                Get.to(() => WalletScreen())?.then((_) {
+                                  controller.getAmount();
+                                });
                               }
-                            } else if (controller.selectedRadioTile.value == "Cash") {
-                              List taxList = [];
-                              for (var v in Constant.taxList) {
-                                taxList.add(v.toJson());
-                              }
-                              Map<String, dynamic> bodyParams = {
-                                'id_ride': controller.data.value.id.toString(),
-                                'id_driver': controller.data.value.idConducteur.toString(),
-                                'id_user_app': controller.data.value.idUserApp.toString(),
-                                'amount': controller.subTotalAmount.value.toString(),
-                                'paymethod': "Cash",
-                                'discount': controller.discountAmount.value.toString(),
-                                'tip': controller.tipAmount.value.toString(),
-                                'tax': taxList,
-                                'transaction_id': DateTime.now().microsecondsSinceEpoch.toString(),
-                                'commission': Preferences.getString(Preferences.admincommission),
-                                'payment_status': "success",
-                              };
-                              controller.cashPaymentRequest(bodyParams).then((value) {
-                                if (value != null) {
-                                  ShowToastDialog.showToast("Payment successfully completed".tr);
-                                  Get.offAll(() => const AddReviewScreen(), arguments: {
-                                    'data': controller.data.value,
-                                    'ride_type': 'ride',
-                                  });
-                                }
-                              });
                             } else if (controller.selectedRadioTile.value == "UPI") {
                               controller.simulateUPILaunch(() {
                                 showLoadingAlert(context);
