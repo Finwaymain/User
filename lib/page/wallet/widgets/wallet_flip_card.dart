@@ -23,15 +23,19 @@ class WalletFlipCard extends StatelessWidget {
 
   String _lastFourDigits() {
     final acNo = controller.accountNumber.replaceAll(RegExp(r'\s+'), '');
-    if (acNo.length >= 4) {
+    if (acNo.isNotEmpty && acNo != 'N/A' && acNo.length >= 4) {
       return acNo.substring(acNo.length - 4);
     }
     final user = Constant.getUserData().data;
-    if (user?.id != null && user!.id.toString().length >= 4) {
-      final idStr = user.id.toString();
-      return idStr.substring(idStr.length - 4);
+    final userAc = user?.acNo?.replaceAll(RegExp(r'\s+'), '');
+    if (userAc != null && userAc.isNotEmpty && userAc != 'N/A' && userAc.length >= 4) {
+      return userAc.substring(userAc.length - 4);
     }
-    return '1068';
+    if (user?.id != null) {
+      final idStr = user!.id.toString();
+      return idStr.length >= 4 ? idStr.substring(idStr.length - 4) : idStr.padLeft(4, '0');
+    }
+    return '0000';
   }
 
   String _fullName() {

@@ -29,7 +29,13 @@ class PayoutController extends GetxController with GetTickerProviderStateMixin {
 
   String get earnAmount => accountDetailsModel.value?.data?.earnAmount ?? "0.00";
 
-  String get totalAmount => (double.parse(amount) + double.parse(earnAmount)).toStringAsFixed(2);
+  String get totalAmount => (double.tryParse(amount) ?? 0.0).toStringAsFixed(2);
+
+  String get withdrawableAmount {
+    final a = double.tryParse(amount) ?? 0.0;
+    final e = double.tryParse(earnAmount) ?? 0.0;
+    return (e < a ? e : a).toStringAsFixed(2);
+  }
 
 
   @override
