@@ -5,6 +5,7 @@ import 'package:finway/themes/constant_colors.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:finway/service/api.dart';
+import 'package:finway/constant/constant.dart';
 
 class MarketplaceController extends GetxController {
   var isLoading = false.obs;
@@ -438,7 +439,17 @@ class MarketplaceController extends GetxController {
   Future<void> fetchMyMarketplaceProducts() async {
     isMyProductsLoading.value = true;
     try {
-      final response = await http.get(Uri.parse(API.getMyMarketplaceProducts), headers: API.header);
+      final userModel = Constant.getUserData();
+      final phone = userModel.phone ?? '';
+      final url = phone.isNotEmpty
+          ? '${API.getMyMarketplaceProducts}?phone=${Uri.encodeComponent(phone)}'
+          : API.getMyMarketplaceProducts;
+      final headers = Map<String, String>.from(API.header);
+      if (phone.isNotEmpty) {
+        headers['phone'] = phone;
+        headers['seller-phone'] = phone;
+      }
+      final response = await http.get(Uri.parse(url), headers: headers);
       if (response.statusCode == 200) {
         final jsonDec = json.decode(response.body);
         if (jsonDec['success'] == 'Success') {
@@ -552,6 +563,15 @@ class MarketplaceController extends GetxController {
       request.fields['condition'] = condition;
       request.fields['delivery_type'] = deliveryType;
 
+      final userModel = Constant.getUserData();
+      final phone = userModel.phone ?? '';
+      if (phone.isNotEmpty) {
+        request.fields['seller_phone'] = phone;
+        request.fields['phone'] = phone;
+        request.headers['phone'] = phone;
+        request.headers['seller-phone'] = phone;
+      }
+
       // Add server-uploaded image URLs
       for (int i = 0; i < uploadedUrls.length; i++) {
         request.fields['image_urls[$i]'] = uploadedUrls[i];
@@ -607,7 +627,17 @@ class MarketplaceController extends GetxController {
   Future<void> fetchSellerOrders() async {
     isSellerOrdersLoading.value = true;
     try {
-      final response = await http.get(Uri.parse(API.getMarketplaceSellerOrders), headers: API.header);
+      final userModel = Constant.getUserData();
+      final phone = userModel.phone ?? '';
+      final url = phone.isNotEmpty
+          ? '${API.getMarketplaceSellerOrders}?phone=${Uri.encodeComponent(phone)}'
+          : API.getMarketplaceSellerOrders;
+      final headers = Map<String, String>.from(API.header);
+      if (phone.isNotEmpty) {
+        headers['phone'] = phone;
+        headers['seller-phone'] = phone;
+      }
+      final response = await http.get(Uri.parse(url), headers: headers);
       if (response.statusCode == 200) {
         final jsonDec = json.decode(response.body);
         if (jsonDec['success'] == 'Success') {
