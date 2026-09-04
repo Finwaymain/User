@@ -518,7 +518,7 @@ class WalletScreen extends StatelessWidget {
       'name': 'Fiinway',
       'order_id': orderId,
       "currency": "INR",
-      'description': 'Fiinway Wallet Top-up',
+      'description': 'Fiinway',
       'retry': {'enabled': true, 'max_count': 1},
       'send_sms_hash': true,
       'prefill': {
