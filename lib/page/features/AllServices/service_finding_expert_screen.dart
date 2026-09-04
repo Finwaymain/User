@@ -38,7 +38,8 @@ class _ServiceFindingExpertScreenState extends State<ServiceFindingExpertScreen>
   Timer? _stepTimer;
   Timer? _countdownTimer;
   int _activeStep = 0;
-  int _remainingSeconds = 60;
+  static const int _totalSearchSeconds = 300; // 5 minutes search window
+  int _remainingSeconds = _totalSearchSeconds;
   bool _searchTimedOut = false;
   bool _cancelling = false;
   bool _showUrgentBanner = false;
@@ -77,12 +78,12 @@ class _ServiceFindingExpertScreenState extends State<ServiceFindingExpertScreen>
     _stepTimer?.cancel();
     _countdownTimer?.cancel();
     setState(() {
-      _remainingSeconds = 60;
+      _remainingSeconds = _totalSearchSeconds;
       _searchTimedOut = false;
       _activeStep = 0;
     });
 
-    _stepTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+    _stepTimer = Timer.periodic(const Duration(seconds: 12), (_) {
       if (!mounted) return;
       if (_activeStep < _steps.length - 1) {
         setState(() => _activeStep++);
@@ -237,7 +238,7 @@ class _ServiceFindingExpertScreenState extends State<ServiceFindingExpertScreen>
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      '${_remainingSeconds}s',
+                      '${_remainingSeconds ~/ 60}:${(_remainingSeconds % 60).toString().padLeft(2, '0')}',
                       style: TextStyle(
                         fontFamily: AppThemeData.bold,
                         fontSize: 12,

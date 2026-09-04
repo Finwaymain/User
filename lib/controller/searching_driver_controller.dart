@@ -18,7 +18,8 @@ import 'package:http/http.dart' as http;
 class SearchingDriverController extends GetxController {
   Rx<RideData?> rideData = Rx<RideData?>(null);
   RxString statut = "new".obs;
-  RxInt remainingSeconds = 60.obs;
+  static const int maxSearchSeconds = 300; // 5 minutes search window
+  RxInt remainingSeconds = maxSearchSeconds.obs;
   RxString statusText = "Looking for nearby drivers...".obs;
 
   Timer? _countdownTimer;
@@ -52,7 +53,7 @@ class SearchingDriverController extends GetxController {
   }
 
   void startSearchTimer() {
-    remainingSeconds.value = 60;
+    remainingSeconds.value = maxSearchSeconds;
     statut.value = "new";
     statusText.value = statusMessages[0];
 
@@ -60,11 +61,9 @@ class SearchingDriverController extends GetxController {
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (remainingSeconds.value > 0) {
         remainingSeconds.value--;
-        // Rotate status text every 8 seconds
-        int index = (60 - remainingSeconds.value) ~/ 8;
-        if (index < statusMessages.length) {
-          statusText.value = statusMessages[index];
-        }
+        // Rotate status text every 20 seconds
+        int index = ((maxSearchSeconds - remainingSeconds.value) ~/ 20) % statusMessages.length;
+        statusText.value = statusMessages[index];
       } else {
         // Timeout
         stopSearchTimer();

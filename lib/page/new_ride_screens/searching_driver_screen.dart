@@ -104,20 +104,20 @@ class _SearchingDriverScreenState extends State<SearchingDriverScreen> with Tick
                 alignment: Alignment.center,
                 children: [
                   SizedBox(
-                    width: 54,
-                    height: 54,
+                    width: 58,
+                    height: 58,
                     child: CircularProgressIndicator(
-                      value: controller.remainingSeconds.value / 60,
+                      value: controller.remainingSeconds.value / SearchingDriverController.maxSearchSeconds,
                       strokeWidth: 3.5,
                       backgroundColor: isDarkMode ? AppThemeData.grey300Dark : AppThemeData.grey300,
                       valueColor: AlwaysStoppedAnimation<Color>(AppThemeData.primary200),
                     ),
                   ),
                   Text(
-                    "${controller.remainingSeconds.value}s",
+                    "${controller.remainingSeconds.value ~/ 60}:${(controller.remainingSeconds.value % 60).toString().padLeft(2, '0')}",
                     style: TextStyle(
                       fontFamily: AppThemeData.bold,
-                      fontSize: 13,
+                      fontSize: 12,
                       color: isDarkMode ? Colors.white : AppThemeData.grey900,
                     ),
                   ),
