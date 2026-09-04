@@ -1517,16 +1517,23 @@ class ParcelPaymentSelectionScreen extends StatelessWidget {
   }
 
   void openCheckout({required amount, required orderId}) async {
+    final userData = Constant.getUserData();
+    final userPhone = userData?.data?.phone ?? "";
+    final userEmail = userData?.data?.email ?? "";
+
     var options = {
       'key': walletController.paymentSettingModel.value.razorpay!.key,
       'amount': amount * 100,
-      'name': 'Cabme',
+      'name': 'Fiinway',
       'order_id': orderId,
       "currency": "INR",
-      'description': 'wallet Topup',
+      'description': 'Fiinway Parcel Payment',
       'retry': {'enabled': true, 'max_count': 1},
       'send_sms_hash': true,
-      'prefill': {'contact': "8888888888", 'email': "demo@demo.com"},
+      'prefill': {
+        if (userPhone.isNotEmpty) 'contact': userPhone,
+        if (userEmail.isNotEmpty) 'email': userEmail,
+      },
       'external': {
         'wallets': ['paytm']
       }
