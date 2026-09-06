@@ -224,15 +224,9 @@ class PaymentController extends GetxController {
       getRideDetailsData(data.value.id.toString());
     }
     if (data.value.statutPaiement != "yes") {
-      for (var i = 0; i < Constant.taxList.length; i++) {
-        if (Constant.taxList[i].statut == 'yes') {
-          if (Constant.taxList[i].type == "Fixed") {
-            taxAmount.value += double.parse(Constant.taxList[i].value.toString());
-          } else {
-            taxAmount.value += ((subTotalAmount.value - discountAmount.value) * double.parse(Constant.taxList[i].value!.toString())) / 100;
-          }
-        }
-      }
+      final method = selectedRadioTile.value.toLowerCase();
+      final base = (subTotalAmount.value - discountAmount.value) > 0 ? (subTotalAmount.value - discountAmount.value) : 0.0;
+      taxAmount.value = Constant.calculateTotalTaxes(base, method);
     }
     update();
   }
@@ -283,12 +277,12 @@ class PaymentController extends GetxController {
         tipAmount.value = double.parse(rideDetailsModel.rideDetailsdata!.tipAmount.toString());
         discountAmount.value = double.parse(rideDetailsModel.rideDetailsdata!.discount.toString());
         taxAmount.value = 0.0;
-        for (var i = 0; i < rideDetailsModel.rideDetailsdata!.taxModel!.length; i++) {
-          if (rideDetailsModel.rideDetailsdata!.taxModel![i].statut! == 'yes') {
-            if (rideDetailsModel.rideDetailsdata!.taxModel![i].type == "Fixed") {
-              taxAmount.value += double.parse(rideDetailsModel.rideDetailsdata!.taxModel![i].value.toString());
-            } else {
-              taxAmount.value += ((subTotalAmount.value - discountAmount.value) * double.parse(rideDetailsModel.rideDetailsdata!.taxModel![i].value!.toString())) / 100;
+        final pm = (rideDetailsModel.rideDetailsdata!.payment ?? selectedRadioTile.value).toString().toLowerCase();
+        if (rideDetailsModel.rideDetailsdata!.taxModel != null) {
+          for (var i = 0; i < rideDetailsModel.rideDetailsdata!.taxModel!.length; i++) {
+            final t = rideDetailsModel.rideDetailsdata!.taxModel![i];
+            if (t.statut == 'yes' && t.isApplicableFor(pm)) {
+              taxAmount.value += calculateTax(taxModel: t);
             }
           }
         }
@@ -416,11 +410,9 @@ class PaymentController extends GetxController {
   }
 
   Future<dynamic> transactionAmountRequest() async {
-    List taxList = [];
-
-    for (var v in Constant.taxList) {
-      taxList.add(v.toJson());
-    }
+    final method = selectedRadioTile.value.toLowerCase();
+    final activeTaxes = Constant.getActiveTaxes(method);
+    List taxList = activeTaxes.map((v) => v.toJson()).toList();
     Map<String, dynamic> bodyParams = {
       'id_ride': data.value.id.toString(),
       'id_driver': data.value.idConducteur.toString(),

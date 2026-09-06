@@ -31,14 +31,20 @@ class AuthOtpController extends GetxController {
   @override
   void onClose() {
     _resendTimer?.cancel();
-    phoneController.value.dispose();
-    phoneOtpController.value.dispose();
-    emailController.value.dispose();
-    emailOtpController.value.dispose();
-    firstNameController.value.dispose();
-    lastNameController.value.dispose();
-    referralCodeController.value.dispose();
     super.onClose();
+  }
+
+  void resetControllers() {
+    phoneController.value = TextEditingController();
+    phoneOtpController.value = TextEditingController();
+    emailController.value = TextEditingController();
+    emailOtpController.value = TextEditingController();
+    firstNameController.value = TextEditingController();
+    lastNameController.value = TextEditingController();
+    referralCodeController.value = TextEditingController();
+    phone.value = '';
+    emailHint.value = '';
+    isLoading.value = false;
   }
 
   void startResendTimer() {

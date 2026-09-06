@@ -566,6 +566,8 @@ class PaymentSelectionScreen extends StatelessWidget {
                                   controller.midtrans.value = false;
                                   controller.orangePay.value = false;
                                   controller.paymentMethodId.value = controller.paymentSettingModel.value.myWallet?.idPaymentMethod?.toString() ?? "wallet";
+                                  controller.getTotalAmount();
+                                  controller.update();
                                 },
                                 trailing: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -611,6 +613,8 @@ class PaymentSelectionScreen extends StatelessWidget {
                                   controller.midtrans.value = false;
                                   controller.orangePay.value = false;
                                   controller.paymentMethodId.value = controller.paymentSettingModel.value.cash?.idPaymentMethod?.toString() ?? "upi";
+                                  controller.getTotalAmount();
+                                  controller.update();
                                 },
                               ),
                               const SizedBox(height: 10),
@@ -637,10 +641,8 @@ class PaymentSelectionScreen extends StatelessWidget {
                             if (controller.selectedRadioTile.value == "Wallet") {
                               final balance = double.tryParse(controller.walletAmount.value) ?? 0.0;
                               if (balance >= total) {
-                                List taxList = [];
-                                for (var v in Constant.taxList) {
-                                  taxList.add(v.toJson());
-                                }
+                                final activeTaxes = Constant.getActiveTaxes("wallet");
+                                List taxList = activeTaxes.map((v) => v.toJson()).toList();
                                 _showWalletMpinDialog(context, controller, taxList);
                               } else {
                                 ShowToastDialog.showToast("Insufficient wallet balance. Redirecting to Wallet to Top Up...".tr);
@@ -827,34 +829,16 @@ class PaymentSelectionScreen extends StatelessWidget {
                           var amount = double.parse(controller.coupanCodeList[index].discount.toString()) / 100;
                           if ((controller.subTotalAmount.value * double.parse(amount.toString())) < controller.subTotalAmount.value) {
                             controller.discountAmount.value = controller.subTotalAmount.value * double.parse(amount.toString());
-                            controller.taxAmount.value = 0.0;
-                            for (var i = 0; i < Constant.taxList.length; i++) {
-                              if (Constant.taxList[i].statut == 'yes') {
-                                if (Constant.taxList[i].type == "Fixed") {
-                                  controller.taxAmount.value += double.parse(Constant.taxList[i].value.toString());
-                                } else {
-                                  controller.taxAmount.value +=
-                                      ((controller.subTotalAmount.value - controller.discountAmount.value) * double.parse(Constant.taxList[i].value!.toString())) / 100;
-                                }
-                              }
-                            }
+                            final base = (controller.subTotalAmount.value - controller.discountAmount.value) > 0 ? (controller.subTotalAmount.value - controller.discountAmount.value) : 0.0;
+                            controller.taxAmount.value = Constant.calculateTotalTaxes(base, controller.selectedRadioTile.value.toLowerCase());
                           } else {
                             ShowToastDialog.showToast("A coupon will be applied when the subtotal amount is greater than the coupon amount.");
                           }
                         } else {
                           if (double.parse(controller.coupanCodeList[index].discount.toString()) < controller.subTotalAmount.value) {
                             controller.discountAmount.value = double.parse(controller.coupanCodeList[index].discount.toString());
-                            controller.taxAmount.value = 0.0;
-                            for (var i = 0; i < Constant.taxList.length; i++) {
-                              if (Constant.taxList[i].statut == 'yes') {
-                                if (Constant.taxList[i].type == "Fixed") {
-                                  controller.taxAmount.value += double.parse(Constant.taxList[i].value.toString());
-                                } else {
-                                  controller.taxAmount.value +=
-                                      ((controller.subTotalAmount.value - controller.discountAmount.value) * double.parse(Constant.taxList[i].value!.toString())) / 100;
-                                }
-                              }
-                            }
+                            final base = (controller.subTotalAmount.value - controller.discountAmount.value) > 0 ? (controller.subTotalAmount.value - controller.discountAmount.value) : 0.0;
+                            controller.taxAmount.value = Constant.calculateTotalTaxes(base, controller.selectedRadioTile.value.toLowerCase());
                           } else {
                             ShowToastDialog.showToast("A coupon will be applied when the subtotal amount is greater than the coupon amount.");
                           }
@@ -1064,17 +1048,8 @@ class PaymentSelectionScreen extends StatelessWidget {
                                 var amount = double.parse(element.discount.toString()) / 100;
                                 if ((controller.subTotalAmount.value * double.parse(amount.toString())) < controller.subTotalAmount.value) {
                                   controller.discountAmount.value = controller.subTotalAmount.value * double.parse(amount.toString());
-                                  controller.taxAmount.value = 0.0;
-                                  for (var i = 0; i < Constant.taxList.length; i++) {
-                                    if (Constant.taxList[i].statut == 'yes') {
-                                      if (Constant.taxList[i].type == "Fixed") {
-                                        controller.taxAmount.value += double.parse(Constant.taxList[i].value.toString());
-                                      } else {
-                                        controller.taxAmount.value +=
-                                            ((controller.subTotalAmount.value - controller.discountAmount.value) * double.parse(Constant.taxList[i].value!.toString())) / 100;
-                                      }
-                                    }
-                                  }
+                                  final base = (controller.subTotalAmount.value - controller.discountAmount.value) > 0 ? (controller.subTotalAmount.value - controller.discountAmount.value) : 0.0;
+                                  controller.taxAmount.value = Constant.calculateTotalTaxes(base, controller.selectedRadioTile.value.toLowerCase());
                                   Navigator.pop(context);
                                 } else {
                                   ShowToastDialog.showToast("A coupon will be applied when the subtotal amount is greater than the coupon amount.");
@@ -1083,17 +1058,8 @@ class PaymentSelectionScreen extends StatelessWidget {
                               } else {
                                 if (double.parse(element.discount.toString()) < controller.subTotalAmount.value) {
                                   controller.discountAmount.value = double.parse(element.discount.toString());
-                                  controller.taxAmount.value = 0.0;
-                                  for (var i = 0; i < Constant.taxList.length; i++) {
-                                    if (Constant.taxList[i].statut == 'yes') {
-                                      if (Constant.taxList[i].type == "Fixed") {
-                                        controller.taxAmount.value += double.parse(Constant.taxList[i].value.toString());
-                                      } else {
-                                        controller.taxAmount.value +=
-                                            ((controller.subTotalAmount.value - controller.discountAmount.value) * double.parse(Constant.taxList[i].value!.toString())) / 100;
-                                      }
-                                    }
-                                  }
+                                  final base = (controller.subTotalAmount.value - controller.discountAmount.value) > 0 ? (controller.subTotalAmount.value - controller.discountAmount.value) : 0.0;
+                                  controller.taxAmount.value = Constant.calculateTotalTaxes(base, controller.selectedRadioTile.value.toLowerCase());
                                   Navigator.pop(context);
                                 } else {
                                   ShowToastDialog.showToast("A coupon will be applied when the subtotal amount is greater than the coupon amount.");
