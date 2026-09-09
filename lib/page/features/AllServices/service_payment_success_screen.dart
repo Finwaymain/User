@@ -595,6 +595,14 @@ class _ServicePaymentSuccessScreenState extends State<ServicePaymentSuccessScree
                                       isDarkMode,
                                     ),
 
+                                  if (booking?.hasPromotionalBonus ?? false)
+                                    _buildBreakdownRow(
+                                      '🎁 Welcome Bonus Applied'.tr,
+                                      '-${_money(booking!.promotionalDiscountValue)}',
+                                      isDarkMode,
+                                      isHighlighted: true,
+                                    ),
+
                                   const SizedBox(height: 8),
                                   Divider(color: isDarkMode ? Colors.white12 : const Color(0xFFE2E8F0)),
                                   const SizedBox(height: 8),

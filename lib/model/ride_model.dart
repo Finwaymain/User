@@ -82,6 +82,10 @@ class RideData {
   String? moyenneDriver;
   String? rideType;
   List<TaxModel>? taxModel;
+  String? discount;
+  String? promotionalAmount;
+  String? promotionalDiscount;
+  bool isPromotionalApplied = false;
 
   RideData(
       {this.id,
@@ -131,6 +135,10 @@ class RideData {
       this.moyenne,
       this.taxModel,
       this.rideType,
+      this.discount,
+      this.promotionalAmount,
+      this.promotionalDiscount,
+      this.isPromotionalApplied = false,
       this.moyenneDriver});
 
   RideData.fromJson(Map<String, dynamic> json) {
@@ -221,6 +229,10 @@ class RideData {
     moyenneDriver = json['moyenne_driver']?.toString();
     taxModel = taxList;
     rideType = json['ride_type']?.toString();
+    discount = json['discount']?.toString();
+    promotionalAmount = json['promotional_amount']?.toString();
+    promotionalDiscount = json['promotional_discount']?.toString();
+    isPromotionalApplied = json['is_promotional_applied'] == true || json['is_promotional_applied'] == 1 || json['is_promotional_applied'] == '1';
   }
 
   Map<String, dynamic> toJson() {

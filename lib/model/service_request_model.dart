@@ -21,6 +21,9 @@ class ServiceRequestData {
   final String? otp;
   final ServiceDriverInfo? driver;
   final ServicePriceEstimate? priceBreakdown;
+  final double? promotionalAmount;
+  final double? promotionalDiscount;
+  final bool isPromotionalApplied;
 
   ServiceRequestData({
     this.id,
@@ -42,6 +45,9 @@ class ServiceRequestData {
     this.otp,
     this.driver,
     this.priceBreakdown,
+    this.promotionalAmount,
+    this.promotionalDiscount,
+    this.isPromotionalApplied = false,
   });
 
   static int? _parseInt(dynamic value) {
@@ -72,6 +78,7 @@ class ServiceRequestData {
     final breakdown = ServicePriceEstimate.tryParse(json['price_breakdown']);
     final driver = ServiceDriverInfo.fromJson(json['driver'] is Map ? Map<String, dynamic>.from(json['driver'] as Map) : null);
     final parsedDriverId = _parseInt(json['driver_id']) ?? driver.id;
+    final isPromo = json['is_promotional_applied'] == true || json['is_promotional_applied'] == 1 || json['is_promotional_applied'] == '1';
 
     return ServiceRequestData(
       id: _parseInt(json['id']),
@@ -93,6 +100,9 @@ class ServiceRequestData {
       otp: _parseString(json['otp']),
       driver: driver,
       priceBreakdown: breakdown,
+      promotionalAmount: double.tryParse(json['promotional_amount']?.toString() ?? ''),
+      promotionalDiscount: double.tryParse(json['promotional_discount']?.toString() ?? ''),
+      isPromotionalApplied: isPromo,
     );
   }
 
@@ -236,6 +246,14 @@ class ServiceRequestData {
     }
     return 0;
   }
+
+  bool get hasPromotionalBonus =>
+      (promotionalDiscount != null && promotionalDiscount! > 0) ||
+      (isPromotionalApplied && (promotionalAmount != null && promotionalAmount! > 0));
+
+  double get promotionalAmountValue => promotionalAmount ?? 0.0;
+  double get promotionalDiscountValue => promotionalDiscount ?? 0.0;
+  double get displayedBookingTotal => hasPromotionalBonus ? (payableAmount + promotionalAmountValue) : payableAmount;
 
   double get materialCostAmount => priceBreakdown?.materialCost ?? 0;
 

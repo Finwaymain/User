@@ -81,6 +81,9 @@ class RideDetailsdata {
   String? driverPhone;
   String? moyenne;
   List<Stops>? stops;
+  String? promotionalAmount;
+  String? promotionalDiscount;
+  bool isPromotionalApplied = false;
 
   RideDetailsdata(
       {this.id,
@@ -132,7 +135,10 @@ class RideDetailsdata {
       this.photoPath,
       this.driverPhone,
       this.moyenne,
-      this.stops});
+      this.stops,
+      this.promotionalAmount,
+      this.promotionalDiscount,
+      this.isPromotionalApplied = false});
 
   RideDetailsdata.fromJson(Map<String, dynamic> json) {
     List<TaxModel>? taxList = [];
@@ -168,6 +174,9 @@ class RideDetailsdata {
     tipAmount = json['tip_amount']?.toString();
     taxModel = taxList;
     discount = json['discount']?.toString();
+    promotionalAmount = json['promotional_amount']?.toString();
+    promotionalDiscount = json['promotional_discount']?.toString();
+    isPromotionalApplied = json['is_promotional_applied'] == true || json['is_promotional_applied'] == 1 || json['is_promotional_applied'] == '1';
     transactionId = json['transaction_id']?.toString();
     trajet = json['trajet']?.toString();
     statut = json['statut']?.toString();

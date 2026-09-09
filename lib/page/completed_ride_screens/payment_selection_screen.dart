@@ -184,25 +184,72 @@ class PaymentSelectionScreen extends StatelessWidget {
                                       )),
                                   child: Column(
                                     children: [
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                                        child: Row(
-                                          children: [
-                                            Expanded(
-                                                child: Text("Sub Total".tr,
-                                                    style: TextStyle(
-                                                      fontFamily: AppThemeData.regular,
-                                                      color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
-                                                      fontSize: 16,
-                                                    ))),
-                                            Text(Constant().amountShow(amount: controller.data.value.montant.toString()),
-                                                style: TextStyle(
-                                                  fontFamily: AppThemeData.medium,
-                                                  color: themeChange.getThem() ? AppThemeData.grey500Dark : AppThemeData.grey500,
-                                                  fontSize: 16,
-                                                )),
-                                          ],
-                                        ),
+                                      Builder(
+                                        builder: (context) {
+                                          final pDiscount = double.tryParse(controller.data.value.promotionalDiscount ?? '0') ?? 0.0;
+                                          final pAmount = double.tryParse(controller.data.value.promotionalAmount ?? '0') ?? 0.0;
+                                          final hasPromo = (controller.data.value.isPromotionalApplied || pDiscount > 0) && pDiscount > 0;
+                                          final baseMontant = double.tryParse(controller.data.value.montant ?? '0') ?? 0.0;
+                                          final displayedSubtotal = hasPromo ? (baseMontant + pAmount) : baseMontant;
+
+                                          return Column(
+                                            children: [
+                                              Padding(
+                                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                                                child: Row(
+                                                  children: [
+                                                    Expanded(
+                                                        child: Text("Sub Total".tr,
+                                                            style: TextStyle(
+                                                              fontFamily: AppThemeData.regular,
+                                                              color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
+                                                              fontSize: 16,
+                                                            ))),
+                                                    Text(Constant().amountShow(amount: displayedSubtotal.toString()),
+                                                        style: TextStyle(
+                                                          fontFamily: AppThemeData.medium,
+                                                          color: themeChange.getThem() ? AppThemeData.grey500Dark : AppThemeData.grey500,
+                                                          fontSize: 16,
+                                                        )),
+                                                  ],
+                                                ),
+                                              ),
+                                              if (hasPromo) ...[
+                                                Container(
+                                                  color: themeChange.getThem() ? AppThemeData.grey300Dark : AppThemeData.grey300,
+                                                  height: 1,
+                                                ),
+                                                Padding(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                                                  child: Row(
+                                                    children: [
+                                                      Expanded(
+                                                          child: Row(
+                                                            children: [
+                                                              const Icon(Icons.card_giftcard_rounded, color: Colors.green, size: 18),
+                                                              const SizedBox(width: 6),
+                                                              Text("🎁 Welcome Bonus".tr,
+                                                                  style: const TextStyle(
+                                                                    fontFamily: AppThemeData.medium,
+                                                                    color: Colors.green,
+                                                                    fontSize: 15,
+                                                                  )),
+                                                            ],
+                                                          )),
+                                                      Text('(-${Constant().amountShow(amount: pDiscount.toString())})',
+                                                          style: const TextStyle(
+                                                            letterSpacing: 1.0,
+                                                            fontSize: 16,
+                                                            color: Colors.green,
+                                                            fontFamily: AppThemeData.medium,
+                                                          ))
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            ],
+                                          );
+                                        },
                                       ),
                                       Container(
                                         color: themeChange.getThem() ? AppThemeData.grey300Dark : AppThemeData.grey300,

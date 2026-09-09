@@ -37,6 +37,7 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
   double _walletBalance = 0;
   double _pendingRazorpayAmount = 0;
   Timer? _pollTimer;
+  bool _applyPromo = true;
 
   @override
   void initState() {
@@ -159,8 +160,12 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
       return;
     }
 
-    final totalTax = Constant.calculateTotalTaxes(baseTotal, _paymentMethod);
-    final totalWithTax = baseTotal + totalTax;
+    final hasPromo = booking.hasPromotionalBonus;
+    final promoDiscount = booking.promotionalDiscountValue;
+    final effectiveBase = (hasPromo && !_applyPromo) ? (baseTotal + promoDiscount) : baseTotal;
+
+    final totalTax = Constant.calculateTotalTaxes(effectiveBase, _paymentMethod);
+    final totalWithTax = effectiveBase + totalTax;
 
     if (_paymentMethod == 'wallet') {
       if (_walletBalance < totalWithTax) {
@@ -222,9 +227,14 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
     final isDarkMode = Provider.of<DarkThemeProvider>(context).getThem();
     final booking = _booking;
     final baseTotal = booking?.payableAmount ?? 0.0;
-    final taxBreakdown = Constant.getTaxBreakdown(baseTotal, _paymentMethod);
-    final totalTaxAmount = Constant.calculateTotalTaxes(baseTotal, _paymentMethod);
-    final finalPayableTotal = baseTotal + totalTaxAmount;
+    final hasPromo = booking?.hasPromotionalBonus ?? false;
+    final promoAmount = booking?.promotionalAmountValue ?? 0.0;
+    final promoDiscount = booking?.promotionalDiscountValue ?? 0.0;
+    final displayedSubtotal = hasPromo ? (baseTotal + promoAmount) : baseTotal;
+    final effectiveBase = (hasPromo && !_applyPromo) ? (baseTotal + promoDiscount) : baseTotal;
+    final taxBreakdown = Constant.getTaxBreakdown(effectiveBase, _paymentMethod);
+    final totalTaxAmount = Constant.calculateTotalTaxes(effectiveBase, _paymentMethod);
+    final finalPayableTotal = effectiveBase + totalTaxAmount;
     final visitAmount = booking?.visitingChargeAmount ?? 0.0;
     final visitLabel = booking?.visitingChargeLabel ?? '';
     final materialAmount = booking?.materialCostAmount ?? 0.0;
@@ -298,6 +308,74 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
                                       _priceRow('Visiting Charge'.tr, visitLabel, isDarkMode),
                                     if (materialAmount > 0)
                                       _priceRow('Material Cost'.tr, _money(materialAmount), isDarkMode),
+                                    if (hasPromo) ...[
+                                      const Divider(height: 16),
+                                      _priceRow(
+                                        'Booking Total'.tr,
+                                        _money(displayedSubtotal),
+                                        isDarkMode,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                        decoration: BoxDecoration(
+                                          color: _applyPromo
+                                              ? Colors.green.withValues(alpha: 0.08)
+                                              : (isDarkMode ? AppThemeData.surface50Dark : Colors.grey.shade100),
+                                          borderRadius: BorderRadius.circular(10),
+                                          border: Border.all(
+                                            color: _applyPromo ? Colors.green.withValues(alpha: 0.35) : Colors.grey.shade300,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            const Icon(Icons.card_giftcard_rounded, color: Colors.green, size: 22),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    '🎁 Welcome Bonus'.tr,
+                                                    style: TextStyle(
+                                                      fontFamily: AppThemeData.semiBold,
+                                                      fontSize: 13,
+                                                      color: _applyPromo ? Colors.green.shade800 : (isDarkMode ? AppThemeData.grey300Dark : Colors.grey.shade700),
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    'Exclusive service discount'.tr,
+                                                    style: TextStyle(
+                                                      fontSize: 11,
+                                                      color: isDarkMode ? AppThemeData.grey400Dark : Colors.grey.shade600,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            Text(
+                                              '-${_money(promoDiscount)}',
+                                              style: TextStyle(
+                                                fontFamily: AppThemeData.bold,
+                                                fontSize: 14,
+                                                color: _applyPromo ? Colors.green : Colors.grey,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Transform.scale(
+                                              scale: 0.8,
+                                              child: Switch(
+                                                value: _applyPromo,
+                                                activeColor: Colors.green,
+                                                onChanged: (val) {
+                                                  setState(() => _applyPromo = val);
+                                                },
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
                                     if (taxBreakdown.isNotEmpty) ...[
                                       const Divider(height: 16),
                                       ...taxBreakdown.map((t) => _priceRow(
