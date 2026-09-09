@@ -114,6 +114,17 @@ class WalletOverviewTab extends StatelessWidget {
                     icon: Icons.card_giftcard_rounded,
                     gradient: [AppThemeData.secondary200, AppThemeData.info200],
                   ),
+                  if (walletController.hasPromo.value) ...[
+                    const SizedBox(height: 12),
+                    _walletBalanceCard(
+                      isDark,
+                      title: '🎁 Welcome Bonus',
+                      subtitle: '₹${walletController.promoDiscountPerService.value.toStringAsFixed(0)} off/service • ${walletController.promoUsesRemaining.value} uses',
+                      amount: walletController.promoBalance.value,
+                      icon: Icons.stars_rounded,
+                      gradient: const [Color(0xFF8B5CF6), Color(0xFF6366F1)],
+                    ),
+                  ],
                 ],
               )),
           const SizedBox(height: 22),

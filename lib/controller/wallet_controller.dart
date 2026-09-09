@@ -228,6 +228,10 @@ class WalletController extends GetxController {
   }
 
   RxDouble earnAmount = 0.0.obs;
+  RxDouble promoBalance = 0.0.obs;
+  RxDouble promoDiscountPerService = 50.0.obs;
+  RxInt promoUsesRemaining = 0.obs;
+  RxBool hasPromo = false.obs;
 
   void _applyCachedWalletAmounts() {
     userModel.value = Constant.getUserData();
@@ -254,6 +258,13 @@ class WalletController extends GetxController {
         if (body['res'] == 'success' && body['data'] != null) {
           walletAmount.value = double.tryParse(body['data']['amount']?.toString() ?? '0') ?? 0;
           earnAmount.value = double.tryParse(body['data']['earn_amount']?.toString() ?? '0') ?? 0;
+          if (body['data']['promotional'] != null) {
+            final p = body['data']['promotional'];
+            promoBalance.value = double.tryParse(p['balance']?.toString() ?? '0') ?? 0;
+            promoDiscountPerService.value = double.tryParse(p['discount_per_service']?.toString() ?? '50') ?? 50;
+            promoUsesRemaining.value = int.tryParse(p['uses_remaining']?.toString() ?? '0') ?? 0;
+            hasPromo.value = (p['has_promotion'] == true || p['is_active'] == true) && promoBalance.value > 0;
+          }
           return;
         }
       }
@@ -280,6 +291,13 @@ class WalletController extends GetxController {
         walletAmount.value = responseBody['data']['amount'] != null ? double.parse(responseBody['data']['amount'].toString()) : 0;
         final earned = responseBody['data']['earn_amount'] ?? userModel.value.data?.earnAmount;
         earnAmount.value = earned != null ? double.tryParse(earned.toString()) ?? 0 : 0;
+        if (responseBody['data']['promotional'] != null) {
+          final p = responseBody['data']['promotional'];
+          promoBalance.value = double.tryParse(p['balance']?.toString() ?? '0') ?? 0;
+          promoDiscountPerService.value = double.tryParse(p['discount_per_service']?.toString() ?? '50') ?? 50;
+          promoUsesRemaining.value = int.tryParse(p['uses_remaining']?.toString() ?? '0') ?? 0;
+          hasPromo.value = (p['has_promotion'] == true || p['is_active'] == true) && promoBalance.value > 0;
+        }
       } else if (response.statusCode == 200 &&
           (responseBody['success'] == "failed" || responseBody['success'] == "Failed")) {
         await _trySmartValueWalletFallback();
