@@ -251,7 +251,15 @@ class SearchingDriverController extends GetxController {
       if (response.statusCode == 200) {
         Map<String, dynamic> responseBody = json.decode(response.body);
         if (responseBody['success'] == "success") {
+          if (responseBody['data'] != null) {
+            try {
+              rideData.value = RideData.fromJson(responseBody['data']);
+            } catch (e) {
+              dev.log("Error updating rideData from retry response: $e");
+            }
+          }
           // Reset the countdown and UI state to "searching"
+          statut.value = "new";
           startSearchTimer();
           return;
         }
