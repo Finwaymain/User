@@ -92,6 +92,10 @@ class RideDetailsdata {
   String? promotionalAmount;
   String? promotionalDiscount;
   bool isPromotionalApplied = false;
+  String? baseFare;
+  String? baseMontant;
+  String? totalFare;
+  String? totalTax;
 
   RideDetailsdata(
       {this.id,
@@ -146,7 +150,12 @@ class RideDetailsdata {
       this.stops,
       this.promotionalAmount,
       this.promotionalDiscount,
-      this.isPromotionalApplied = false});
+      this.isPromotionalApplied = false,
+      this.baseFare,
+      this.baseMontant,
+      this.totalFare,
+      this.totalTax});
+
 
   RideDetailsdata.fromJson(Map<String, dynamic> json) {
     List<TaxModel>? taxList = [];
@@ -185,6 +194,11 @@ class RideDetailsdata {
     promotionalAmount = json['promotional_amount']?.toString();
     promotionalDiscount = json['promotional_discount']?.toString();
     isPromotionalApplied = json['is_promotional_applied'] == true || json['is_promotional_applied'] == 1 || json['is_promotional_applied'] == '1';
+    baseFare = (json['base_fare'] ?? json['base_montant'])?.toString();
+    baseMontant = json['base_montant']?.toString();
+    totalFare = json['total_fare']?.toString();
+    totalTax = (json['total_tax'] ?? json['total_tax_amount'])?.toString();
+
     transactionId = json['transaction_id']?.toString();
     trajet = json['trajet']?.toString();
     statut = json['statut']?.toString();
@@ -311,6 +325,11 @@ class RideDetailsdata {
     } else {
       data['stops'] = [];
     }
+    data['base_fare'] = baseFare;
+    data['base_montant'] = baseMontant;
+    data['total_fare'] = totalFare;
+    data['total_tax'] = totalTax;
     return data;
+
   }
 }

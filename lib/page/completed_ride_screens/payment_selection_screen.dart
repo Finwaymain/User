@@ -21,7 +21,6 @@ import 'package:finway/service/api.dart';
 import 'package:finway/themes/appbar_cust.dart';
 import 'package:finway/themes/button_them.dart';
 import 'package:finway/themes/constant_colors.dart';
-import 'package:finway/themes/radio_button.dart';
 import 'package:finway/themes/text_field_them.dart';
 import 'package:finway/utils/Preferences.dart';
 import 'package:finway/utils/dark_theme_provider.dart';
@@ -92,221 +91,76 @@ class PaymentSelectionScreen extends StatelessWidget {
                             children: [
                               buildListPromoCode(controller, themeChange.getThem()),
                               const SizedBox(
-                                height: 20,
+                                height: 12,
                               ),
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: themeChange.getThem() ? AppThemeData.surface50Dark : AppThemeData.surface50,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: themeChange.getThem() ? AppThemeData.grey200Dark : AppThemeData.grey200,
-                                  ),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12.0),
-                                  child: Obx(() {
-                                    final hasAppliedCoupon = controller.selectedPromoCode.value.isNotEmpty;
-                                    return Row(
-                                      children: [
-                                        Image.asset(
-                                          'assets/images/promo_code.png',
-                                          width: 48,
-                                          height: 48,
-                                        ),
-                                        Expanded(
-                                          child: Padding(
-                                            padding: const EdgeInsets.only(left: 12),
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Row(
-                                                  children: [
-                                                    Text(
-                                                      "Promo Code".tr,
-                                                      style: TextStyle(
-                                                        fontSize: 15,
-                                                        fontFamily: AppThemeData.semiBold,
-                                                        color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
-                                                      ),
-                                                    ),
-                                                    if (hasAppliedCoupon) ...[
-                                                      const SizedBox(width: 8),
-                                                      Container(
-                                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                                        decoration: BoxDecoration(
-                                                          color: Colors.green.shade50,
-                                                          borderRadius: BorderRadius.circular(6),
-                                                          border: Border.all(color: Colors.green.shade300),
-                                                        ),
-                                                        child: Text(
-                                                          controller.selectedPromoCode.value,
-                                                          style: TextStyle(
-                                                            fontSize: 11,
-                                                            fontFamily: AppThemeData.bold,
-                                                            color: Colors.green.shade700,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ],
-                                                ),
-                                                Text(
-                                                  hasAppliedCoupon
-                                                      ? "${controller.selectedPromoValue.value} discount applied (-${Constant().amountShow(amount: controller.discountAmount.value.toString())})"
-                                                      : "Apply promo code".tr,
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    fontFamily: hasAppliedCoupon ? AppThemeData.medium : AppThemeData.regular,
-                                                    color: hasAppliedCoupon ? Colors.green.shade600 : (themeChange.getThem() ? AppThemeData.grey400Dark : AppThemeData.grey500),
-                                                  ),
-                                                )
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                        if (hasAppliedCoupon)
-                                          GestureDetector(
-                                            onTap: () {
-                                              controller.selectedPromoCode.value = "";
-                                              controller.selectedPromoValue.value = "";
-                                              controller.discountAmount.value = 0.0;
-                                              controller.couponCodeController.clear();
-                                              final base = (controller.subTotalAmount.value - controller.discountAmount.value) > 0 ? (controller.subTotalAmount.value - controller.discountAmount.value) : 0.0;
-                                              controller.taxAmount.value = Constant.calculateTotalTaxes(base, controller.selectedRadioTile.value.toLowerCase());
-                                              controller.getTotalAmount();
-                                              controller.update();
-                                              ShowToastDialog.showToast("Coupon removed successfully".tr);
-                                            },
-                                            child: Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                              decoration: BoxDecoration(
-                                                color: Colors.red.shade50,
-                                                borderRadius: BorderRadius.circular(8),
-                                                border: Border.all(color: Colors.red.shade200),
-                                              ),
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Icon(Icons.close_rounded, size: 16, color: Colors.red.shade700),
-                                                  const SizedBox(width: 4),
-                                                  Text(
-                                                    "Remove".tr,
-                                                    style: TextStyle(
-                                                      fontSize: 12,
-                                                      fontFamily: AppThemeData.bold,
-                                                      color: Colors.red.shade700,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          )
-                                        else
-                                          GestureDetector(
-                                            onTap: () {
-                                              showModalBottomSheet(
-                                                isScrollControlled: true,
-                                                isDismissible: true,
-                                                context: context,
-                                                backgroundColor: Colors.transparent,
-                                                enableDrag: true,
-                                                builder: (BuildContext context) => couponCodeSheet(
-                                                  context,
-                                                  controller,
-                                                ),
-                                              );
-                                            },
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                borderRadius: BorderRadius.circular(30),
-                                                boxShadow: <BoxShadow>[
-                                                  BoxShadow(
-                                                    color: Colors.black.withValues(alpha: 0.15),
-                                                    blurRadius: 3,
-                                                    offset: const Offset(1, 2),
-                                                  ),
-                                                ],
-                                              ),
-                                              child: Image.asset(
-                                                'assets/images/add_payment.png',
-                                                width: 36,
-                                                height: 36,
-                                              ),
-                                            ),
-                                          ),
-                                      ],
-                                    );
-                                  }),
-                                ),
-                              ),
+
                               Padding(
-                                padding: const EdgeInsets.only(top: 15.0),
+                                padding: const EdgeInsets.only(top: 12.0),
                                 child: Container(
                                   decoration: BoxDecoration(
                                       color: themeChange.getThem() ? AppThemeData.surface50Dark : AppThemeData.surface50,
-                                      borderRadius: BorderRadius.circular(16),
+                                      borderRadius: BorderRadius.circular(14),
                                       border: Border.all(
                                         color: themeChange.getThem() ? AppThemeData.grey300Dark : AppThemeData.grey300,
                                         width: 1,
                                       )),
                                   child: Column(
                                     children: [
-                                      Builder(
-                                        builder: (context) {
-                                          final pDiscount = double.tryParse(controller.data.value.promotionalDiscount ?? '0') ?? 0.0;
-                                          final pAmount = double.tryParse(controller.data.value.promotionalAmount ?? '0') ?? 0.0;
-                                          final hasPromo = (controller.data.value.isPromotionalApplied || pDiscount > 0) && pDiscount > 0;
-                                          final baseMontant = double.tryParse(controller.data.value.montant ?? '0') ?? 0.0;
-                                          final displayedSubtotal = hasPromo ? (baseMontant + pAmount) : baseMontant;
+                                       Builder(
+                                         builder: (context) {
+                                           final pDiscount = controller.getPromoDiscount();
+                                           final hasPromo = pDiscount > 0;
+                                           final displayedSubtotal = controller.subTotalAmount.value;
 
-                                          return Column(
-                                            children: [
-                                              Padding(
-                                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                                                child: Row(
-                                                  children: [
-                                                    Expanded(
-                                                        child: Text("Sub Total".tr,
-                                                            style: TextStyle(
-                                                              fontFamily: AppThemeData.regular,
-                                                              color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
-                                                              fontSize: 16,
-                                                            ))),
-                                                    Text(Constant().amountShow(amount: displayedSubtotal.toString()),
-                                                        style: TextStyle(
-                                                          fontFamily: AppThemeData.medium,
-                                                          color: themeChange.getThem() ? AppThemeData.grey500Dark : AppThemeData.grey500,
-                                                          fontSize: 16,
-                                                        )),
-                                                  ],
-                                                ),
-                                              ),
+                                           return Column(
+                                             children: [
+                                               Padding(
+                                                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                                 child: Row(
+                                                   children: [
+                                                     Expanded(
+                                                         child: Text("Sub Total".tr,
+                                                             style: TextStyle(
+                                                               fontFamily: AppThemeData.regular,
+                                                               color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
+                                                               fontSize: 14,
+                                                             ))),
+                                                     Text(Constant().amountShow(amount: displayedSubtotal.toStringAsFixed(2)),
+                                                         style: TextStyle(
+                                                           fontFamily: AppThemeData.medium,
+                                                           color: themeChange.getThem() ? AppThemeData.grey500Dark : AppThemeData.grey500,
+                                                           fontSize: 14,
+                                                         )),
+                                                   ],
+                                                 ),
+                                               ),
                                               if (hasPromo) ...[
-                                                Container(
-                                                  color: themeChange.getThem() ? AppThemeData.grey300Dark : AppThemeData.grey300,
+                                                Divider(
                                                   height: 1,
+                                                  thickness: 1,
+                                                  color: themeChange.getThem() ? AppThemeData.grey300Dark : AppThemeData.grey200,
                                                 ),
                                                 Padding(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                                                   child: Row(
                                                     children: [
                                                       Expanded(
                                                           child: Row(
                                                             children: [
-                                                              const Icon(Icons.card_giftcard_rounded, color: Colors.green, size: 18),
+                                                              const Icon(Icons.card_giftcard_rounded, color: Colors.green, size: 16),
                                                               const SizedBox(width: 6),
                                                               Text("🎁 Promotion Bonus".tr,
                                                                   style: const TextStyle(
                                                                     fontFamily: AppThemeData.medium,
                                                                     color: Colors.green,
-                                                                    fontSize: 15,
+                                                                    fontSize: 13.5,
                                                                   )),
                                                             ],
                                                           )),
-                                                      Text('(-${Constant().amountShow(amount: pDiscount.toString())})',
+                                                      Text('(-${Constant().amountShow(amount: pDiscount.toStringAsFixed(2))})',
                                                           style: const TextStyle(
-                                                            letterSpacing: 1.0,
-                                                            fontSize: 16,
+                                                            letterSpacing: 0.5,
+                                                            fontSize: 14,
                                                             color: Colors.green,
                                                             fontFamily: AppThemeData.medium,
                                                           ))
@@ -318,56 +172,64 @@ class PaymentSelectionScreen extends StatelessWidget {
                                           );
                                         },
                                       ),
-                                      Container(
-                                        color: themeChange.getThem() ? AppThemeData.grey300Dark : AppThemeData.grey300,
-                                        height: 1,
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                                        child: Row(
-                                          children: [
-                                            Expanded(
-                                                child: Text("Discount".tr,
-                                                    style: TextStyle(
-                                                      fontFamily: AppThemeData.regular,
-                                                      color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
-                                                      fontSize: 16,
-                                                    ))),
-                                            Text('(-${Constant().amountShow(amount: controller.discountAmount.toString())})',
-                                                style: const TextStyle(
-                                                  letterSpacing: 1.0,
-                                                  fontSize: 16,
-                                                  color: Colors.red,
-                                                  fontFamily: AppThemeData.medium,
-                                                ))
-                                          ],
+                                      if (controller.discountAmount.value > 0) ...[
+                                        Divider(
+                                          height: 1,
+                                          thickness: 1,
+                                          color: themeChange.getThem() ? AppThemeData.grey300Dark : AppThemeData.grey200,
                                         ),
-                                      ),
-                                      Container(
-                                        color: themeChange.getThem() ? AppThemeData.grey300Dark : AppThemeData.grey300,
-                                        height: 1,
-                                      ),
-                                      Visibility(
-                                        visible: controller.selectedPromoCode.value.isNotEmpty,
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                                           child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: [
-                                              Text("${"Promo Code :".tr} ${controller.selectedPromoCode.value}",
-                                                  style: TextStyle(
-                                                    fontFamily: AppThemeData.regular,
-                                                    color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
-                                                    fontSize: 16,
-                                                  )),
-                                              Text('(${controller.selectedPromoValue.value})',
-                                                  style: TextStyle(
+                                              Expanded(
+                                                  child: Text("Discount".tr,
+                                                      style: TextStyle(
+                                                        fontFamily: AppThemeData.regular,
+                                                        color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
+                                                        fontSize: 14,
+                                                      ))),
+                                              Text('(-${Constant().amountShow(amount: controller.discountAmount.toString())})',
+                                                  style: const TextStyle(
+                                                    letterSpacing: 0.5,
+                                                    fontSize: 14,
+                                                    color: Colors.red,
                                                     fontFamily: AppThemeData.medium,
-                                                    color: themeChange.getThem() ? AppThemeData.grey500Dark : AppThemeData.grey500,
-                                                    fontSize: 16,
                                                   ))
                                             ],
                                           ),
+                                        ),
+                                      ],
+                                      Visibility(
+                                        visible: controller.selectedPromoCode.value.isNotEmpty,
+                                        child: Column(
+                                          children: [
+                                            Divider(
+                                              height: 1,
+                                              thickness: 1,
+                                              color: themeChange.getThem() ? AppThemeData.grey300Dark : AppThemeData.grey200,
+                                            ),
+                                            Padding(
+                                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                              child: Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                children: [
+                                                  Text("${"Promo Code :".tr} ${controller.selectedPromoCode.value}",
+                                                      style: TextStyle(
+                                                        fontFamily: AppThemeData.regular,
+                                                        color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
+                                                        fontSize: 14,
+                                                      )),
+                                                  Text('(${controller.selectedPromoValue.value})',
+                                                      style: TextStyle(
+                                                        fontFamily: AppThemeData.medium,
+                                                        color: themeChange.getThem() ? AppThemeData.grey500Dark : AppThemeData.grey500,
+                                                        fontSize: 14,
+                                                      ))
+                                                ],
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                       Builder(
@@ -383,8 +245,13 @@ class PaymentSelectionScreen extends StatelessWidget {
                                               TaxModel taxModel = activeTaxes[index];
                                               return Column(
                                                 children: [
+                                                  Divider(
+                                                    height: 1,
+                                                    thickness: 1,
+                                                    color: themeChange.getThem() ? AppThemeData.grey300Dark : AppThemeData.grey200,
+                                                  ),
                                                   Padding(
-                                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                                                     child: Row(
                                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                       children: [
@@ -393,21 +260,17 @@ class PaymentSelectionScreen extends StatelessWidget {
                                                             style: TextStyle(
                                                               fontFamily: AppThemeData.regular,
                                                               color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
-                                                              fontSize: 16,
+                                                              fontSize: 14,
                                                             )),
                                                         Text(Constant().amountShow(amount: controller.calculateTax(taxModel: taxModel).toString()),
                                                             style: TextStyle(
                                                               fontFamily: AppThemeData.medium,
                                                               color: themeChange.getThem() ? AppThemeData.grey500Dark : AppThemeData.grey500,
-                                                              fontSize: 16,
+                                                              fontSize: 14,
                                                             ))
                                                       ],
                                                     ),
                                                   ),
-                                                  Container(
-                                                    color: themeChange.getThem() ? AppThemeData.grey300Dark : AppThemeData.grey300,
-                                                    height: 1,
-                                                  )
                                                 ],
                                               );
                                             },
@@ -415,11 +278,16 @@ class PaymentSelectionScreen extends StatelessWidget {
                                         },
                                       ),
                                       Visibility(
-                                        visible: controller.tipAmount.value == 0 ? false : true,
+                                        visible: controller.tipAmount.value != 0,
                                         child: Column(
                                           children: [
+                                            Divider(
+                                              height: 1,
+                                              thickness: 1,
+                                              color: themeChange.getThem() ? AppThemeData.grey300Dark : AppThemeData.grey200,
+                                            ),
                                             Padding(
-                                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                                               child: Row(
                                                 children: [
                                                   Expanded(
@@ -427,217 +295,123 @@ class PaymentSelectionScreen extends StatelessWidget {
                                                           style: TextStyle(
                                                             fontFamily: AppThemeData.regular,
                                                             color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
-                                                            fontSize: 16,
+                                                            fontSize: 14,
                                                           ))),
                                                   Text(Constant().amountShow(amount: controller.tipAmount.value.toString()),
                                                       style: TextStyle(
                                                         fontFamily: AppThemeData.medium,
                                                         color: themeChange.getThem() ? AppThemeData.grey500Dark : AppThemeData.grey500,
-                                                        fontSize: 16,
+                                                        fontSize: 14,
                                                       )),
                                                 ],
                                               ),
                                             ),
-                                            Container(
-                                              color: themeChange.getThem() ? AppThemeData.grey300Dark : AppThemeData.grey300,
-                                              height: 1,
-                                            ),
                                           ],
                                         ),
                                       ),
+                                      Divider(
+                                        height: 1,
+                                        thickness: 1,
+                                        color: themeChange.getThem() ? AppThemeData.grey300Dark : AppThemeData.grey200,
+                                      ),
                                       Padding(
-                                        padding: const EdgeInsets.all(16),
+                                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          crossAxisAlignment: CrossAxisAlignment.end,
+                                          crossAxisAlignment: CrossAxisAlignment.center,
                                           children: [
                                             Text("Total".tr,
                                                 style: TextStyle(
-                                                  fontFamily: AppThemeData.regular,
+                                                  fontFamily: AppThemeData.bold,
                                                   color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
-                                                  fontSize: 16,
+                                                  fontSize: 15.5,
                                                 )),
-                                            const SizedBox(
-                                              width: 10,
-                                            ),
                                             Text(Constant().amountShow(amount: controller.getTotalAmount().toString()),
                                                 style: TextStyle(
-                                                  fontFamily: AppThemeData.medium,
-                                                  color: themeChange.getThem() ? AppThemeData.grey500Dark : AppThemeData.grey500,
-                                                  fontSize: 16,
+                                                  fontFamily: AppThemeData.bold,
+                                                  color: AppThemeData.primary200,
+                                                  fontSize: 17,
                                                 )),
                                           ],
                                         ),
                                       ),
-                                      Container(
-                                        color: themeChange.getThem() ? AppThemeData.grey300Dark : AppThemeData.grey300,
+                                      Divider(
                                         height: 1,
+                                        thickness: 1,
+                                        color: themeChange.getThem() ? AppThemeData.grey300Dark : AppThemeData.grey200,
                                       ),
                                       Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                                         child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            Align(
-                                              alignment: Alignment.centerLeft,
-                                              child: Text("Tip to Driver".tr,
-                                                  textAlign: TextAlign.left,
-                                                  style: TextStyle(
-                                                    fontFamily: AppThemeData.regular,
-                                                    color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
-                                                    fontSize: 16,
-                                                  )),
-                                            ),
-                                            Padding(
-                                              padding: const EdgeInsets.only(top: 10),
-                                              child: Row(
-                                                crossAxisAlignment: CrossAxisAlignment.center,
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: [
-                                                  Expanded(
-                                                    child: GestureDetector(
-                                                      onTap: () {
-                                                        if (controller.tipAmount.value == 5) {
-                                                          controller.tipAmount.value = 0;
-                                                        } else {
-                                                          controller.tipAmount.value = 5;
-                                                        }
-                                                      },
-                                                      child: Container(
-                                                        height: 40,
-                                                        decoration: BoxDecoration(
-                                                          color: controller.tipAmount.value == 5 ? AppThemeData.primary200 : Colors.white,
-                                                          borderRadius: BorderRadius.circular(10),
-                                                          border: Border.all(
-                                                            color: controller.tipAmount.value == 5 ? Colors.transparent : Colors.black.withValues(alpha: 0.20),
-                                                          ),
+                                            Text("Tip to Driver".tr,
+                                                style: TextStyle(
+                                                  fontFamily: AppThemeData.semiBold,
+                                                  color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
+                                                  fontSize: 13.5,
+                                                )),
+                                            const SizedBox(height: 8),
+                                            Row(
+                                              children: [
+                                                _buildTipChip(controller, 5),
+                                                const SizedBox(width: 6),
+                                                _buildTipChip(controller, 10),
+                                                const SizedBox(width: 6),
+                                                _buildTipChip(controller, 15),
+                                                const SizedBox(width: 6),
+                                                _buildTipChip(controller, 20),
+                                                const SizedBox(width: 6),
+                                                Expanded(
+                                                  child: InkWell(
+                                                    onTap: () {
+                                                      tipAmountBottomSheet(
+                                                        context,
+                                                        themeChange.getThem(),
+                                                        controller,
+                                                      );
+                                                    },
+                                                    child: Container(
+                                                      height: 32,
+                                                      decoration: BoxDecoration(
+                                                        color: (controller.tipAmount.value > 0 &&
+                                                                controller.tipAmount.value != 5 &&
+                                                                controller.tipAmount.value != 10 &&
+                                                                controller.tipAmount.value != 15 &&
+                                                                controller.tipAmount.value != 20)
+                                                            ? AppThemeData.primary200
+                                                            : (themeChange.getThem() ? Colors.white10 : Colors.grey.shade100),
+                                                        borderRadius: BorderRadius.circular(8),
+                                                        border: Border.all(
+                                                          color: Colors.black.withValues(alpha: 0.12),
                                                         ),
-                                                        child: Center(
-                                                            child: Text(
-                                                          Constant().amountShow(amount: '5'),
-                                                          style: TextStyle(color: controller.tipAmount.value == 5 ? Colors.white : Colors.black, fontSize: 12),
-                                                        )),
                                                       ),
-                                                    ),
-                                                  ),
-                                                  const SizedBox(
-                                                    width: 8,
-                                                  ),
-                                                  Expanded(
-                                                    child: GestureDetector(
-                                                      onTap: () {
-                                                        if (controller.tipAmount.value == 10) {
-                                                          controller.tipAmount.value = 0;
-                                                        } else {
-                                                          controller.tipAmount.value = 10;
-                                                        }
-                                                      },
-                                                      child: Container(
-                                                        height: 40,
-                                                        decoration: BoxDecoration(
-                                                          color: controller.tipAmount.value == 10 ? AppThemeData.primary200 : Colors.white,
-                                                          borderRadius: BorderRadius.circular(10),
-                                                          border: Border.all(
-                                                            color: controller.tipAmount.value == 10 ? Colors.transparent : Colors.black.withValues(alpha: 0.20),
-                                                          ),
-                                                        ),
-                                                        child: Center(
-                                                            child: Text(
-                                                          Constant().amountShow(amount: '10'),
-                                                          style: TextStyle(color: controller.tipAmount.value == 10 ? Colors.white : Colors.black, fontSize: 12),
-                                                        )),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  const SizedBox(
-                                                    width: 8,
-                                                  ),
-                                                  Expanded(
-                                                    child: GestureDetector(
-                                                      onTap: () {
-                                                        if (controller.tipAmount.value == 15) {
-                                                          controller.tipAmount.value = 0;
-                                                        } else {
-                                                          controller.tipAmount.value = 15;
-                                                        }
-                                                      },
-                                                      child: Container(
-                                                        height: 40,
-                                                        decoration: BoxDecoration(
-                                                          color: controller.tipAmount.value == 15 ? AppThemeData.primary200 : Colors.white,
-                                                          borderRadius: BorderRadius.circular(10),
-                                                          border: Border.all(
-                                                            color: controller.tipAmount.value == 15 ? Colors.transparent : Colors.black.withValues(alpha: 0.20),
-                                                          ),
-                                                        ),
-                                                        child: Center(
-                                                            child: Text(
-                                                          Constant().amountShow(amount: '15'),
-                                                          style: TextStyle(color: controller.tipAmount.value == 15 ? Colors.white : Colors.black, fontSize: 12),
-                                                        )),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  const SizedBox(
-                                                    width: 8,
-                                                  ),
-                                                  Expanded(
-                                                    child: GestureDetector(
-                                                      onTap: () {
-                                                        if (controller.tipAmount.value == 20) {
-                                                          controller.tipAmount.value = 0;
-                                                        } else {
-                                                          controller.tipAmount.value = 20;
-                                                        }
-                                                      },
-                                                      child: Container(
-                                                        height: 40,
-                                                        decoration: BoxDecoration(
-                                                          color: controller.tipAmount.value == 20 ? AppThemeData.primary200 : Colors.white,
-                                                          borderRadius: BorderRadius.circular(10),
-                                                          border: Border.all(
-                                                            color: controller.tipAmount.value == 20 ? Colors.transparent : Colors.black.withValues(alpha: 0.20),
-                                                          ),
-                                                        ),
-                                                        child: Center(
-                                                            child: Text(
-                                                          Constant().amountShow(amount: '20'),
-                                                          style: TextStyle(color: controller.tipAmount.value == 20 ? Colors.white : Colors.black, fontSize: 12),
-                                                        )),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  const SizedBox(
-                                                    width: 8,
-                                                  ),
-                                                  Expanded(
-                                                    child: InkWell(
-                                                      onTap: () {
-                                                        tipAmountBottomSheet(
-                                                          context,
-                                                          themeChange.getThem(),
-                                                          controller,
-                                                        );
-                                                      },
-                                                      child: Container(
-                                                        height: 40,
-                                                        decoration: BoxDecoration(
-                                                          color: Colors.white,
-                                                          borderRadius: BorderRadius.circular(10),
-                                                          border: Border.all(
-                                                            color: Colors.black.withValues(alpha: 0.20),
-                                                          ),
-                                                        ),
-                                                        child: Center(
-                                                          child: Text(
-                                                            "Other".tr,
-                                                            style: const TextStyle(color: Colors.black, fontSize: 12),
+                                                      child: Center(
+                                                        child: Text(
+                                                          (controller.tipAmount.value > 0 &&
+                                                                  controller.tipAmount.value != 5 &&
+                                                                  controller.tipAmount.value != 10 &&
+                                                                  controller.tipAmount.value != 15 &&
+                                                                  controller.tipAmount.value != 20)
+                                                              ? Constant().amountShow(amount: controller.tipAmount.value.toString())
+                                                              : "Other".tr,
+                                                          style: TextStyle(
+                                                            color: (controller.tipAmount.value > 0 &&
+                                                                    controller.tipAmount.value != 5 &&
+                                                                    controller.tipAmount.value != 10 &&
+                                                                    controller.tipAmount.value != 15 &&
+                                                                    controller.tipAmount.value != 20)
+                                                                ? Colors.white
+                                                                : (themeChange.getThem() ? Colors.white70 : Colors.black87),
+                                                            fontSize: 11.5,
+                                                            fontWeight: FontWeight.w600,
                                                           ),
                                                         ),
                                                       ),
                                                     ),
                                                   ),
-                                                ],
-                                              ),
+                                                ),
+                                              ],
                                             ),
                                           ],
                                         ),
@@ -646,22 +420,22 @@ class PaymentSelectionScreen extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 20),
+                              const SizedBox(height: 16),
                               Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                                 Text("Select Payment Option".tr,
                                     style: TextStyle(
                                       fontFamily: AppThemeData.semiBold,
                                       color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
-                                      fontSize: 16,
+                                      fontSize: 15,
                                     )),
                               ]),
-                              const SizedBox(height: 12),
+                              const SizedBox(height: 10),
 
-                              // 1. Fiinway Wallet Option (Always Clickable)
-                              _buildModernPaymentOptionCard(
+                              // 1. Fiinway Wallet Option (Selectable)
+                              _buildPaymentOptionCard(
                                 isDark: themeChange.getThem(),
                                 title: "Fiinway Wallet".tr,
-                                subtitle: "Pay seamlessly with your Fiinway Wallet".tr,
+
                                 isSelected: controller.selectedRadioTile.value == "Wallet",
                                 icon: Icons.account_balance_wallet_rounded,
                                 onTap: () {
@@ -680,22 +454,21 @@ class PaymentSelectionScreen extends StatelessWidget {
                                   controller.midtrans.value = false;
                                   controller.orangePay.value = false;
                                   controller.paymentMethodId.value = controller.paymentSettingModel.value.myWallet?.idPaymentMethod?.toString() ?? "wallet";
-                                  controller.getTotalAmount();
-                                  controller.update();
+                                  controller.updateTaxesForMethod("wallet");
                                 },
-                                trailing: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                trailingWidget: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                                   decoration: BoxDecoration(
                                     color: (double.tryParse(controller.walletAmount.value) ?? 0.0) >= controller.getTotalAmount()
                                         ? AppThemeData.success300.withValues(alpha: 0.12)
                                         : Colors.amber.shade700.withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(6),
+                                    borderRadius: BorderRadius.circular(5),
                                   ),
                                   child: Text(
                                     "Balance: ${Constant().amountShow(amount: controller.walletAmount.value)}",
                                     style: TextStyle(
                                       fontFamily: AppThemeData.semiBold,
-                                      fontSize: 11.5,
+                                      fontSize: 11,
                                       color: (double.tryParse(controller.walletAmount.value) ?? 0.0) >= controller.getTotalAmount()
                                           ? AppThemeData.success300
                                           : Colors.amber.shade800,
@@ -704,11 +477,11 @@ class PaymentSelectionScreen extends StatelessWidget {
                                 ),
                               ),
 
-                              // 2. UPI Option
-                              _buildModernPaymentOptionCard(
+                              // 2. UPI Option (Selectable)
+                              _buildPaymentOptionCard(
                                 isDark: themeChange.getThem(),
                                 title: "UPI / Online Payment".tr,
-                                subtitle: "Pay via Google Pay, PhonePe, Paytm or BHIM".tr,
+                                subtitle: "Rozarpay, PhonePe, Paytm, BHIM".tr,
                                 isSelected: controller.selectedRadioTile.value == "UPI",
                                 icon: Icons.qr_code_2_rounded,
                                 onTap: () {
@@ -727,17 +500,15 @@ class PaymentSelectionScreen extends StatelessWidget {
                                   controller.midtrans.value = false;
                                   controller.orangePay.value = false;
                                   controller.paymentMethodId.value = controller.paymentSettingModel.value.cash?.idPaymentMethod?.toString() ?? "upi";
-                                  controller.getTotalAmount();
-                                  controller.update();
+                                  controller.updateTaxesForMethod("upi");
                                 },
                               ),
-                              // 3. Cash to Driver Option
-                              _buildModernPaymentOptionCard(
+
+                              // 3. Cash to Driver (Selectable, but Pay Button is disabled when selected)
+                              _buildCashPaymentOptionCard(
                                 isDark: themeChange.getThem(),
-                                title: "Cash to Driver".tr,
-                                subtitle: "Pay cash in hand directly to your driver".tr,
+                                amount: controller.getCashTotalAmount().toString(),
                                 isSelected: controller.selectedRadioTile.value == "Cash",
-                                icon: Icons.payments_rounded,
                                 onTap: () {
                                   controller.selectedRadioTile.value = "Cash";
                                   controller.cash.value = true;
@@ -754,24 +525,8 @@ class PaymentSelectionScreen extends StatelessWidget {
                                   controller.midtrans.value = false;
                                   controller.orangePay.value = false;
                                   controller.paymentMethodId.value = "cash";
-                                  controller.getTotalAmount();
-                                  controller.update();
+                                  controller.updateTaxesForMethod("cash");
                                 },
-                                trailing: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                  decoration: BoxDecoration(
-                                    color: AppThemeData.primary200.withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    Constant().amountShow(amount: controller.getTotalAmount().toString()),
-                                    style: TextStyle(
-                                      fontFamily: AppThemeData.bold,
-                                      fontSize: 12.5,
-                                      color: AppThemeData.primary200,
-                                    ),
-                                  ),
-                                ),
                               ),
                               const SizedBox(height: 10),
                             ],
@@ -781,105 +536,68 @@ class PaymentSelectionScreen extends StatelessWidget {
                     ),
                     Padding(
                       padding: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 52,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppThemeData.primary200,
-                            elevation: 2,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          onPressed: () async {
-                            final total = controller.getTotalAmount();
-                            if (controller.selectedRadioTile.value == "Wallet") {
-                              final balance = double.tryParse(controller.walletAmount.value) ?? 0.0;
-                              if (balance >= total) {
-                                final activeTaxes = Constant.getActiveTaxes("wallet");
-                                List taxList = activeTaxes.map((v) => v.toJson()).toList();
-                                _showWalletMpinDialog(context, controller, taxList);
-                              } else {
-                                ShowToastDialog.showToast("Insufficient wallet balance. Redirecting to Wallet to Top Up...".tr);
-                                Get.to(() => WalletScreen())?.then((_) {
-                                  controller.getAmount();
-                                });
-                              }
-                            } else if (controller.selectedRadioTile.value == "UPI") {
-                              startRazorpayPayment(amount: controller.getTotalAmount().toString());
-                            } else if (controller.selectedRadioTile.value == "Cash") {
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return AlertDialog(
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                    title: Row(
-                                      children: [
-                                        const Icon(Icons.payments_rounded, color: Colors.green),
-                                        const SizedBox(width: 8),
-                                        Text("Pay with Cash".tr, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                                      ],
+                      child: Builder(
+                        builder: (context) {
+                          final isCash = controller.selectedRadioTile.value == "Cash";
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(
+                                width: double.infinity,
+                                height: 50,
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: isCash ? (themeChange.getThem() ? Colors.white12 : Colors.grey.shade300) : AppThemeData.primary200,
+                                    disabledBackgroundColor: themeChange.getThem() ? Colors.white12 : Colors.grey.shade300,
+                                    disabledForegroundColor: themeChange.getThem() ? Colors.white38 : Colors.grey.shade600,
+                                    elevation: isCash ? 0 : 2,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(14),
                                     ),
-                                    content: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          "Please hand over ${Constant().amountShow(amount: controller.getTotalAmount().toString())} in cash directly to your driver.".tr,
-                                          style: const TextStyle(fontSize: 14.5),
-                                        ),
-                                        const SizedBox(height: 12),
-                                        Container(
-                                          padding: const EdgeInsets.all(10),
-                                          decoration: BoxDecoration(
-                                            color: Colors.amber.shade50,
-                                            borderRadius: BorderRadius.circular(8),
-                                            border: Border.all(color: Colors.amber.shade200),
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              Icon(Icons.info_outline, color: Colors.amber.shade900, size: 20),
-                                              const SizedBox(width: 8),
-                                              Expanded(
-                                                child: Text(
-                                                  "Your driver will confirm receipt of the cash on their app to complete the ride.".tr,
-                                                  style: TextStyle(fontSize: 12, color: Colors.amber.shade900),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
+                                  ),
+                                  onPressed: isCash
+                                      ? null
+                                      : () async {
+                                          final total = controller.getTotalAmount();
+                                          if (controller.selectedRadioTile.value == "Wallet") {
+                                            final balance = double.tryParse(controller.walletAmount.value) ?? 0.0;
+                                            if (balance >= total) {
+                                              final activeTaxes = Constant.getActiveTaxes("wallet");
+                                              List taxList = activeTaxes.map((v) => v.toJson()).toList();
+                                              _showWalletMpinDialog(context, controller, taxList);
+                                            } else {
+                                              ShowToastDialog.showToast("Insufficient wallet balance. Redirecting to Wallet to Top Up...".tr);
+                                              Get.to(() => WalletScreen())?.then((_) {
+                                                controller.getAmount();
+                                              });
+                                            }
+                                          } else if (controller.selectedRadioTile.value == "UPI") {
+                                            startRazorpayPayment(amount: controller.getTotalAmount().toString());
+                                          } else {
+                                            ShowToastDialog.showToast("Please select a payment option".tr);
+                                          }
+                                        },
+                                  child: Text(
+                                    isCash
+                                        ? "Pay ${Constant().amountShow(amount: controller.getCashTotalAmount().toString())} Directly to Driver".tr
+                                        : (controller.selectedRadioTile.value == "Wallet"
+                                            ? ((double.tryParse(controller.walletAmount.value) ?? 0.0) >= controller.getTotalAmount()
+                                                ? "Pay ${Constant().amountShow(amount: controller.getTotalAmount().toString())} with Wallet".tr
+                                                : "Top Up Wallet (${Constant().amountShow(amount: controller.getTotalAmount().toString())})".tr)
+                                            : "Pay ${Constant().amountShow(amount: controller.getTotalAmount().toString())} via UPI".tr),
+                                    style: TextStyle(
+                                      fontFamily: AppThemeData.bold,
+                                      fontSize: 15,
+                                      color: isCash ? (themeChange.getThem() ? Colors.white54 : Colors.grey.shade600) : Colors.white,
                                     ),
-                                    actions: [
-                                      ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: AppThemeData.primary200,
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                        ),
-                                        onPressed: () => Navigator.pop(context),
-                                        child: Text("Understood".tr, style: const TextStyle(color: Colors.white)),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              );
-                            } else {
-                              ShowToastDialog.showToast("Please select a payment option".tr);
-                            }
-                          },
-                          child: Text(
-                            controller.selectedRadioTile.value == "Cash"
-                                ? "Pay ${Constant().amountShow(amount: controller.getTotalAmount().toString())} in Cash".tr
-                                : "Pay ${Constant().amountShow(amount: controller.getTotalAmount().toString())}".tr,
-                            style: const TextStyle(
-                              fontFamily: AppThemeData.bold,
-                              fontSize: 16,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+
+                            ],
+                          );
+                        },
                       ),
                     ),
                   ],
@@ -919,83 +637,87 @@ class PaymentSelectionScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildModernPaymentOptionCard({
+  Widget _buildPaymentOptionCard({
     required bool isDark,
     required String title,
-    required String subtitle,
+    String? subtitle,
     required bool isSelected,
     required IconData icon,
     required VoidCallback onTap,
-    Widget? trailing,
+    Widget? trailingWidget,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(14),
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppThemeData.primary200.withValues(alpha: isDark ? 0.18 : 0.08)
+              ? AppThemeData.primary200.withValues(alpha: isDark ? 0.16 : 0.07)
               : (isDark ? AppThemeData.surface50Dark : Colors.white),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isSelected
                 ? AppThemeData.primary200
                 : (isDark ? AppThemeData.grey300Dark : AppThemeData.grey300),
-            width: isSelected ? 1.8 : 1.0,
+            width: isSelected ? 1.6 : 1.0,
           ),
           boxShadow: [
             BoxShadow(
               color: isSelected
-                  ? AppThemeData.primary200.withValues(alpha: 0.12)
-                  : Colors.black.withValues(alpha: isDark ? 0.12 : 0.02),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
+                  ? AppThemeData.primary200.withValues(alpha: 0.10)
+                  : Colors.black.withValues(alpha: isDark ? 0.08 : 0.02),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(11),
+              width: 38,
+              height: 38,
               decoration: BoxDecoration(
                 color: isSelected
-                    ? AppThemeData.primary200.withValues(alpha: 0.2)
+                    ? AppThemeData.primary200.withValues(alpha: 0.18)
                     : (isDark ? Colors.white10 : Colors.grey.shade100),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
                 icon,
                 color: isSelected ? AppThemeData.primary200 : (isDark ? Colors.white70 : AppThemeData.grey700),
-                size: 24,
+                size: 20,
               ),
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     title,
                     style: TextStyle(
-                      fontFamily: AppThemeData.bold,
-                      fontSize: 14.5,
+                      fontFamily: AppThemeData.semiBold,
+                      fontSize: 14,
                       color: isDark ? Colors.white : AppThemeData.grey900,
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontFamily: AppThemeData.regular,
-                      fontSize: 12,
-                      color: isDark ? AppThemeData.grey500Dark : AppThemeData.grey500,
+                  if (subtitle != null && subtitle.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontFamily: AppThemeData.regular,
+                        fontSize: 11.5,
+                        color: isDark ? AppThemeData.grey500Dark : AppThemeData.grey500,
+                      ),
                     ),
-                  ),
-                  if (trailing != null) ...[
-                    const SizedBox(height: 5),
-                    trailing,
+                  ],
+                  if (trailingWidget != null) ...[
+                    const SizedBox(height: 4),
+                    trailingWidget,
                   ],
                 ],
               ),
@@ -1004,9 +726,152 @@ class PaymentSelectionScreen extends StatelessWidget {
             Icon(
               isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
               color: isSelected ? AppThemeData.primary200 : (isDark ? Colors.white38 : Colors.grey.shade400),
-              size: 22,
+              size: 21,
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCashPaymentOptionCard({
+    required bool isDark,
+    required String amount,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppThemeData.primary200.withValues(alpha: isDark ? 0.16 : 0.07)
+              : (isDark ? AppThemeData.surface50Dark : Colors.white),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isSelected
+                ? AppThemeData.primary200
+                : (isDark ? AppThemeData.grey300Dark : AppThemeData.grey300),
+            width: isSelected ? 1.6 : 1.0,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: isSelected
+                  ? AppThemeData.primary200.withValues(alpha: 0.10)
+                  : Colors.black.withValues(alpha: isDark ? 0.08 : 0.02),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? AppThemeData.primary200.withValues(alpha: 0.18)
+                    : (isDark ? Colors.white10 : Colors.teal.shade50),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                Icons.payments_outlined,
+                color: isSelected ? AppThemeData.primary200 : (isDark ? Colors.tealAccent.shade100 : Colors.teal.shade700),
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        "Cash to Driver".tr,
+                        style: TextStyle(
+                          fontFamily: AppThemeData.semiBold,
+                          fontSize: 14,
+                          color: isDark ? Colors.white : AppThemeData.grey900,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.white12 : Colors.teal.shade50,
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(
+                        color: isDark ? Colors.white24 : Colors.teal.shade200,
+                        width: 0.8,
+                      ),
+                    ),
+                    child: Text(
+                      "Driver Collects".tr,
+                      style: TextStyle(
+                        fontFamily: AppThemeData.medium,
+                        fontSize: 9.5,
+                        color: isDark ? Colors.tealAccent.shade100 : Colors.teal.shade700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+
+            const SizedBox(width: 8),
+            Icon(
+              isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+              color: isSelected ? AppThemeData.primary200 : (isDark ? Colors.white38 : Colors.grey.shade400),
+              size: 21,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTipChip(PaymentController controller, double amount) {
+    final isSelected = controller.tipAmount.value == amount;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          if (controller.tipAmount.value == amount) {
+            controller.tipAmount.value = 0;
+          } else {
+            controller.tipAmount.value = amount;
+          }
+          controller.updateTaxesForMethod(controller.selectedRadioTile.value);
+        },
+        child: Container(
+          height: 32,
+          decoration: BoxDecoration(
+            color: isSelected ? AppThemeData.primary200 : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isSelected ? AppThemeData.primary200 : Colors.black.withValues(alpha: 0.15),
+            ),
+          ),
+          child: Center(
+            child: Text(
+              Constant().amountShow(amount: amount.toInt().toString()),
+              style: TextStyle(
+                color: isSelected ? Colors.white : null,
+                fontSize: 11.5,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -1024,7 +889,7 @@ class PaymentSelectionScreen extends StatelessWidget {
               border: Border.all(
                 color: isDarkMode ? AppThemeData.grey200Dark : AppThemeData.grey200,
               ),
-              borderRadius: const BorderRadius.all(Radius.circular(0.0)),
+              borderRadius: BorderRadius.circular(14),
             ),
             child: SizedBox(
               height: 100,
@@ -1044,16 +909,14 @@ class PaymentSelectionScreen extends StatelessWidget {
                           var amount = double.parse(controller.coupanCodeList[index].discount.toString()) / 100;
                           if ((controller.subTotalAmount.value * double.parse(amount.toString())) < controller.subTotalAmount.value) {
                             controller.discountAmount.value = controller.subTotalAmount.value * double.parse(amount.toString());
-                            final base = (controller.subTotalAmount.value - controller.discountAmount.value) > 0 ? (controller.subTotalAmount.value - controller.discountAmount.value) : 0.0;
-                            controller.taxAmount.value = Constant.calculateTotalTaxes(base, controller.selectedRadioTile.value.toLowerCase());
+                            controller.updateTaxesForMethod(controller.selectedRadioTile.value);
                           } else {
                             ShowToastDialog.showToast("A coupon will be applied when the subtotal amount is greater than the coupon amount.");
                           }
                         } else {
                           if (double.parse(controller.coupanCodeList[index].discount.toString()) < controller.subTotalAmount.value) {
                             controller.discountAmount.value = double.parse(controller.coupanCodeList[index].discount.toString());
-                            final base = (controller.subTotalAmount.value - controller.discountAmount.value) > 0 ? (controller.subTotalAmount.value - controller.discountAmount.value) : 0.0;
-                            controller.taxAmount.value = Constant.calculateTotalTaxes(base, controller.selectedRadioTile.value.toLowerCase());
+                            controller.updateTaxesForMethod(controller.selectedRadioTile.value);
                           } else {
                             ShowToastDialog.showToast("A coupon will be applied when the subtotal amount is greater than the coupon amount.");
                           }
@@ -1263,8 +1126,7 @@ class PaymentSelectionScreen extends StatelessWidget {
                                 var amount = double.parse(element.discount.toString()) / 100;
                                 if ((controller.subTotalAmount.value * double.parse(amount.toString())) < controller.subTotalAmount.value) {
                                   controller.discountAmount.value = controller.subTotalAmount.value * double.parse(amount.toString());
-                                  final base = (controller.subTotalAmount.value - controller.discountAmount.value) > 0 ? (controller.subTotalAmount.value - controller.discountAmount.value) : 0.0;
-                                  controller.taxAmount.value = Constant.calculateTotalTaxes(base, controller.selectedRadioTile.value.toLowerCase());
+                                  controller.updateTaxesForMethod(controller.selectedRadioTile.value);
                                   Navigator.pop(context);
                                 } else {
                                   ShowToastDialog.showToast("A coupon will be applied when the subtotal amount is greater than the coupon amount.");
@@ -1273,8 +1135,7 @@ class PaymentSelectionScreen extends StatelessWidget {
                               } else {
                                 if (double.parse(element.discount.toString()) < controller.subTotalAmount.value) {
                                   controller.discountAmount.value = double.parse(element.discount.toString());
-                                  final base = (controller.subTotalAmount.value - controller.discountAmount.value) > 0 ? (controller.subTotalAmount.value - controller.discountAmount.value) : 0.0;
-                                  controller.taxAmount.value = Constant.calculateTotalTaxes(base, controller.selectedRadioTile.value.toLowerCase());
+                                  controller.updateTaxesForMethod(controller.selectedRadioTile.value);
                                   Navigator.pop(context);
                                 } else {
                                   ShowToastDialog.showToast("A coupon will be applied when the subtotal amount is greater than the coupon amount.");
@@ -1309,10 +1170,7 @@ class PaymentSelectionScreen extends StatelessWidget {
                           controller.selectedPromoValue.value = "";
                           controller.discountAmount.value = 0.0;
                           controller.couponCodeController.clear();
-                          final base = (controller.subTotalAmount.value - controller.discountAmount.value) > 0 ? (controller.subTotalAmount.value - controller.discountAmount.value) : 0.0;
-                          controller.taxAmount.value = Constant.calculateTotalTaxes(base, controller.selectedRadioTile.value.toLowerCase());
-                          controller.getTotalAmount();
-                          controller.update();
+                          controller.updateTaxesForMethod(controller.selectedRadioTile.value);
                           Navigator.pop(context);
                           ShowToastDialog.showToast("Coupon removed successfully".tr);
                         },
@@ -1529,8 +1387,8 @@ class PaymentSelectionScreen extends StatelessWidget {
   void openCheckout({required amount, required orderId}) async {
     final razorpayKey = walletController.paymentSettingModel.value.razorpay?.key ?? Constant.getPaymentSetting().razorpay?.key ?? '';
     final userData = Constant.getUserData();
-    final userPhone = userData?.data?.phone ?? "9999999999";
-    final userEmail = userData?.data?.email ?? "user@fiinway.com";
+    final userPhone = userData.data?.phone ?? "9999999999";
+    final userEmail = userData.data?.email ?? "user@fiinway.com";
 
     var options = {
       'key': razorpayKey,
@@ -2243,7 +2101,10 @@ class PaymentSelectionScreen extends StatelessWidget {
                                   'id_user_app': controller.data.value.idUserApp.toString(),
                                   'amount': controller.subTotalAmount.value.toString(),
                                   'paymethod': controller.selectedRadioTile.value,
-                                  'discount': controller.discountAmount.value.toString(),
+                                  'discount': (controller.discountAmount.value + controller.getPromoDiscount()).toString(),
+                                  'promotional_discount': controller.getPromoDiscount().toString(),
+                                  'promotional_amount': controller.getPromoDiscount().toString(),
+                                  'is_promotional_applied': controller.getPromoDiscount() > 0 ? "1" : "0",
                                   'tip': controller.tipAmount.value.toString(),
                                   'tax': taxList,
                                   'transaction_id': DateTime.now().microsecondsSinceEpoch.toString(),

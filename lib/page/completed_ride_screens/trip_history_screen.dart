@@ -435,7 +435,7 @@ class TripHistoryScreen extends StatelessWidget {
                                         ),
                                         Expanded(
                                           flex: 1,
-                                          child: Text(Constant().amountShow(amount: controller.data.value.montant),
+                                          child: Text(Constant().amountShow(amount: controller.subTotalAmount.value > 0 ? controller.subTotalAmount.value.toStringAsFixed(2) : (controller.data.value.baseFare ?? controller.data.value.baseMontant ?? controller.data.value.montant)),
                                               textAlign: TextAlign.end,
                                               maxLines: 1,
                                               style: TextStyle(
@@ -484,12 +484,12 @@ class TripHistoryScreen extends StatelessWidget {
                                     height: 1,
                                   ),
                                   ListView.builder(
-                                    itemCount: controller.data.value.statutPaiement == "yes" ? controller.data.value.taxModel!.length : Constant.taxList.length,
+                                    itemCount: (controller.data.value.statutPaiement == "yes" && controller.data.value.taxModel != null) ? controller.data.value.taxModel!.length : Constant.taxList.length,
                                     shrinkWrap: true,
                                     padding: EdgeInsets.zero,
                                     physics: const NeverScrollableScrollPhysics(),
                                     itemBuilder: (context, index) {
-                                      TaxModel taxModel = controller.data.value.statutPaiement == "yes" ? controller.data.value.taxModel![index] : Constant.taxList[index];
+                                      TaxModel taxModel = (controller.data.value.statutPaiement == "yes" && controller.data.value.taxModel != null) ? controller.data.value.taxModel![index] : Constant.taxList[index];
                                       return Column(
                                         children: [
                                           Padding(

@@ -196,6 +196,64 @@ class PaymentController extends GetxController {
     return null;
   }
 
+  double get rawPromoDiscount => double.tryParse(data.value.promotionalDiscount ?? '0') ?? 0.0;
+  bool get hasPromoBonus => rawPromoDiscount > 0;
+
+  double getPromoDiscount() {
+    // Promotion bonus ONLY applies when user selects Wallet payment
+    if (selectedRadioTile.value.toLowerCase() != "wallet") {
+      return 0.0;
+    }
+    return rawPromoDiscount;
+  }
+
+  double getTaxableBase() {
+    double base = subTotalAmount.value - discountAmount.value - getPromoDiscount();
+    return base > 0 ? base : 0.0;
+  }
+
+  double getTrueBaseFareFromRideData(RideData d) {
+    // 1. Check explicit baseFare or baseMontant
+    double? bf = double.tryParse(d.baseFare ?? '');
+    if (bf != null && bf > 0) return bf;
+    double? bm = double.tryParse(d.baseMontant ?? '');
+    if (bm != null && bm > 0) return bm;
+
+    // 2. If montant equals totalFare and totalTax is available: base = totalFare - totalTax
+    double? m = double.tryParse(d.montant ?? '');
+    double? tf = double.tryParse(d.totalFare ?? '');
+    double? tt = double.tryParse(d.totalTax ?? '');
+    if (m != null && tf != null && tt != null && tt > 0 && (m - tf).abs() < 0.05 && m > tt) {
+      return m - tt;
+    }
+
+    return m ?? 0.0;
+  }
+
+  double getTrueBaseFareFromRideDetails(RideDetailsdata d) {
+    double? bf = double.tryParse(d.baseFare ?? '');
+    if (bf != null && bf > 0) return bf;
+    double? bm = double.tryParse(d.baseMontant ?? '');
+    if (bm != null && bm > 0) return bm;
+
+    double? m = double.tryParse(d.montant ?? '');
+    double? tf = double.tryParse(d.totalFare ?? '');
+    double? tt = double.tryParse(d.totalTax ?? '');
+    if (m != null && tf != null && tt != null && tt > 0 && (m - tf).abs() < 0.05 && m > tt) {
+      return m - tt;
+    }
+
+    return m ?? 0.0;
+  }
+
+  void updateTaxesForMethod([String? method]) {
+    final pm = (method ?? selectedRadioTile.value).toLowerCase();
+    final base = getTaxableBase();
+    taxAmount.value = Constant.calculateTotalTaxes(base, pm);
+    getTotalAmount();
+    update();
+  }
+
   getArgument() async {
     subTotalAmount.value = 0.0;
     tipAmount.value = 0.0;
@@ -206,30 +264,29 @@ class PaymentController extends GetxController {
     if (argumentData != null) {
       data.value = argumentData["rideData"];
       selectedRadioTile.value = data.value.payment.toString();
-      subTotalAmount.value = double.parse(data.value.montant.toString());
-      // taxAmount.value = double.parse(Constant.taxValue ?? "0.0");
+      subTotalAmount.value = getTrueBaseFareFromRideData(data.value);
 
-      if (selectedRadioTile.value == "Wallet") {
+      if (selectedRadioTile.value == "Wallet" || selectedRadioTile.value == "wallet") {
         wallet.value = true;
+        selectedRadioTile.value = "Wallet";
       } else if (selectedRadioTile.value == "UPI" || selectedRadioTile.value == "upi") {
         upi.value = true;
         selectedRadioTile.value = "UPI";
+      } else if (selectedRadioTile.value == "Cash" || selectedRadioTile.value == "cash") {
+        cash.value = true;
+        selectedRadioTile.value = "Cash";
       } else {
-        selectedRadioTile.value = "Wallet";
-        wallet.value = true;
+        selectedRadioTile.value = "Cash";
+        cash.value = true;
       }
     }
     getAmount();
-    if (data.value.statutPaiement == "yes") {
+    if (data.value.id != null && data.value.id.toString().isNotEmpty) {
       getRideDetailsData(data.value.id.toString());
     }
-    if (data.value.statutPaiement != "yes") {
-      final method = selectedRadioTile.value.toLowerCase();
-      final base = (subTotalAmount.value - discountAmount.value) > 0 ? (subTotalAmount.value - discountAmount.value) : 0.0;
-      taxAmount.value = Constant.calculateTotalTaxes(base, method);
-    }
-    update();
+    updateTaxesForMethod();
   }
+
 
   Future<dynamic> getAmount() async {
     try {
@@ -272,24 +329,29 @@ class PaymentController extends GetxController {
 
       if (response.statusCode == 200 && responseBody['success'] == "success") {
         RideDetailsModel rideDetailsModel = RideDetailsModel.fromJson(responseBody);
-
-        subTotalAmount.value = double.parse(rideDetailsModel.rideDetailsdata!.montant.toString());
-        tipAmount.value = double.parse(rideDetailsModel.rideDetailsdata!.tipAmount.toString());
-        discountAmount.value = double.parse(rideDetailsModel.rideDetailsdata!.discount.toString());
-        taxAmount.value = 0.0;
-        final pm = (rideDetailsModel.rideDetailsdata!.payment ?? selectedRadioTile.value).toString().toLowerCase();
-        if (rideDetailsModel.rideDetailsdata!.taxModel != null) {
-          for (var i = 0; i < rideDetailsModel.rideDetailsdata!.taxModel!.length; i++) {
-            final t = rideDetailsModel.rideDetailsdata!.taxModel![i];
-            if (t.statut == 'yes' && t.isApplicableFor(pm)) {
-              taxAmount.value += calculateTax(taxModel: t);
-            }
+        if (rideDetailsModel.rideDetailsdata != null) {
+          final rData = rideDetailsModel.rideDetailsdata!;
+          subTotalAmount.value = getTrueBaseFareFromRideDetails(rData);
+          tipAmount.value = double.tryParse(rData.tipAmount ?? '0') ?? 0.0;
+          discountAmount.value = double.tryParse(rData.discount ?? '0') ?? 0.0;
+          if (rData.promotionalDiscount != null) {
+            data.value.promotionalDiscount = rData.promotionalDiscount;
           }
+          if (rData.promotionalAmount != null) {
+            data.value.promotionalAmount = rData.promotionalAmount;
+          }
+          data.value.isPromotionalApplied = rData.isPromotionalApplied;
+          data.value.baseFare = rData.baseFare;
+          data.value.baseMontant = rData.baseMontant;
+          data.value.totalFare = rData.totalFare;
+          data.value.totalTax = rData.totalTax;
+          data.value.statutPaiement = rData.statutPaiement;
+          data.value.statut = rData.statut;
+
+          updateTaxesForMethod();
+          data.refresh();
+          update();
         }
-        data.value.statutPaiement = rideDetailsModel.rideDetailsdata!.statutPaiement;
-        data.value.statut = rideDetailsModel.rideDetailsdata!.statut;
-        data.refresh();
-        update();
       } else if (response.statusCode == 200 && responseBody['success'] == "Failed") {
       } else {
         ShowToastDialog.showToast('Something want wrong. Please try again later');
@@ -310,13 +372,11 @@ class PaymentController extends GetxController {
 
   double calculateTax({TaxModel? taxModel}) {
     if (taxModel == null) return 0.0;
-    double base = (subTotalAmount.value - discountAmount.value);
-    return Constant.calculateTaxFor(taxModel, base > 0 ? base : 0.0);
+    return Constant.calculateTaxFor(taxModel, getTaxableBase());
   }
 
   double getTotalAmount() {
-    double base = (subTotalAmount.value - discountAmount.value);
-    if (base < 0) base = 0.0;
+    final base = getTaxableBase();
     double totalTax = 0.0;
     for (var tax in Constant.getActiveTaxes(selectedRadioTile.value.toLowerCase())) {
       totalTax += Constant.calculateTaxFor(tax, base);
@@ -324,6 +384,17 @@ class PaymentController extends GetxController {
     taxAmount.value = totalTax;
     return base + tipAmount.value + totalTax;
   }
+
+  double getCashTotalAmount() {
+    // Cash payment NEVER receives promotional discount
+    final base = (subTotalAmount.value - discountAmount.value) > 0 ? (subTotalAmount.value - discountAmount.value) : 0.0;
+    double totalTax = 0.0;
+    for (var tax in Constant.getActiveTaxes("cash")) {
+      totalTax += Constant.calculateTaxFor(tax, base);
+    }
+    return base + tipAmount.value + totalTax;
+  }
+
 
   Rx<UserModel> userModel = UserModel().obs;
 

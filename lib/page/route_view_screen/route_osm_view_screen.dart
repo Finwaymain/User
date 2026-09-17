@@ -1162,34 +1162,39 @@ class _RouteOsmViewScreenState extends State<RouteOsmViewScreen> {
       }
     }
 
+    final double pLat = double.tryParse(rideData!.latitudeDepart?.toString() ?? '') ?? departureLatLong?.latitude ?? 0.0;
+    final double pLng = double.tryParse(rideData!.longitudeDepart?.toString() ?? '') ?? departureLatLong?.longitude ?? 0.0;
+    final double destLat = destinationLatLong?.latitude ?? 0.0;
+    final double destLng = destinationLatLong?.longitude ?? 0.0;
+
     if (rideData!.statut == "confirmed") {
       drawRoad(
         wayPointList: [],
-        startPoint: GeoPoint(latitude: dLat, longitude: dLng),
+        startPoint: GeoPoint(latitude: dLat != 0.0 ? dLat : pLat, longitude: dLng != 0.0 ? dLng : pLng),
         lastPoint: GeoPoint(
-          latitude: double.parse(rideData!.latitudeDepart.toString()),
-          longitude: double.parse(rideData!.longitudeDepart.toString()),
+          latitude: pLat,
+          longitude: pLng,
         ),
       );
     } else if (rideData!.statut == "on ride") {
       drawRoad(
         wayPointList: wayPointList,
-        startPoint: GeoPoint(latitude: dLat, longitude: dLng),
+        startPoint: GeoPoint(latitude: dLat != 0.0 ? dLat : pLat, longitude: dLng != 0.0 ? dLng : pLng),
         lastPoint: GeoPoint(
-          latitude: destinationLatLong!.latitude,
-          longitude: destinationLatLong!.longitude,
+          latitude: destLat,
+          longitude: destLng,
         ),
       );
     } else {
       drawRoad(
         wayPointList: wayPointList,
         startPoint: GeoPoint(
-          latitude: departureLatLong!.latitude,
-          longitude: departureLatLong!.longitude,
+          latitude: pLat,
+          longitude: pLng,
         ),
         lastPoint: GeoPoint(
-          latitude: destinationLatLong!.latitude,
-          longitude: destinationLatLong!.longitude,
+          latitude: destLat,
+          longitude: destLng,
         ),
       );
     }

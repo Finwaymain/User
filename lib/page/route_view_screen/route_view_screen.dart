@@ -62,6 +62,26 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
   Timer? _driverLocationTimer;
   StreamSubscription? _driverLocationSubscription;
 
+  LatLng? driverCurrentLocation;
+  final DraggableScrollableController _sheetController = DraggableScrollableController();
+
+  void _toggleSheet() {
+    if (!_sheetController.isAttached) return;
+    if (_sheetController.size > 0.25) {
+      _sheetController.animateTo(
+        0.16,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    } else {
+      _sheetController.animateTo(
+        0.68,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
   /// Previous driver position for smooth marker interpolation.
   LatLng? _previousDriverLatLng;
   /// Timestamp of the last getDirections() call — throttled to every 15 s.
@@ -130,6 +150,8 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
   void dispose() {
     _driverLocationSubscription?.cancel();
     _driverLocationTimer?.cancel();
+    _sheetController.dispose();
+    resonController.dispose();
     super.dispose();
   }
 
@@ -176,7 +198,7 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
             _previousDriverLatLng = target;
           }
 
-          departureLatLong = target;
+          driverCurrentLocation = target;
 
           // ─── OTP PROXIMITY DETECTION ───────────────────────────────────────
           // Only reveal the OTP panel when the driver is ≤ 150 m from pickup,
@@ -314,19 +336,28 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
             double dLat = double.parse(dLatStr);
             double dLng = double.parse(dLngStr);
 
+            driverCurrentLocation = LatLng(dLat, dLng);
+
             if (mounted) {
               setState(() {
-                departureLatLong = LatLng(dLat, dLng);
                 if (taxiIcon != null) {
                   _markers[rideData!.id.toString()] = Marker(
                     markerId: MarkerId(rideData!.id.toString()),
                     infoWindow: InfoWindow(title: rideData!.prenomConducteur.toString()),
-                    position: departureLatLong,
+                    position: driverCurrentLocation!,
                     icon: taxiIcon!,
                     rotation: 0.0,
                   );
                 }
               });
+            }
+
+            final now = DateTime.now();
+            if (polyLines.isEmpty ||
+                _directionsLastFetched == null ||
+                now.difference(_directionsLastFetched!).inSeconds >= 15) {
+              _directionsLastFetched = now;
+              if (mounted) getDirections(dLat: dLat, dLng: dLng);
             }
           }
         }
@@ -367,6 +398,11 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (rideData == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     final themeChange = Provider.of<DarkThemeProvider>(context);
     return Scaffold(
       body: Stack(
@@ -376,13 +412,20 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
             zoomControlsEnabled: false,
             myLocationButtonEnabled: false,
             myLocationEnabled: false,
-            initialCameraPosition: const CameraPosition(
-              target: LatLng(48.8561, 2.2930),
+            padding: const EdgeInsets.only(bottom: 130, top: 40),
+            initialCameraPosition: CameraPosition(
+              target: departureLatLong,
               zoom: 14.0,
             ),
             onMapCreated: (GoogleMapController controller) {
               _controller = controller;
-              _controller!.moveCamera(CameraUpdate.newLatLngZoom(departureLatLong, 12));
+              if (polyLines.containsKey(const PolylineId("poly")) &&
+                  polyLines[const PolylineId("poly")]!.points.isNotEmpty) {
+                final pts = polyLines[const PolylineId("poly")]!.points;
+                updateCameraLocation(pts.first, pts.last, _controller);
+              } else {
+                _controller!.moveCamera(CameraUpdate.newLatLngZoom(departureLatLong, 12));
+              }
             },
             polylines: Set<Polyline>.of(polyLines.values),
             markers: _markers.values.toSet(),
@@ -409,41 +452,94 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
               ),
             ),
           ),
-          Container(
-            decoration: BoxDecoration(
-              color: themeChange.getThem() ? AppThemeData.surface50Dark : Colors.white,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(28),
-                topRight: Radius.circular(28),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.12),
-                  blurRadius: 20,
-                  offset: const Offset(0, -4),
-                )
-              ],
-            ),
+          Positioned(
+            top: 10,
+            right: 16,
             child: SafeArea(
-              top: false,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Handle line
-                    Center(
-                      child: Container(
-                        width: 44,
-                        height: 5,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade300,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: themeChange.getThem() ? AppThemeData.surface50Dark : Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    )
+                  ],
+                ),
+                child: IconButton(
+                  icon: Icon(
+                    Icons.my_location_rounded,
+                    color: AppThemeData.primary200,
+                    size: 22,
+                  ),
+                  onPressed: () {
+                    if (polyLines.containsKey(const PolylineId("poly")) &&
+                        polyLines[const PolylineId("poly")]!.points.isNotEmpty) {
+                      final pts = polyLines[const PolylineId("poly")]!.points;
+                      updateCameraLocation(pts.first, pts.last, _controller);
+                    } else {
+                      updateCameraLocation(departureLatLong, destinationLatLong, _controller);
+                    }
+                  },
+                ),
+              ),
+            ),
+          ),
+          DraggableScrollableSheet(
+            controller: _sheetController,
+            initialChildSize: 0.38,
+            minChildSize: 0.16,
+            maxChildSize: 0.70,
+            snap: true,
+            snapSizes: const [0.16, 0.38, 0.70],
+            builder: (BuildContext context, ScrollController scrollController) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: themeChange.getThem() ? AppThemeData.surface50Dark : Colors.white,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(28),
+                    topRight: Radius.circular(28),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 20,
+                      offset: const Offset(0, -4),
+                    )
+                  ],
+                ),
+                child: SafeArea(
+                  top: false,
+                  child: SingleChildScrollView(
+                    controller: scrollController,
+                    physics: const ClampingScrollPhysics(),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Interactive Drag Handle
+                          GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: _toggleSheet,
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              alignment: Alignment.center,
+                              child: Container(
+                                width: 44,
+                                height: 5,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade400,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
 
                     // Success Banner
                     Row(
@@ -1047,11 +1143,14 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
                 ),
               ),
             ),
-          )
-        ],
-      ),
-    );
-  }
+          ),
+        );
+      },
+    ),
+  ],
+),
+);
+}
 
   final resonController = TextEditingController();
 
@@ -1193,105 +1292,216 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
         });
   }
 
-  getDirections({required double dLat, required double dLng}) async {
+  Future<void> getDirections({required double dLat, required double dLng}) async {
+    if (rideData == null) return;
+
     List<LatLng> polylineCoordinates = [];
-    PolylineResult result;
     List<PolylineWayPoint> wayPointList = [];
+
     if (rideData!.stops != null) {
       for (var i = 0; i < rideData!.stops!.length; i++) {
-        wayPointList.add(PolylineWayPoint(location: rideData!.stops![i].location!));
+        final loc = rideData!.stops![i].location;
+        if (loc != null && loc.isNotEmpty) {
+          wayPointList.add(PolylineWayPoint(location: loc));
+        }
       }
     }
+
+    final double pLat = double.tryParse(rideData!.latitudeDepart?.toString() ?? '') ?? departureLatLong.latitude;
+    final double pLng = double.tryParse(rideData!.longitudeDepart?.toString() ?? '') ?? departureLatLong.longitude;
+    final double destLat = destinationLatLong.latitude;
+    final double destLng = destinationLatLong.longitude;
+
+    PointLatLng originPoint;
+    PointLatLng destPoint;
 
     if (rideData!.statut == "confirmed") {
-      PolylineRequest requestData = PolylineRequest(
-        wayPoints: [],
-        optimizeWaypoints: true,
-        mode: TravelMode.driving,
-        origin: PointLatLng(dLat, dLng),
-        destination: PointLatLng(double.parse(rideData!.latitudeDepart.toString()), double.parse(rideData!.longitudeDepart.toString())),
-      );
-      result = await polylinePoints.getRouteBetweenCoordinates(
-        googleApiKey: Constant.kGoogleApiKey.toString(),
-        request: requestData,
-      );
+      originPoint = PointLatLng(dLat != 0.0 ? dLat : pLat, dLng != 0.0 ? dLng : pLng);
+      destPoint = PointLatLng(pLat, pLng);
+
+      try {
+        final durationRes = await http.get(Uri.parse(
+            "https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=${originPoint.latitude},${originPoint.longitude}&destinations=$pLat,$pLng&key=${Constant.kGoogleApiKey}"));
+        if (durationRes.statusCode == 200) {
+          final durationData = jsonDecode(durationRes.body);
+          if (durationData['rows'] != null &&
+              durationData['rows'].isNotEmpty &&
+              durationData['rows'][0]['elements'] != null &&
+              durationData['rows'][0]['elements'].isNotEmpty &&
+              durationData['rows'][0]['elements'][0]['duration'] != null) {
+            driverEstimateArrivalTime = durationData['rows'][0]['elements'][0]['duration']['text'].toString();
+          }
+        }
+      } catch (_) {}
     } else if (rideData!.statut == "on ride") {
-      PolylineRequest requestData = PolylineRequest(
-        wayPoints: wayPointList,
-        optimizeWaypoints: true,
-        mode: TravelMode.driving,
-        origin: PointLatLng(dLat, dLng),
-        destination: PointLatLng(destinationLatLong.latitude, destinationLatLong.longitude),
-      );
-      result = await polylinePoints.getRouteBetweenCoordinates(
-        googleApiKey: Constant.kGoogleApiKey.toString(),
-        request: requestData,
-      );
+      originPoint = PointLatLng(dLat != 0.0 ? dLat : pLat, dLng != 0.0 ? dLng : pLng);
+      destPoint = PointLatLng(destLat, destLng);
     } else {
-      PolylineRequest requestData = PolylineRequest(
-        wayPoints: wayPointList,
-        optimizeWaypoints: true,
-        mode: TravelMode.driving,
-        origin: PointLatLng(departureLatLong.latitude, departureLatLong.longitude),
-        destination: PointLatLng(destinationLatLong.latitude, destinationLatLong.longitude),
-      );
-      result = await polylinePoints.getRouteBetweenCoordinates(
-        googleApiKey: Constant.kGoogleApiKey.toString(),
-        request: requestData,
-      );
+      originPoint = PointLatLng(pLat, pLng);
+      destPoint = PointLatLng(destLat, destLng);
     }
 
+    // Tier 1: Direct Google Directions API with Android package headers
+    try {
+      final apiKey = Constant.kGoogleApiKey ?? '';
+      if (apiKey.isNotEmpty) {
+        String url = "https://maps.googleapis.com/maps/api/directions/json"
+            "?origin=${originPoint.latitude},${originPoint.longitude}"
+            "&destination=${destPoint.latitude},${destPoint.longitude}"
+            "&mode=driving"
+            "&key=$apiKey";
+
+        if (wayPointList.isNotEmpty) {
+          final waypointsStr = wayPointList.map((w) => w.location).join('|');
+          url += "&waypoints=$waypointsStr";
+        }
+
+        final response = await http.get(
+          Uri.parse(url),
+          headers: {
+            'X-Android-Package': 'com.fiinway',
+            'X-Android-Cert': '427CAACCD854958730B0A3187C9E986DDCA86726',
+          },
+        ).timeout(const Duration(seconds: 5));
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          if (data['routes'] != null && (data['routes'] as List).isNotEmpty) {
+            final overview = data['routes'][0]['overview_polyline']?['points'];
+            if (overview != null && overview.toString().isNotEmpty) {
+              final decoded = polylinePoints.decodePolyline(overview.toString());
+              for (var pt in decoded) {
+                polylineCoordinates.add(LatLng(pt.latitude, pt.longitude));
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      dev.log("User App Tier 1 Google Direct failed: $e");
+    }
+
+    // Tier 2: flutter_polyline_points with Google API Key
+    if (polylineCoordinates.isEmpty) {
+      try {
+        PolylineRequest requestData = PolylineRequest(
+          wayPoints: wayPointList,
+          optimizeWaypoints: true,
+          mode: TravelMode.driving,
+          origin: originPoint,
+          destination: destPoint,
+        );
+        final result = await polylinePoints.getRouteBetweenCoordinates(
+          googleApiKey: Constant.kGoogleApiKey.toString(),
+          request: requestData,
+        );
+        if (result.points.isNotEmpty) {
+          for (var point in result.points) {
+            polylineCoordinates.add(LatLng(point.latitude, point.longitude));
+          }
+        }
+      } catch (e) {
+        dev.log("User App Tier 2 PolylinePoints failed: $e");
+      }
+    }
+
+    // Tier 3: OSRM High-resolution Road Router (guarantees real road polyline worldwide)
+    if (polylineCoordinates.isEmpty) {
+      try {
+        String osrmUrl = "https://router.project-osrm.org/route/v1/driving/"
+            "${originPoint.longitude},${originPoint.latitude};"
+            "${destPoint.longitude},${destPoint.latitude}"
+            "?overview=full&geometries=polyline";
+
+        final osrmRes = await http.get(Uri.parse(osrmUrl)).timeout(const Duration(seconds: 5));
+        if (osrmRes.statusCode == 200) {
+          final data = jsonDecode(osrmRes.body);
+          if (data['routes'] != null && (data['routes'] as List).isNotEmpty) {
+            final geometry = data['routes'][0]['geometry'];
+            if (geometry != null && geometry.toString().isNotEmpty) {
+              final decoded = polylinePoints.decodePolyline(geometry.toString());
+              for (var pt in decoded) {
+                polylineCoordinates.add(LatLng(pt.latitude, pt.longitude));
+              }
+            }
+          }
+        }
+      } catch (e) {
+        dev.log("User App Tier 3 OSRM failed: $e");
+      }
+    }
+
+    // Tier 4: Fallback line
+    if (polylineCoordinates.isEmpty) {
+      polylineCoordinates = [
+        LatLng(originPoint.latitude, originPoint.longitude),
+        LatLng(destPoint.latitude, destPoint.longitude),
+      ];
+    }
+
+    // Markers placement
     _markers['Departure'] = Marker(
       markerId: const MarkerId('Departure'),
-      infoWindow: const InfoWindow(title: "Departure"),
-      position: LatLng(double.parse(rideData!.latitudeDepart.toString()), double.parse(rideData!.longitudeDepart.toString())),
-      icon: departureIcon!,
+      infoWindow: InfoWindow(title: "Departure".tr, snippet: rideData!.departName ?? ''),
+      position: LatLng(pLat, pLng),
+      icon: departureIcon ?? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
     );
 
-    _markers['Destination'] = Marker(
-      markerId: const MarkerId('Destination'),
-      infoWindow: const InfoWindow(title: "Destination"),
-      position: destinationLatLong,
-      icon: destinationIcon!,
-    );
+    if (destLat != 0.0 && destLng != 0.0) {
+      _markers['Destination'] = Marker(
+        markerId: const MarkerId('Destination'),
+        infoWindow: InfoWindow(title: "Destination".tr, snippet: rideData!.destinationName ?? ''),
+        position: LatLng(destLat, destLng),
+        icon: destinationIcon ?? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+      );
+    }
 
     if (rideData!.stops != null) {
       for (var i = 0; i < rideData!.stops!.length; i++) {
-        _markers['${rideData!.stops![i]}'] = Marker(
-          markerId: MarkerId('${rideData!.stops![i]}'),
-          infoWindow: InfoWindow(title: rideData!.stops![i].location!),
-          position: LatLng(double.parse(rideData!.stops![i].latitude!), double.parse(rideData!.stops![i].longitude!)),
-          icon: stopIcon!,
-        );
+        final sLat = double.tryParse(rideData!.stops![i].latitude ?? '') ?? 0.0;
+        final sLng = double.tryParse(rideData!.stops![i].longitude ?? '') ?? 0.0;
+        if (sLat != 0.0 && sLng != 0.0) {
+          _markers['stop_$i'] = Marker(
+            markerId: MarkerId('stop_$i'),
+            infoWindow: InfoWindow(title: rideData!.stops![i].location ?? "Stop"),
+            position: LatLng(sLat, sLng),
+            icon: stopIcon ?? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueYellow),
+          );
+        }
       }
     }
 
-    if (result.points.isNotEmpty) {
-      for (var point in result.points) {
-        polylineCoordinates.add(LatLng(point.latitude, point.longitude));
-      }
+    if (dLat != 0.0 && dLng != 0.0) {
+      _markers[rideData!.id.toString()] = Marker(
+        markerId: MarkerId(rideData!.id.toString()),
+        infoWindow: InfoWindow(title: rideData!.prenomConducteur ?? "Captain"),
+        position: LatLng(dLat, dLng),
+        icon: taxiIcon ?? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+      );
     }
 
     addPolyLine(polylineCoordinates);
   }
 
-  addPolyLine(List<LatLng> polylineCoordinates) {
+  void addPolyLine(List<LatLng> polylineCoordinates) {
     if (polylineCoordinates.isEmpty) {
       polylineCoordinates = [departureLatLong, destinationLatLong];
     }
-    if (polylineCoordinates.isNotEmpty) {
-      PolylineId id = const PolylineId("poly");
-      Polyline polyline = Polyline(
-        polylineId: id,
-        color: AppThemeData.primary200,
-        points: polylineCoordinates,
-        width: 6,
-        geodesic: true,
-      );
-      polyLines[id] = polyline;
-      if (_controller != null && polylineCoordinates.length >= 2) {
-        updateCameraLocation(polylineCoordinates.first, polylineCoordinates.last, _controller);
-      }
+    PolylineId id = const PolylineId("poly");
+    Polyline polyline = Polyline(
+      polylineId: id,
+      color: AppThemeData.primary200,
+      points: polylineCoordinates,
+      width: 6,
+      geodesic: true,
+    );
+    polyLines[id] = polyline;
+
+    if (_controller != null && polylineCoordinates.length >= 2) {
+      updateCameraLocation(polylineCoordinates.first, polylineCoordinates.last, _controller);
+    }
+
+    if (mounted) {
       setState(() {});
     }
   }
@@ -1302,6 +1512,13 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
     GoogleMapController? mapController,
   ) async {
     if (mapController == null) return;
+    if (source.latitude == 0.0 || destination.latitude == 0.0) return;
+
+    if ((source.latitude - destination.latitude).abs() < 0.0001 &&
+        (source.longitude - destination.longitude).abs() < 0.0001) {
+      mapController.animateCamera(CameraUpdate.newLatLngZoom(source, 15));
+      return;
+    }
 
     LatLngBounds bounds;
 
@@ -1315,18 +1532,21 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
       bounds = LatLngBounds(southwest: source, northeast: destination);
     }
 
-    CameraUpdate cameraUpdate = CameraUpdate.newLatLngBounds(bounds, 10);
+    CameraUpdate cameraUpdate = CameraUpdate.newLatLngBounds(bounds, 60);
 
     return checkCameraLocation(cameraUpdate, mapController);
   }
 
   Future<void> checkCameraLocation(CameraUpdate cameraUpdate, GoogleMapController mapController) async {
-    mapController.animateCamera(cameraUpdate);
-    LatLngBounds l1 = await mapController.getVisibleRegion();
-    LatLngBounds l2 = await mapController.getVisibleRegion();
+    try {
+      await mapController.animateCamera(cameraUpdate);
+      LatLngBounds l1 = await mapController.getVisibleRegion();
+      LatLngBounds l2 = await mapController.getVisibleRegion();
 
-    if (l1.southwest.latitude == -90 || l2.southwest.latitude == -90) {
-      return checkCameraLocation(cameraUpdate, mapController);
-    }
+      if (l1.southwest.latitude == -90 || l2.southwest.latitude == -90) {
+        await Future.delayed(const Duration(milliseconds: 200));
+        await mapController.animateCamera(cameraUpdate);
+      }
+    } catch (_) {}
   }
 }
