@@ -238,12 +238,29 @@ class Constant {
     );
   }
 
-  static Future<void> makePhoneCall(String phoneNumber) async {
+  static Future<void> makePhoneCall(String? phoneNumber) async {
+    if (phoneNumber == null || phoneNumber.trim().isEmpty || phoneNumber.trim().toLowerCase() == 'null') {
+      ShowToastDialog.showToast("Driver phone number not available".tr);
+      return;
+    }
+    final cleanPhone = phoneNumber.replaceAll(RegExp(r'[^\d+]'), '');
+    if (cleanPhone.isEmpty) {
+      ShowToastDialog.showToast("Invalid phone number".tr);
+      return;
+    }
     final Uri launchUri = Uri(
       scheme: 'tel',
-      path: phoneNumber,
+      path: cleanPhone,
     );
-    await launchUrl(launchUri);
+    try {
+      if (await canLaunchUrl(launchUri)) {
+        await launchUrl(launchUri);
+      } else {
+        await launchUrl(launchUri, mode: LaunchMode.externalApplication);
+      }
+    } catch (e) {
+      ShowToastDialog.showToast("Could not initiate call: $e");
+    }
   }
 
   static Future<void> launchMapURl(String? latitude, String? longLatitude) async {

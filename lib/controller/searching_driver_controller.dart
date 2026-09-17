@@ -136,6 +136,14 @@ class SearchingDriverController extends GetxController {
                 driverPhone: details.rideDetailsdata!.driverPhone,
                 moyenne: details.rideDetailsdata!.moyenne,
                 stops: details.rideDetailsdata!.stops,
+                brand: details.rideDetailsdata!.brand,
+                model: details.rideDetailsdata!.model,
+                carMake: details.rideDetailsdata!.carMake,
+                color: details.rideDetailsdata!.color,
+                numberplate: details.rideDetailsdata!.numberplate,
+                passenger: details.rideDetailsdata!.passenger,
+                idVehicule: details.rideDetailsdata!.idVehicule,
+                distanceUnit: details.rideDetailsdata!.distanceUnit,
               );
               handleRideStatusTransition(currentStatus, updatedRideData);
             }

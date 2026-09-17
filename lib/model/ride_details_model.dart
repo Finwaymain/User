@@ -80,6 +80,14 @@ class RideDetailsdata {
   String? photoPath;
   String? driverPhone;
   String? moyenne;
+  String? brand;
+  String? model;
+  String? carMake;
+  String? color;
+  String? numberplate;
+  String? passenger;
+  String? idVehicule;
+  String? distanceUnit;
   List<Stops>? stops;
   String? promotionalAmount;
   String? promotionalDiscount;
@@ -208,8 +216,16 @@ class RideDetailsdata {
     nomConducteur = json['nomConducteur']?.toString();
     prenomConducteur = json['prenomConducteur']?.toString();
     photoPath = json['photo_path']?.toString();
-    driverPhone = json['driverPhone']?.toString();
+    driverPhone = (json['driverPhone'] ?? json['driver_phone'])?.toString();
     moyenne = json['moyenne']?.toString();
+    brand = json['brand']?.toString();
+    model = json['model']?.toString();
+    carMake = json['car_make']?.toString();
+    color = json['color']?.toString();
+    numberplate = json['numberplate']?.toString();
+    passenger = json['passenger']?.toString();
+    idVehicule = json['idVehicule']?.toString();
+    distanceUnit = json['distance_unit']?.toString();
     
     List<Stops>? stopsList = [];
     if (json['stops'] != null && json['stops'].toString() != "[]" && json['stops'].toString() != "null") {
@@ -282,6 +298,14 @@ class RideDetailsdata {
     data['photo_path'] = photoPath;
     data['driverPhone'] = driverPhone;
     data['moyenne'] = moyenne;
+    data['brand'] = brand;
+    data['model'] = model;
+    data['car_make'] = carMake;
+    data['color'] = color;
+    data['numberplate'] = numberplate;
+    data['passenger'] = passenger;
+    data['idVehicule'] = idVehicule;
+    data['distance_unit'] = distanceUnit;
     if (stops != null) {
       data['stops'] = stops!.map((v) => v.toJson()).toList();
     } else {

@@ -10,7 +10,6 @@ import 'package:finway/controller/ride_details_controller.dart';
 import 'package:finway/model/ride_model.dart';
 import 'package:finway/page/chats_screen/conversation_screen.dart';
 import 'package:finway/page/completed_ride_screens/payment_selection_screen.dart';
-import 'package:finway/page/completed_ride_screens/trip_history_screen.dart';
 import 'package:finway/themes/button_them.dart';
 import 'package:finway/themes/constant_colors.dart';
 import 'package:finway/themes/custom_alert_dialog.dart';
@@ -30,7 +29,6 @@ import 'package:location/location.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../constant/image_constant.dart';
 import '../../service/api.dart';
 
 class RouteViewScreen extends StatefulWidget {
@@ -269,6 +267,48 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
             return;
           }
 
+          if (mounted && rideData != null) {
+            setState(() {
+              if (rawItem['statut'] != null) rideData!.statut = rawItem['statut']?.toString();
+              if (rawItem['brand'] != null && rawItem['brand'].toString().isNotEmpty) {
+                rideData!.brand = rawItem['brand']?.toString();
+              }
+              if (rawItem['model'] != null && rawItem['model'].toString().isNotEmpty) {
+                rideData!.model = rawItem['model']?.toString();
+              }
+              if (rawItem['color'] != null && rawItem['color'].toString().isNotEmpty) {
+                rideData!.color = rawItem['color']?.toString();
+              }
+              if (rawItem['numberplate'] != null && rawItem['numberplate'].toString().isNotEmpty) {
+                rideData!.numberplate = rawItem['numberplate']?.toString();
+              }
+              if (rawItem['passenger'] != null && rawItem['passenger'].toString().isNotEmpty) {
+                rideData!.passenger = rawItem['passenger']?.toString();
+              }
+              if (rawItem['driverPhone'] != null || rawItem['driver_phone'] != null) {
+                final p = (rawItem['driverPhone'] ?? rawItem['driver_phone'])?.toString();
+                if (p != null && p.isNotEmpty && p != 'null') {
+                  rideData!.driverPhone = p;
+                }
+              }
+              if (rawItem['nomConducteur'] != null && rawItem['nomConducteur'].toString().isNotEmpty) {
+                rideData!.nomConducteur = rawItem['nomConducteur']?.toString();
+              }
+              if (rawItem['prenomConducteur'] != null && rawItem['prenomConducteur'].toString().isNotEmpty) {
+                rideData!.prenomConducteur = rawItem['prenomConducteur']?.toString();
+              }
+              if (rawItem['photo_path'] != null && rawItem['photo_path'].toString().isNotEmpty && rawItem['photo_path'].toString() != 'null') {
+                rideData!.photoPath = rawItem['photo_path']?.toString();
+              }
+              if (rawItem['moyenne'] != null) {
+                rideData!.moyenne = rawItem['moyenne']?.toString();
+              }
+              if (rawItem['distance_unit'] != null && rawItem['distance_unit'].toString().isNotEmpty) {
+                rideData!.distanceUnit = rawItem['distance_unit']?.toString();
+              }
+            });
+          }
+
           String? dLatStr = rawItem['driver_latitude']?.toString();
           String? dLngStr = rawItem['driver_longitude']?.toString();
           if (dLatStr != null && dLatStr.isNotEmpty && dLngStr != null && dLngStr.isNotEmpty) {
@@ -277,7 +317,6 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
 
             if (mounted) {
               setState(() {
-                rideData!.statut = rawItem['statut']?.toString();
                 departureLatLong = LatLng(dLat, dLng);
                 if (taxiIcon != null) {
                   _markers[rideData!.id.toString()] = Marker(
@@ -526,106 +565,278 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
                       const SizedBox(height: 16),
                     ],
 
-                    // Driver details card
-                    Row(
+                    // Driver and Vehicle Details Card
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(30),
-                          child: CachedNetworkImage(
-                            imageUrl: rideData!.photoPath.toString(),
-                            height: 54,
-                            width: 54,
-                            fit: BoxFit.cover,
-                            placeholder: (context, url) => Constant.loader(context),
-                            errorWidget: (context, url, error) => Image.asset(ImageConstant.logo),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "${rideData!.prenomConducteur.toString()} ${rideData!.nomConducteur.toString()}",
-                                style: TextStyle(
-                                  fontFamily: AppThemeData.bold,
-                                  fontSize: 15,
-                                  color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
+                        // Driver Row
+                        Row(
+                          children: [
+                            Container(
+                              width: 52,
+                              height: 52,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: AppThemeData.primary200.withValues(alpha: 0.3),
+                                  width: 2,
                                 ),
                               ),
-                              const SizedBox(height: 3),
-                              Row(
+                              child: ClipOval(
+                                child: (rideData!.photoPath != null &&
+                                        rideData!.photoPath!.isNotEmpty &&
+                                        rideData!.photoPath != 'null' &&
+                                        !rideData!.photoPath!.contains('placeholder'))
+                                    ? CachedNetworkImage(
+                                        imageUrl: rideData!.photoPath!,
+                                        fit: BoxFit.cover,
+                                        placeholder: (context, url) => Container(
+                                          color: Colors.grey.shade200,
+                                          child: const Icon(Icons.person, color: Colors.grey, size: 28),
+                                        ),
+                                        errorWidget: (context, url, error) => Container(
+                                          color: Colors.grey.shade200,
+                                          child: const Icon(Icons.person, color: Colors.grey, size: 28),
+                                        ),
+                                      )
+                                    : Container(
+                                        color: Colors.grey.shade200,
+                                        child: const Icon(Icons.person, color: Colors.grey, size: 30),
+                                      ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Icon(Icons.star_rounded, color: Colors.amber, size: 16),
-                                  const SizedBox(width: 4),
                                   Text(
-                                    rideData!.moyenne != "null" ? rideData!.moyenne.toString() : "5.0",
+                                    "${rideData!.prenomConducteur ?? ''} ${rideData!.nomConducteur ?? ''}".trim(),
                                     style: TextStyle(
-                                      fontFamily: AppThemeData.medium,
-                                      fontSize: 12,
-                                      color: themeChange.getThem() ? AppThemeData.grey500Dark : AppThemeData.grey500,
+                                      fontFamily: AppThemeData.bold,
+                                      fontSize: 16,
+                                      color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(height: 4),
                                   Container(
-                                    width: 4,
-                                    height: 4,
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(
+                                      color: Colors.amber.withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(Icons.star_rounded, color: Colors.amber, size: 14),
+                                        const SizedBox(width: 3),
+                                        Text(
+                                          (rideData!.moyenne != null && rideData!.moyenne != "null" && rideData!.moyenne!.isNotEmpty)
+                                              ? rideData!.moyenne.toString()
+                                              : "5.0",
+                                          style: const TextStyle(
+                                            fontFamily: AppThemeData.bold,
+                                            fontSize: 12,
+                                            color: Color(0xFFB45309),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            // Action buttons row (Chat & Active Call)
+                            Row(
+                              children: [
+                                if (rideData!.statut == "confirmed") ...[
+                                  InkWell(
+                                    onTap: () {
+                                      Get.to(ConversationScreen(), arguments: {
+                                        'receiverId': int.tryParse(rideData!.idConducteur.toString()) ?? 0,
+                                        'orderId': int.tryParse(rideData!.id.toString()) ?? 0,
+                                        'receiverName': "${rideData!.prenomConducteur ?? ''} ${rideData!.nomConducteur ?? ''}".trim(),
+                                        'receiverPhoto': rideData!.photoPath
+                                      });
+                                    },
+                                    borderRadius: BorderRadius.circular(24),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(9),
+                                      decoration: BoxDecoration(
+                                        color: Colors.blue.withValues(alpha: 0.1),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(Icons.chat_bubble_outline_rounded, color: Colors.blue, size: 20),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                ],
+                                InkWell(
+                                  onTap: () {
+                                    Constant.makePhoneCall(rideData!.driverPhone);
+                                  },
+                                  borderRadius: BorderRadius.circular(24),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFF16A34A),
                                       shape: BoxShape.circle,
-                                      color: Colors.grey.shade400,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Color(0x3316A34A),
+                                          blurRadius: 8,
+                                          offset: Offset(0, 3),
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Icon(Icons.phone_rounded, color: Colors.white, size: 20),
+                                  ),
+                                ),
+                              ],
+                            )
+                          ],
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        // Vehicle Details Container
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: themeChange.getThem() ? AppThemeData.surface50Dark : const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: themeChange.getThem() ? Colors.white12 : const Color(0xFFE2E8F0),
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              // Row 1: Vehicle Name & License Plate
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.directions_car_rounded,
+                                          size: 18,
+                                          color: AppThemeData.primary200,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            (() {
+                                              final brand = (rideData!.brand ?? '').trim();
+                                              final model = (rideData!.model ?? '').trim();
+                                              final full = "$brand $model".trim();
+                                              if (full.isNotEmpty && full != "null") return full;
+                                              return (rideData!.place != null && rideData!.place!.isNotEmpty)
+                                                  ? rideData!.place!
+                                                  : "Cab / Taxi";
+                                            })(),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontFamily: AppThemeData.bold,
+                                              fontSize: 14,
+                                              color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                   const SizedBox(width: 8),
-                                  Expanded(
+                                  // Number plate badge
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: themeChange.getThem() ? Colors.black : Colors.white,
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(
+                                        color: themeChange.getThem() ? Colors.white30 : Colors.grey.shade400,
+                                        width: 1.2,
+                                      ),
+                                    ),
                                     child: Text(
-                                      "${rideData!.color ?? ''} ${rideData!.brand ?? ''} ${rideData!.model ?? ''}",
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                                      (rideData!.numberplate != null &&
+                                              rideData!.numberplate!.isNotEmpty &&
+                                              rideData!.numberplate != 'null')
+                                          ? rideData!.numberplate!.toUpperCase()
+                                          : 'NO NUMBER',
                                       style: TextStyle(
-                                        fontFamily: AppThemeData.medium,
+                                        fontFamily: AppThemeData.bold,
                                         fontSize: 12,
-                                        color: themeChange.getThem() ? AppThemeData.grey500Dark : AppThemeData.grey500,
+                                        letterSpacing: 0.8,
+                                        color: themeChange.getThem() ? Colors.amber : const Color(0xFF0F172A),
                                       ),
                                     ),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                rideData!.numberplate ?? "",
-                                style: TextStyle(
-                                  fontFamily: AppThemeData.bold,
-                                  fontSize: 12,
-                                  color: AppThemeData.primary200,
-                                ),
+
+                              const SizedBox(height: 8),
+
+                              // Row 2: Colour & Passenger Capacity
+                              Row(
+                                children: [
+                                  // Vehicle Colour
+                                  Expanded(
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.palette_outlined, size: 15, color: Colors.grey),
+                                        const SizedBox(width: 6),
+                                        Expanded(
+                                          child: Text(
+                                            "Color: ${(rideData!.color != null && rideData!.color!.isNotEmpty && rideData!.color != 'null') ? rideData!.color : 'Standard'}",
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontFamily: AppThemeData.medium,
+                                              fontSize: 12,
+                                              color: themeChange.getThem() ? AppThemeData.grey500Dark : AppThemeData.grey500,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  Container(
+                                    width: 1,
+                                    height: 14,
+                                    color: Colors.grey.withValues(alpha: 0.3),
+                                  ),
+                                  const SizedBox(width: 8),
+
+                                  // Passenger Capacity
+                                  Expanded(
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.people_alt_outlined, size: 15, color: Colors.grey),
+                                        const SizedBox(width: 6),
+                                        Expanded(
+                                          child: Text(
+                                            "Seats: ${(rideData!.passenger != null && rideData!.passenger!.isNotEmpty && rideData!.passenger != 'null') ? rideData!.passenger : (rideData!.numberPoeple ?? '4')} Pass.",
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontFamily: AppThemeData.medium,
+                                              fontSize: 12,
+                                              color: themeChange.getThem() ? AppThemeData.grey500Dark : AppThemeData.grey500,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
                         ),
-                        
-                        // Action buttons row
-                        Row(
-                          children: [
-                            if (rideData!.statut == "confirmed")
-                              IconButton(
-                                icon: const Icon(Icons.chat_bubble_outline, color: Colors.blue),
-                                onPressed: () {
-                                  Get.to(ConversationScreen(), arguments: {
-                                    'receiverId': int.parse(rideData!.idConducteur.toString()),
-                                    'orderId': int.parse(rideData!.id.toString()),
-                                    'receiverName': "${rideData!.prenomConducteur} ${rideData!.nomConducteur}",
-                                    'receiverPhoto': rideData!.photoPath
-                                  });
-                                },
-                              ),
-                            IconButton(
-                              icon: const Icon(Icons.phone_outlined, color: Colors.green),
-                              onPressed: () {
-                                Constant.makePhoneCall(rideData!.driverPhone.toString());
-                              },
-                            ),
-                          ],
-                        )
                       ],
                     ),
                     const Divider(height: 28, thickness: 1),
@@ -744,7 +955,7 @@ class _RouteViewScreenState extends State<RouteViewScreen> {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                "${rideData!.distance} ${rideData!.distanceUnit}",
+                                "${rideData!.distance} ${(rideData!.distanceUnit != null && rideData!.distanceUnit != 'null' && rideData!.distanceUnit!.isNotEmpty) ? rideData!.distanceUnit : (Constant.distanceUnit ?? 'km')}",
                                 style: TextStyle(
                                   fontFamily: AppThemeData.bold,
                                   fontSize: 14,

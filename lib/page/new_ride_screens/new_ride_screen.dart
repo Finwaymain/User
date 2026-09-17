@@ -7,14 +7,11 @@ import 'package:finway/page/completed_ride_screens/payment_selection_screen.dart
 import 'package:finway/page/completed_ride_screens/trip_history_screen.dart';
 import 'package:finway/page/route_view_screen/route_view_screen.dart';
 import 'package:finway/page/route_view_screen/route_osm_view_screen.dart';
-import 'package:finway/page/review_screens/add_review_screen.dart';
-import 'package:finway/themes/button_them.dart';
 import 'package:finway/themes/constant_colors.dart';
 import 'package:finway/utils/dark_theme_provider.dart';
 import 'package:finway/widget/StarRating.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:location/location.dart';
 import 'package:provider/provider.dart';
@@ -831,7 +828,88 @@ class NewRideScreen extends StatelessWidget {
                     ]
                   ],
                 ),
-              )
+              ),
+
+              // Vehicle details snippet for active ride
+              if (isInProgress) ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: isDark ? Colors.white12 : const Color(0xFFE2E8F0),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Icon(Icons.directions_car_rounded, size: 16, color: AppThemeData.primary200),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  (() {
+                                    final brand = (data.brand ?? '').trim();
+                                    final model = (data.model ?? '').trim();
+                                    final full = "$brand $model".trim();
+                                    if (full.isNotEmpty && full != "null") return full;
+                                    return (data.place != null && data.place!.isNotEmpty) ? data.place! : "Cab / Taxi";
+                                  })(),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontFamily: AppThemeData.bold,
+                                    fontSize: 12,
+                                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        if (data.numberplate != null && data.numberplate!.isNotEmpty && data.numberplate != 'null') ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: isDark ? Colors.black : Colors.white,
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                color: isDark ? Colors.white30 : Colors.grey.shade400,
+                                width: 1,
+                              ),
+                            ),
+                            child: Text(
+                              data.numberplate!.toUpperCase(),
+                              style: TextStyle(
+                                fontFamily: AppThemeData.bold,
+                                fontSize: 11,
+                                color: isDark ? Colors.amber : const Color(0xFF0F172A),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                        ],
+                        if (data.color != null && data.color!.isNotEmpty && data.color != 'null') ...[
+                          Text(
+                            data.color!,
+                            style: TextStyle(
+                              fontFamily: AppThemeData.medium,
+                              fontSize: 11,
+                              color: isDark ? Colors.white60 : Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ],
 
             // ── ACTION BUTTONS FOOTER ─────────────────────────────────────────

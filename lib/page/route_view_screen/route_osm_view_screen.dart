@@ -11,7 +11,6 @@ import 'package:finway/controller/ride_details_controller.dart';
 import 'package:finway/model/ride_model.dart';
 import 'package:finway/page/chats_screen/conversation_screen.dart';
 import 'package:finway/page/completed_ride_screens/payment_selection_screen.dart';
-import 'package:finway/page/completed_ride_screens/trip_history_screen.dart';
 import 'package:finway/themes/button_them.dart';
 import 'package:finway/themes/constant_colors.dart';
 import 'package:finway/themes/custom_alert_dialog.dart';
@@ -19,7 +18,6 @@ import 'package:finway/themes/custom_dialog_box.dart';
 import 'package:finway/themes/text_field_them.dart';
 import 'package:finway/utils/Preferences.dart';
 import 'package:finway/utils/dark_theme_provider.dart';
-import 'package:finway/widget/StarRating.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
@@ -31,7 +29,6 @@ import 'package:location/location.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../constant/image_constant.dart';
 import '../../service/api.dart';
 
 class RouteOsmViewScreen extends StatefulWidget {
@@ -208,11 +205,48 @@ class _RouteOsmViewScreenState extends State<RouteOsmViewScreen> {
               getDirections(dLat: dLat, dLng: dLng);
             });
             mapController.moveTo(departureLatLong!, animate: true);
-            if (mounted) {
-              setState(() {
-                rideData!.statut = rawItem['statut']?.toString();
-              });
-            }
+          }
+
+          if (mounted && rideData != null) {
+            setState(() {
+              if (rawItem['statut'] != null) rideData!.statut = rawItem['statut']?.toString();
+              if (rawItem['brand'] != null && rawItem['brand'].toString().isNotEmpty) {
+                rideData!.brand = rawItem['brand']?.toString();
+              }
+              if (rawItem['model'] != null && rawItem['model'].toString().isNotEmpty) {
+                rideData!.model = rawItem['model']?.toString();
+              }
+              if (rawItem['color'] != null && rawItem['color'].toString().isNotEmpty) {
+                rideData!.color = rawItem['color']?.toString();
+              }
+              if (rawItem['numberplate'] != null && rawItem['numberplate'].toString().isNotEmpty) {
+                rideData!.numberplate = rawItem['numberplate']?.toString();
+              }
+              if (rawItem['passenger'] != null && rawItem['passenger'].toString().isNotEmpty) {
+                rideData!.passenger = rawItem['passenger']?.toString();
+              }
+              if (rawItem['driverPhone'] != null || rawItem['driver_phone'] != null) {
+                final p = (rawItem['driverPhone'] ?? rawItem['driver_phone'])?.toString();
+                if (p != null && p.isNotEmpty && p != 'null') {
+                  rideData!.driverPhone = p;
+                }
+              }
+              if (rawItem['nomConducteur'] != null && rawItem['nomConducteur'].toString().isNotEmpty) {
+                rideData!.nomConducteur = rawItem['nomConducteur']?.toString();
+              }
+              if (rawItem['prenomConducteur'] != null && rawItem['prenomConducteur'].toString().isNotEmpty) {
+                rideData!.prenomConducteur = rawItem['prenomConducteur']?.toString();
+              }
+              if (rawItem['photo_path'] != null && rawItem['photo_path'].toString().isNotEmpty && rawItem['photo_path'].toString() != 'null') {
+                rideData!.photoPath = rawItem['photo_path']?.toString();
+              }
+              if (rawItem['moyenne'] != null) {
+                rideData!.moyenne = rawItem['moyenne']?.toString();
+              }
+              if (rawItem['distance_unit'] != null && rawItem['distance_unit'].toString().isNotEmpty) {
+                rideData!.distanceUnit = rawItem['distance_unit']?.toString();
+              }
+            });
           }
         }
       }
@@ -386,193 +420,355 @@ class _RouteOsmViewScreenState extends State<RouteOsmViewScreen> {
                             ],
                           ),
                         ),
+                        // Driver and Vehicle Details Card
                         Padding(
-                          padding: EdgeInsets.only(top: rideData!.statut == 'confirmed' ? 10 : 0),
-                          child: Row(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(80),
-                                child: CachedNetworkImage(
-                                  imageUrl: rideData!.photoPath.toString(),
-                                  height: 60,
-                                  width: 60,
-                                  fit: BoxFit.cover,
-                                  placeholder: (context, url) => Constant.loader(context),
-                                  errorWidget: (context, url, error) => Image.asset(
-                                    ImageConstant.logo,
+                              // Driver Row
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 52,
+                                    height: 52,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: AppThemeData.primary200.withValues(alpha: 0.3),
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: ClipOval(
+                                      child: (rideData!.photoPath != null &&
+                                              rideData!.photoPath!.isNotEmpty &&
+                                              rideData!.photoPath != 'null' &&
+                                              !rideData!.photoPath!.contains('placeholder'))
+                                          ? CachedNetworkImage(
+                                              imageUrl: rideData!.photoPath!,
+                                              fit: BoxFit.cover,
+                                              placeholder: (context, url) => Container(
+                                                color: Colors.grey.shade200,
+                                                child: const Icon(Icons.person, color: Colors.grey, size: 28),
+                                              ),
+                                              errorWidget: (context, url, error) => Container(
+                                                color: Colors.grey.shade200,
+                                                child: const Icon(Icons.person, color: Colors.grey, size: 28),
+                                              ),
+                                            )
+                                          : Container(
+                                              color: Colors.grey.shade200,
+                                              child: const Icon(Icons.person, color: Colors.grey, size: 30),
+                                            ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          "${rideData!.prenomConducteur ?? ''} ${rideData!.nomConducteur ?? ''}".trim(),
+                                          style: TextStyle(
+                                            fontFamily: AppThemeData.bold,
+                                            fontSize: 16,
+                                            color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: Colors.amber.withValues(alpha: 0.15),
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Icon(Icons.star_rounded, color: Colors.amber, size: 14),
+                                              const SizedBox(width: 3),
+                                              Text(
+                                                (rideData!.moyenne != null && rideData!.moyenne != "null" && rideData!.moyenne!.isNotEmpty)
+                                                    ? rideData!.moyenne.toString()
+                                                    : "5.0",
+                                                style: const TextStyle(
+                                                  fontFamily: AppThemeData.bold,
+                                                  fontSize: 12,
+                                                  color: Color(0xFFB45309),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  // Action buttons row (Chat, Share, Active Call)
+                                  Row(
+                                    children: [
+                                      if (rideData!.statut == "confirmed") ...[
+                                        InkWell(
+                                          onTap: () {
+                                            Get.to(ConversationScreen(), arguments: {
+                                              'receiverId': int.tryParse(rideData!.idConducteur.toString()) ?? 0,
+                                              'orderId': int.tryParse(rideData!.id.toString()) ?? 0,
+                                              'receiverName': "${rideData!.prenomConducteur ?? ''} ${rideData!.nomConducteur ?? ''}".trim(),
+                                              'receiverPhoto': rideData!.photoPath
+                                            });
+                                          },
+                                          borderRadius: BorderRadius.circular(24),
+                                          child: Container(
+                                            padding: const EdgeInsets.all(9),
+                                            decoration: BoxDecoration(
+                                              color: Colors.blue.withValues(alpha: 0.1),
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: const Icon(Icons.chat_bubble_outline_rounded, color: Colors.blue, size: 20),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                      ],
+                                      if (rideData!.statut != "rejected") ...[
+                                        InkWell(
+                                          onTap: () async {
+                                            ShowToastDialog.showLoader("Please wait");
+                                            final Location currentLocation = Location();
+                                            LocationData location = await currentLocation.getLocation();
+                                            ShowToastDialog.closeLoader();
+                                            await Share.share(
+                                              'https://www.google.com/maps/search/?api=1&query=${location.latitude},${location.longitude}',
+                                              subject: "Cabme".tr,
+                                            );
+                                          },
+                                          borderRadius: BorderRadius.circular(24),
+                                          child: Container(
+                                            padding: const EdgeInsets.all(9),
+                                            decoration: BoxDecoration(
+                                              color: AppThemeData.secondary200.withValues(alpha: 0.15),
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: SvgPicture.asset(
+                                              'assets/icons/ic_share.svg',
+                                              height: 18,
+                                              width: 18,
+                                              colorFilter: ColorFilter.mode(
+                                                themeChange.getThem() ? AppThemeData.surface50Dark : AppThemeData.secondary200,
+                                                BlendMode.srcIn,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                      ],
+                                      InkWell(
+                                        onTap: () {
+                                          Constant.makePhoneCall(rideData!.driverPhone);
+                                        },
+                                        borderRadius: BorderRadius.circular(24),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(10),
+                                          decoration: const BoxDecoration(
+                                            color: Color(0xFF16A34A),
+                                            shape: BoxShape.circle,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Color(0x3316A34A),
+                                                blurRadius: 8,
+                                                offset: Offset(0, 3),
+                                              ),
+                                            ],
+                                          ),
+                                          child: const Icon(Icons.phone_rounded, color: Colors.white, size: 20),
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                ],
+                              ),
+
+                              const SizedBox(height: 12),
+
+                              // Vehicle Details Container
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: themeChange.getThem() ? AppThemeData.surface50Dark : const Color(0xFFF8FAFC),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: themeChange.getThem() ? Colors.white12 : const Color(0xFFE2E8F0),
                                   ),
                                 ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
                                 child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text("${rideData!.prenomConducteur.toString()} ${rideData!.nomConducteur.toString()}",
-                                        style: TextStyle(
-                                          fontFamily: AppThemeData.semiBold,
-                                          color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
-                                          fontSize: 16,
-                                          letterSpacing: 0.6,
-                                        )),
-                                    const SizedBox(height: 5),
+                                    // Row 1: Vehicle Name & License Plate
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.start,
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
-                                        StarRating(
-                                            size: 20, rating: rideData!.moyenne != "null" ? double.parse(rideData!.moyenne.toString()) : 0.0, color: AppThemeData.warning200),
+                                        Expanded(
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                Icons.directions_car_rounded,
+                                                size: 18,
+                                                color: AppThemeData.primary200,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: Text(
+                                                  (() {
+                                                    final brand = (rideData!.brand ?? '').trim();
+                                                    final model = (rideData!.model ?? '').trim();
+                                                    final full = "$brand $model".trim();
+                                                    if (full.isNotEmpty && full != "null") return full;
+                                                    return (rideData!.place != null && rideData!.place!.isNotEmpty)
+                                                        ? rideData!.place!
+                                                        : "Cab / Taxi";
+                                                  })(),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: TextStyle(
+                                                    fontFamily: AppThemeData.bold,
+                                                    fontSize: 14,
+                                                    color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        // Number plate badge
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                          decoration: BoxDecoration(
+                                            color: themeChange.getThem() ? Colors.black : Colors.white,
+                                            borderRadius: BorderRadius.circular(6),
+                                            border: Border.all(
+                                              color: themeChange.getThem() ? Colors.white30 : Colors.grey.shade400,
+                                              width: 1.2,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            (rideData!.numberplate != null &&
+                                                    rideData!.numberplate!.isNotEmpty &&
+                                                    rideData!.numberplate != 'null')
+                                                ? rideData!.numberplate!.toUpperCase()
+                                                : 'NO NUMBER',
+                                            style: TextStyle(
+                                              fontFamily: AppThemeData.bold,
+                                              fontSize: 12,
+                                              letterSpacing: 0.8,
+                                              color: themeChange.getThem() ? Colors.amber : const Color(0xFF0F172A),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+
+                                    const SizedBox(height: 8),
+
+                                    // Row 2: Colour & Passenger Capacity
+                                    Row(
+                                      children: [
+                                        // Vehicle Colour
+                                        Expanded(
+                                          child: Row(
+                                            children: [
+                                              const Icon(Icons.palette_outlined, size: 15, color: Colors.grey),
+                                              const SizedBox(width: 6),
+                                              Expanded(
+                                                child: Text(
+                                                  "Color: ${(rideData!.color != null && rideData!.color!.isNotEmpty && rideData!.color != 'null') ? rideData!.color : 'Standard'}",
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: TextStyle(
+                                                    fontFamily: AppThemeData.medium,
+                                                    fontSize: 12,
+                                                    color: themeChange.getThem() ? AppThemeData.grey500Dark : AppThemeData.grey500,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+
+                                        Container(
+                                          width: 1,
+                                          height: 14,
+                                          color: Colors.grey.withValues(alpha: 0.3),
+                                        ),
+                                        const SizedBox(width: 8),
+
+                                        // Passenger Capacity
+                                        Expanded(
+                                          child: Row(
+                                            children: [
+                                              const Icon(Icons.people_alt_outlined, size: 15, color: Colors.grey),
+                                              const SizedBox(width: 6),
+                                              Expanded(
+                                                child: Text(
+                                                  "Seats: ${(rideData!.passenger != null && rideData!.passenger!.isNotEmpty && rideData!.passenger != 'null') ? rideData!.passenger : (rideData!.numberPoeple ?? '4')} Pass.",
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: TextStyle(
+                                                    fontFamily: AppThemeData.medium,
+                                                    fontSize: 12,
+                                                    color: themeChange.getThem() ? AppThemeData.grey500Dark : AppThemeData.grey500,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ],
                                 ),
                               ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  SingleChildScrollView(
-                                    scrollDirection: Axis.horizontal,
-                                    child: Row(
-                                      children: [
-                                        Visibility(
-                                          visible: rideData!.statut == "confirmed" ? true : false,
-                                          child: InkWell(
-                                              onTap: () {
-                                                Get.to(ConversationScreen(), arguments: {
-                                                  'receiverId': int.parse(rideData!.idConducteur.toString()),
-                                                  'orderId': int.parse(rideData!.id.toString()),
-                                                  'receiverName': "${rideData!.prenomConducteur} ${rideData!.nomConducteur}",
-                                                  'receiverPhoto': rideData!.photoPath
-                                                });
-                                              },
-                                              child: Image.asset(
-                                                'assets/icons/chat_icon.png',
-                                                height: 40,
-                                                width: 40,
-                                                fit: BoxFit.cover,
-                                              )),
-                                        ),
-                                        rideData!.statut != "rejected"
-                                            ? Padding(
-                                                padding: const EdgeInsets.only(left: 10),
-                                                child: InkWell(
-                                                    onTap: () async {
-                                                      ShowToastDialog.showLoader("Please wait");
-                                                      final Location currentLocation = Location();
-                                                      LocationData location = await currentLocation.getLocation();
-                                                      await Share.share(
-                                                        'https://www.google.com/maps/search/?api=1&query=${location.latitude},${location.longitude}',
-                                                        subject: "Cabme".tr,
-                                                      );
-                                                      // await FlutterShareMe()
-                                                      //     .shareToWhatsApp(msg: 'https://www.google.com/maps/search/?api=1&query=${location.latitude},${location.longitude}');
-                                                    },
-                                                    child: Container(
-                                                      alignment: Alignment.center,
-                                                      height: 40,
-                                                      width: 40,
-                                                      decoration: BoxDecoration(
-                                                        shape: BoxShape.circle,
-                                                        color: AppThemeData.secondary200,
-                                                      ),
-                                                      child: SvgPicture.asset(
-                                                        'assets/icons/ic_share.svg',
-                                                        height: 20,
-                                                        width: 20,
-                                                        colorFilter: ColorFilter.mode(
-                                                          themeChange.getThem() ? AppThemeData.surface50Dark : AppThemeData.surface50,
-                                                          BlendMode.srcIn,
-                                                        ),
-                                                      ),
-                                                    )),
-                                              )
-                                            : const Offstage(),
-                                        Padding(
-                                          padding: const EdgeInsets.only(left: 10),
-                                          child: InkWell(
-                                              onTap: () {
-                                                Constant.makePhoneCall(rideData!.driverPhone.toString());
-                                              },
-                                              child: Container(
-                                                alignment: Alignment.center,
-                                                height: 40,
-                                                width: 40,
-                                                decoration: BoxDecoration(
-                                                  shape: BoxShape.circle,
-                                                  color: AppThemeData.warning200,
-                                                ),
-                                                child: SvgPicture.asset(
-                                                  'assets/icons/call_icon.svg',
-                                                  height: 20,
-                                                  width: 20,
-                                                  colorFilter: ColorFilter.mode(
-                                                    themeChange.getThem() ? AppThemeData.surface50Dark : AppThemeData.surface50,
-                                                    BlendMode.srcIn,
-                                                  ),
-                                                ),
-                                              )),
-                                        ),
-                                        Visibility(
-                                          visible: rideData!.statut == "on ride" ? true : false,
-                                          child: Padding(
-                                            padding: const EdgeInsets.only(left: 10),
-                                            child: ButtonThem.buildButton(
-                                              radius: 5,
-                                              txtSize: 12,
-                                              context,
-                                              title: 'Pay & Get Cashback'.tr,
-                                              btnHeight: 40,
-                                              btnWidthRatio: 0.3,
-                                              onPress: () async {
-                                                Get.to(() => ScannerAndTransferScreen());
-                                              },
-                                            ),
-                                          ),
-                                        ),
-                                        Visibility(
-                                          visible: rideData!.statut == "on ride" ? true : false,
-                                          child: Padding(
-                                            padding: const EdgeInsets.only(left: 10),
-                                            child: ButtonThem.buildButton(
-                                              radius: 5,
-                                              txtSize: 12,
-                                              context,
-                                              title: 'sos'.tr,
-                                              btnHeight: 40,
-                                              btnWidthRatio: 0.15,
-                                              onPress: () async {
-                                                LocationData location = await Location().getLocation();
-                                                Map<String, dynamic> bodyParams = {
-                                                  'lat': location.latitude,
-                                                  'lng': location.longitude,
-                                                  'ride_id': rideData!.id,
-                                                };
-                                                controllerRideDetails.sos(bodyParams).then((value) {
-                                                  if (value != null) {
-                                                    if (value['success'] == "success") {
-                                                      ShowToastDialog.showToast(value['message']);
-                                                    }
-                                                  }
-                                                });
-                                              },
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 5.0),
-                                    child: Text(
-                                      rideData!.dateRetour.toString(),
-                                      style: TextStyle(
-                                        color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
-                                        fontFamily: AppThemeData.medium,
-                                        fontSize: 16,
+
+                              if (rideData!.statut == "on ride") ...[
+                                const SizedBox(height: 10),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: ButtonThem.buildButton(
+                                        radius: 8,
+                                        txtSize: 12,
+                                        context,
+                                        title: 'Pay & Get Cashback'.tr,
+                                        btnHeight: 40,
+                                        btnWidthRatio: 0.8,
+                                        onPress: () async {
+                                          Get.to(() => ScannerAndTransferScreen());
+                                        },
                                       ),
                                     ),
-                                  ),
-                                ],
-                              )
+                                    const SizedBox(width: 8),
+                                    ButtonThem.buildButton(
+                                      radius: 8,
+                                      txtSize: 12,
+                                      context,
+                                      title: 'sos'.tr,
+                                      btnHeight: 40,
+                                      btnWidthRatio: 0.25,
+                                      onPress: () async {
+                                        LocationData location = await Location().getLocation();
+                                        Map<String, dynamic> bodyParams = {
+                                          'lat': location.latitude,
+                                          'lng': location.longitude,
+                                          'ride_id': rideData!.id,
+                                        };
+                                        controllerRideDetails.sos(bodyParams).then((value) {
+                                          if (value != null && value['success'] == "success") {
+                                            ShowToastDialog.showToast(value['message']);
+                                          }
+                                        });
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ],
                           ),
                         ),
