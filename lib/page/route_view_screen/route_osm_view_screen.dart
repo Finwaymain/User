@@ -24,7 +24,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:finway/page/features/SmartValue/ScanAndTransfer/view/scanner_and_transfer_screen.dart';
 import 'package:location/location.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -729,44 +728,27 @@ class _RouteOsmViewScreenState extends State<RouteOsmViewScreen> {
 
                               if (rideData!.statut == "on ride") ...[
                                 const SizedBox(height: 10),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: ButtonThem.buildButton(
-                                        radius: 8,
-                                        txtSize: 12,
-                                        context,
-                                        title: 'Pay & Get Cashback'.tr,
-                                        btnHeight: 40,
-                                        btnWidthRatio: 0.8,
-                                        onPress: () async {
-                                          Get.to(() => ScannerAndTransferScreen());
-                                        },
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    ButtonThem.buildButton(
-                                      radius: 8,
-                                      txtSize: 12,
-                                      context,
-                                      title: 'sos'.tr,
-                                      btnHeight: 40,
-                                      btnWidthRatio: 0.25,
-                                      onPress: () async {
-                                        LocationData location = await Location().getLocation();
-                                        Map<String, dynamic> bodyParams = {
-                                          'lat': location.latitude,
-                                          'lng': location.longitude,
-                                          'ride_id': rideData!.id,
-                                        };
-                                        controllerRideDetails.sos(bodyParams).then((value) {
-                                          if (value != null && value['success'] == "success") {
-                                            ShowToastDialog.showToast(value['message']);
-                                          }
-                                        });
-                                      },
-                                    ),
-                                  ],
+                                ButtonThem.buildButton(
+                                  radius: 8,
+                                  txtSize: 13,
+                                  btnColor: AppThemeData.error200,
+                                  context,
+                                  title: 'sos'.tr,
+                                  btnHeight: 42,
+                                  btnWidthRatio: 1,
+                                  onPress: () async {
+                                    LocationData location = await Location().getLocation();
+                                    Map<String, dynamic> bodyParams = {
+                                      'lat': location.latitude,
+                                      'lng': location.longitude,
+                                      'ride_id': rideData!.id,
+                                    };
+                                    controllerRideDetails.sos(bodyParams).then((value) {
+                                      if (value != null && value['success'] == "success") {
+                                        ShowToastDialog.showToast(value['message']);
+                                      }
+                                    });
+                                  },
                                 ),
                               ],
                             ],
