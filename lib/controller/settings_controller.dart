@@ -74,9 +74,9 @@ class SettingsController extends GetxController {
           Constant.allTaxList = model.data!.taxModel!;
         }
         Constant.currency = model.data?.currency ?? "₹";
-        Constant.symbolAtRight = model.data?.symbolAtRight == 'true' ? true : false;
-        Constant.kGoogleApiKey = model.data?.googleMapApiKey ?? "";
-        Constant.contactUsEmail = model.data?.contactUsEmail ?? "";
+        if (model.data?.googleMapApiKey != null && model.data!.googleMapApiKey!.isNotEmpty) {
+          Constant.kGoogleApiKey = model.data!.googleMapApiKey!;
+        }
         Constant.contactUsAddress = model.data?.contactUsAddress ?? "";
         Constant.contactUsPhone = model.data?.contactUsPhone ?? "";
         Constant.rideOtp = model.data?.showRideOtp ?? "yes";

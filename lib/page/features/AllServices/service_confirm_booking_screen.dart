@@ -12,6 +12,7 @@ import 'package:finway/themes/constant_colors.dart';
 import 'package:finway/utils/Preferences.dart';
 import 'package:finway/utils/dark_theme_provider.dart';
 import 'package:finway/utils/location_picker_helper.dart';
+import 'package:finway/constant/constant.dart';
 import 'service_finding_expert_screen.dart';
 import 'service_style.dart';
 
@@ -311,13 +312,37 @@ class _ServiceConfirmBookingScreenState extends State<ServiceConfirmBookingScree
                   style: TextStyle(fontSize: 12, color: _mutedColor(isDarkMode)),
                 ),
               ),
-            const Divider(height: 24),
-            _breakupRow(
-              isDarkMode,
-              'Estimated Service Amount'.tr,
-              _estimate!.displayTotal,
-              bold: true,
-            ),
+            if (_estimate!.isPromotionalApplied) ...[
+              const Divider(height: 20),
+              _breakupRow(
+                isDarkMode,
+                'Booking Total'.tr,
+                _estimate!.displayedBookingTotalLabel.isNotEmpty
+                    ? _estimate!.displayedBookingTotalLabel
+                    : '${Constant.currency ?? '₹'}${_estimate!.displayedBookingTotal.toStringAsFixed(0)}',
+                bold: true,
+              ),
+              _breakupRow(
+                isDarkMode,
+                '🎁 Promotion Bonus'.tr,
+                '-${Constant.currency ?? '₹'}${_estimate!.welcomeDiscount.toStringAsFixed(0)}',
+              ),
+              const Divider(height: 20),
+              _breakupRow(
+                isDarkMode,
+                'Estimated Service Amount'.tr,
+                '${Constant.currency ?? '₹'}${_estimate!.finalPayable.toStringAsFixed(0)}',
+                bold: true,
+              ),
+            ] else ...[
+              const Divider(height: 24),
+              _breakupRow(
+                isDarkMode,
+                'Estimated Service Amount'.tr,
+                _estimate!.displayTotal,
+                bold: true,
+              ),
+            ],
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -414,7 +439,9 @@ class _ServiceConfirmBookingScreenState extends State<ServiceConfirmBookingScree
         'description': description,
         'booking_frequency': widget.draft.bookingFrequency,
         'booking_mode': widget.draft.bookingMode,
-        'amount': _estimate!.totalMin > 0 ? _estimate!.totalMin : _estimate!.payableAmountFor(includeServicePrices: true),
+        'amount': (_estimate != null && _estimate!.isPromotionalApplied && _estimate!.finalPayable > 0)
+            ? _estimate!.finalPayable
+            : (_estimate!.totalMin > 0 ? _estimate!.totalMin : _estimate!.payableAmountFor(includeServicePrices: true)),
         'price_breakdown': _estimate!.toBreakdownJson(),
       });
 
@@ -460,7 +487,15 @@ class _ServiceConfirmBookingScreenState extends State<ServiceConfirmBookingScree
     final accent = _accent(isDarkMode);
     final items = _buildDisplayItems();
     final serviceCount = items.isEmpty ? 1 : items.length;
-    final payableTotal = _estimate?.displayTotal ?? 'Rate on visit'.tr;
+    final isPromo = _estimate?.isPromotionalApplied == true;
+    final payableTotal = (isPromo && _estimate!.finalPayable > 0)
+        ? '${Constant.currency ?? '₹'}${_estimate!.finalPayable.toStringAsFixed(0)}'
+        : (_estimate?.displayTotal ?? 'Rate on visit'.tr);
+    final bookingTotalLabel = (isPromo && _estimate!.displayedBookingTotal > 0)
+        ? (_estimate!.displayedBookingTotalLabel.isNotEmpty
+            ? _estimate!.displayedBookingTotalLabel
+            : '${Constant.currency ?? '₹'}${_estimate!.displayedBookingTotal.toStringAsFixed(0)}')
+        : payableTotal;
 
     return Scaffold(
       backgroundColor: _pageBg(isDarkMode),
@@ -510,6 +545,41 @@ class _ServiceConfirmBookingScreenState extends State<ServiceConfirmBookingScree
                               if (_estimate != null && _estimate!.displayVisitingCharge.isNotEmpty) ...[
                                 const SizedBox(height: 8),
                                 _serviceRow(isDarkMode, 'Visiting Charge'.tr, 'Nearby providers'.tr, _estimate!.displayVisitingCharge, style, icon: Icons.directions_walk_rounded),
+                              ],
+                              if (isPromo) ...[
+                                const Divider(height: 20),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text('Booking Total'.tr, style: TextStyle(fontSize: 13, fontFamily: AppThemeData.semiBold, color: _titleColor(isDarkMode))),
+                                    Text(bookingTotalLabel, style: TextStyle(fontFamily: AppThemeData.bold, fontSize: 14, color: _titleColor(isDarkMode))),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.withValues(alpha: 0.08),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.card_giftcard_rounded, color: Colors.green, size: 18),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text('🎁 Promotion Bonus'.tr, style: TextStyle(fontSize: 12, fontFamily: AppThemeData.semiBold, color: Colors.green.shade800)),
+                                            Text('Exclusive service discount applied'.tr, style: TextStyle(fontSize: 10.5, color: isDarkMode ? AppThemeData.grey400Dark : Colors.grey.shade600)),
+                                          ],
+                                        ),
+                                      ),
+                                      Text('-${Constant.currency ?? '₹'}${_estimate!.welcomeDiscount.toStringAsFixed(0)}', style: const TextStyle(fontSize: 13.5, fontFamily: AppThemeData.bold, color: Colors.green)),
+                                    ],
+                                  ),
+                                ),
                               ],
                               const SizedBox(height: 12),
                               Row(

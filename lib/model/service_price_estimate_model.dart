@@ -86,6 +86,16 @@ class ServicePriceEstimate {
   final String totalLabel;
   final int providersNearby;
   final String currencySymbol;
+  final bool isPromotionalApplied;
+  final double basePrice;
+  final double promotionalAmount;
+  final double displayedBookingTotal;
+  final double displayedBookingTotalMax;
+  final String displayedBookingTotalLabel;
+  final double welcomeDiscount;
+  final double finalPayable;
+  final int usesRemaining;
+  final String promoBalance;
 
   ServicePriceEstimate({
     required this.serviceItems,
@@ -104,6 +114,16 @@ class ServicePriceEstimate {
     required this.totalLabel,
     required this.providersNearby,
     this.currencySymbol = '',
+    this.isPromotionalApplied = false,
+    this.basePrice = 0,
+    this.promotionalAmount = 0,
+    this.displayedBookingTotal = 0,
+    this.displayedBookingTotalMax = 0,
+    this.displayedBookingTotalLabel = '',
+    this.welcomeDiscount = 0,
+    this.finalPayable = 0,
+    this.usesRemaining = 0,
+    this.promoBalance = '0.00',
   });
 
   factory ServicePriceEstimate.fromJson(Map<String, dynamic> json) {
@@ -117,6 +137,12 @@ class ServicePriceEstimate {
     final totalMax = double.tryParse(json['total_max']?.toString() ?? json['total']?.toString() ?? '') ?? totalMin;
     final visitMin = double.tryParse(json['visiting_charge_min']?.toString() ?? json['visiting_charge']?.toString() ?? '') ?? 0;
     final visitMax = double.tryParse(json['visiting_charge_max']?.toString() ?? json['visiting_charge']?.toString() ?? '') ?? visitMin;
+    final isPromo = json['is_promotional_applied'] == true || json['is_promotional_applied'] == 1 || json['is_promotional_applied'] == '1';
+    final promoAmt = double.tryParse(json['promotional_amount']?.toString() ?? '') ?? 0;
+    final dispTotal = double.tryParse(json['displayed_booking_total']?.toString() ?? '') ?? (isPromo ? (totalMin + promoAmt) : totalMin);
+    final dispTotalMax = double.tryParse(json['displayed_booking_total_max']?.toString() ?? '') ?? (isPromo ? (totalMax + promoAmt) : totalMax);
+    final welcDiscount = double.tryParse(json['welcome_discount']?.toString() ?? json['promotional_discount']?.toString() ?? '') ?? (isPromo ? promoAmt : 0);
+    final payable = double.tryParse(json['final_payable']?.toString() ?? '') ?? totalMin;
 
     return ServicePriceEstimate(
       serviceItems: items,
@@ -135,6 +161,16 @@ class ServicePriceEstimate {
       totalLabel: json['total_label']?.toString() ?? '',
       providersNearby: int.tryParse(json['providers_nearby']?.toString() ?? '') ?? 0,
       currencySymbol: json['currency_symbol']?.toString() ?? Constant.currency ?? '',
+      isPromotionalApplied: isPromo,
+      basePrice: double.tryParse(json['base_price']?.toString() ?? '') ?? totalMin,
+      promotionalAmount: promoAmt,
+      displayedBookingTotal: dispTotal,
+      displayedBookingTotalMax: dispTotalMax,
+      displayedBookingTotalLabel: json['displayed_booking_total_label']?.toString() ?? '',
+      welcomeDiscount: welcDiscount,
+      finalPayable: payable,
+      usesRemaining: int.tryParse(json['uses_remaining']?.toString() ?? '') ?? 0,
+      promoBalance: json['promo_balance']?.toString() ?? '0.00',
     );
   }
 
@@ -231,6 +267,18 @@ class ServicePriceEstimate {
         'total_max': totalMax,
         'total_label': displayTotal,
         'providers_nearby': providersNearby,
+        if (isPromotionalApplied) ...{
+          'is_promotional_applied': true,
+          'base_price': basePrice > 0 ? basePrice : totalMin,
+          'promotional_amount': promotionalAmount,
+          'displayed_booking_total': displayedBookingTotal,
+          'displayed_booking_total_max': displayedBookingTotalMax,
+          'displayed_booking_total_label': displayedBookingTotalLabel.isNotEmpty ? displayedBookingTotalLabel : '${Constant.currency ?? '₹'}${displayedBookingTotal.toStringAsFixed(0)}',
+          'welcome_discount': welcomeDiscount,
+          'final_payable': finalPayable > 0 ? finalPayable : totalMin,
+          'uses_remaining': usesRemaining,
+          'promo_balance': promoBalance,
+        },
       };
 }
 

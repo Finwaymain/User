@@ -7,7 +7,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:finway/constant/constant.dart';
 import 'package:finway/controller/service_booking_controller.dart';
 import 'package:finway/model/service_request_model.dart';
-import 'package:finway/model/service_price_estimate_model.dart';
 import 'package:finway/page/MainDashBoard/screen/main_dashboard.dart';
 import 'package:finway/themes/button_them.dart';
 import 'package:finway/themes/constant_colors.dart';
@@ -147,8 +146,9 @@ class _ServicePaymentSuccessScreenState extends State<ServicePaymentSuccessScree
       totalTaxAmount += (t['amount'] as double? ?? 0.0);
     }
 
-    if (totalTaxAmount <= 0 && booking?.taxAmount != null && booking!.taxAmount! > 0) {
-      totalTaxAmount = booking!.taxAmount!;
+    final bookingTax = booking?.taxAmount;
+    if (totalTaxAmount <= 0 && bookingTax != null && bookingTax > 0) {
+      totalTaxAmount = bookingTax;
       activeTaxList.add({
         'label': 'Taxes & Platform Charges'.tr,
         'amount': totalTaxAmount,
@@ -597,7 +597,7 @@ class _ServicePaymentSuccessScreenState extends State<ServicePaymentSuccessScree
 
                                   if (booking?.hasPromotionalBonus ?? false)
                                     _buildBreakdownRow(
-                                      '🎁 Welcome Bonus Applied'.tr,
+                                      '🎁 Promotion Bonus Applied'.tr,
                                       '-${_money(booking!.promotionalDiscountValue)}',
                                       isDarkMode,
                                       isHighlighted: true,

@@ -116,7 +116,7 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
   void _handleRazorpaySuccess(PaymentSuccessResponse response) async {
     setState(() => _paying = true);
     ShowToastDialog.showLoader('Confirming payment...'.tr);
-    final ok = await _controller.payBooking(bookingId: widget.bookingId, paymentMethod: 'upi');
+    final ok = await _controller.payBooking(bookingId: widget.bookingId, paymentMethod: 'upi', applyPromotional: _applyPromo);
     ShowToastDialog.closeLoader();
     if (!mounted) return;
     setState(() => _paying = false);
@@ -142,7 +142,7 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
   void _handleExternalWallet(ExternalWalletResponse response) async {
     ShowToastDialog.showToast('Payment processing via ${response.walletName ?? 'UPI'}'.tr);
     setState(() => _paying = true);
-    final ok = await _controller.payBooking(bookingId: widget.bookingId, paymentMethod: 'upi');
+    final ok = await _controller.payBooking(bookingId: widget.bookingId, paymentMethod: 'upi', applyPromotional: _applyPromo);
     if (!mounted) return;
     setState(() => _paying = false);
     if (ok) {
@@ -184,7 +184,7 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
       }
 
       setState(() => _paying = true);
-      final ok = await _controller.payBooking(bookingId: widget.bookingId, paymentMethod: 'wallet');
+      final ok = await _controller.payBooking(bookingId: widget.bookingId, paymentMethod: 'wallet', applyPromotional: _applyPromo);
       if (!mounted) return;
       setState(() => _paying = false);
 
@@ -200,7 +200,7 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
     }
 
     setState(() => _paying = true);
-    final ok = await _controller.payBooking(bookingId: widget.bookingId, paymentMethod: _paymentMethod);
+    final ok = await _controller.payBooking(bookingId: widget.bookingId, paymentMethod: _paymentMethod, applyPromotional: _applyPromo);
     if (!mounted) return;
     setState(() => _paying = false);
 
@@ -296,11 +296,16 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
                                     Text('Payment Summary'.tr, style: TextStyle(fontFamily: AppThemeData.semiBold, fontSize: 14)),
                                     const SizedBox(height: 10),
                                     ...booking.bookedServiceItems.map(
-                                      (e) => _priceRow(
-                                        e.name,
-                                        e.priceAvailable ? _money(e.minPrice) : (e.displayPrice.isNotEmpty ? e.displayPrice : 'Rate on visit'.tr),
-                                        isDarkMode,
-                                      ),
+                                      (e) {
+                                        double itemPrice = e.priceAvailable ? e.minPrice : (double.tryParse(e.price.toString()) ?? 0);
+                                        if (hasPromo && booking.bookedServiceItems.indexOf(e) == 0) {
+                                          if (itemPrice + visitAmount < displayedSubtotal && promoAmount > 0) {
+                                            itemPrice += promoAmount;
+                                          }
+                                        }
+                                        final label = itemPrice > 0 ? _money(itemPrice) : (e.displayPrice.isNotEmpty ? e.displayPrice : 'Rate on visit'.tr);
+                                        return _priceRow(e.name, label, isDarkMode);
+                                      },
                                     ),
                                     if (visitAmount > 0)
                                       _priceRow('Visiting Charge'.tr, _money(visitAmount), isDarkMode)
@@ -336,7 +341,7 @@ class _ServiceCompletedPaymentScreenState extends State<ServiceCompletedPaymentS
                                                 crossAxisAlignment: CrossAxisAlignment.start,
                                                 children: [
                                                   Text(
-                                                    '🎁 Welcome Bonus'.tr,
+                                                    '🎁 Promotion Bonus'.tr,
                                                     style: TextStyle(
                                                       fontFamily: AppThemeData.semiBold,
                                                       fontSize: 13,

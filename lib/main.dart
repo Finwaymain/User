@@ -471,7 +471,8 @@ class _MyAppState extends State<MyApp> {
                   child: builtChild,
                 );
               },
-              home: AppRoutes.getInitialScreen());
+              home: AppRoutes.getInitialScreen(),
+            );
         }));
   }
 

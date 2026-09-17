@@ -104,72 +104,139 @@ class PaymentSelectionScreen extends StatelessWidget {
                                 ),
                                 child: Padding(
                                   padding: const EdgeInsets.all(12.0),
-                                  child: Row(
-                                    children: [
-                                      Image.asset(
-                                        'assets/images/promo_code.png',
-                                        width: 48,
-                                        height: 48,
-                                      ),
-                                      Expanded(
-                                        child: Padding(
-                                          padding: const EdgeInsets.only(left: 12),
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                "Promo Code".tr,
-                                                style: TextStyle(
-                                                  fontSize: 15,
-                                                  fontFamily: AppThemeData.semiBold,
-                                                  color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
-                                                ),
-                                              ),
-                                              Text(
-                                                "Apply promo code".tr,
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  fontFamily: AppThemeData.regular,
-                                                  color: themeChange.getThem() ? AppThemeData.grey400Dark : AppThemeData.grey500,
-                                                ),
-                                              )
-                                            ],
-                                          ),
+                                  child: Obx(() {
+                                    final hasAppliedCoupon = controller.selectedPromoCode.value.isNotEmpty;
+                                    return Row(
+                                      children: [
+                                        Image.asset(
+                                          'assets/images/promo_code.png',
+                                          width: 48,
+                                          height: 48,
                                         ),
-                                      ),
-                                      GestureDetector(
-                                          onTap: () {
-                                            showModalBottomSheet(
-                                              isScrollControlled: true,
-                                              isDismissible: true,
-                                              context: context,
-                                              backgroundColor: Colors.transparent,
-                                              enableDrag: true,
-                                              builder: (BuildContext context) => couponCodeSheet(
-                                                context,
-                                                controller,
-                                              ),
-                                            );
-                                          },
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.circular(30),
-                                              boxShadow: <BoxShadow>[
-                                                BoxShadow(
-                                                  color: Colors.black.withValues(alpha: 0.15),
-                                                  blurRadius: 3,
-                                                  offset: const Offset(1, 2),
+                                        Expanded(
+                                          child: Padding(
+                                            padding: const EdgeInsets.only(left: 12),
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    Text(
+                                                      "Promo Code".tr,
+                                                      style: TextStyle(
+                                                        fontSize: 15,
+                                                        fontFamily: AppThemeData.semiBold,
+                                                        color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
+                                                      ),
+                                                    ),
+                                                    if (hasAppliedCoupon) ...[
+                                                      const SizedBox(width: 8),
+                                                      Container(
+                                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                        decoration: BoxDecoration(
+                                                          color: Colors.green.shade50,
+                                                          borderRadius: BorderRadius.circular(6),
+                                                          border: Border.all(color: Colors.green.shade300),
+                                                        ),
+                                                        child: Text(
+                                                          controller.selectedPromoCode.value,
+                                                          style: TextStyle(
+                                                            fontSize: 11,
+                                                            fontFamily: AppThemeData.bold,
+                                                            color: Colors.green.shade700,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ],
                                                 ),
+                                                Text(
+                                                  hasAppliedCoupon
+                                                      ? "${controller.selectedPromoValue.value} discount applied (-${Constant().amountShow(amount: controller.discountAmount.value.toString())})"
+                                                      : "Apply promo code".tr,
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontFamily: hasAppliedCoupon ? AppThemeData.medium : AppThemeData.regular,
+                                                    color: hasAppliedCoupon ? Colors.green.shade600 : (themeChange.getThem() ? AppThemeData.grey400Dark : AppThemeData.grey500),
+                                                  ),
+                                                )
                                               ],
                                             ),
-                                            child: Image.asset(
-                                              'assets/images/add_payment.png',
-                                              width: 36,
-                                              height: 36,
+                                          ),
+                                        ),
+                                        if (hasAppliedCoupon)
+                                          GestureDetector(
+                                            onTap: () {
+                                              controller.selectedPromoCode.value = "";
+                                              controller.selectedPromoValue.value = "";
+                                              controller.discountAmount.value = 0.0;
+                                              controller.couponCodeController.clear();
+                                              final base = (controller.subTotalAmount.value - controller.discountAmount.value) > 0 ? (controller.subTotalAmount.value - controller.discountAmount.value) : 0.0;
+                                              controller.taxAmount.value = Constant.calculateTotalTaxes(base, controller.selectedRadioTile.value.toLowerCase());
+                                              controller.getTotalAmount();
+                                              controller.update();
+                                              ShowToastDialog.showToast("Coupon removed successfully".tr);
+                                            },
+                                            child: Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                              decoration: BoxDecoration(
+                                                color: Colors.red.shade50,
+                                                borderRadius: BorderRadius.circular(8),
+                                                border: Border.all(color: Colors.red.shade200),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(Icons.close_rounded, size: 16, color: Colors.red.shade700),
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    "Remove".tr,
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      fontFamily: AppThemeData.bold,
+                                                      color: Colors.red.shade700,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
-                                          )),
-                                    ],
-                                  ),
+                                          )
+                                        else
+                                          GestureDetector(
+                                            onTap: () {
+                                              showModalBottomSheet(
+                                                isScrollControlled: true,
+                                                isDismissible: true,
+                                                context: context,
+                                                backgroundColor: Colors.transparent,
+                                                enableDrag: true,
+                                                builder: (BuildContext context) => couponCodeSheet(
+                                                  context,
+                                                  controller,
+                                                ),
+                                              );
+                                            },
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.circular(30),
+                                                boxShadow: <BoxShadow>[
+                                                  BoxShadow(
+                                                    color: Colors.black.withValues(alpha: 0.15),
+                                                    blurRadius: 3,
+                                                    offset: const Offset(1, 2),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: Image.asset(
+                                                'assets/images/add_payment.png',
+                                                width: 36,
+                                                height: 36,
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    );
+                                  }),
                                 ),
                               ),
                               Padding(
@@ -228,7 +295,7 @@ class PaymentSelectionScreen extends StatelessWidget {
                                                             children: [
                                                               const Icon(Icons.card_giftcard_rounded, color: Colors.green, size: 18),
                                                               const SizedBox(width: 6),
-                                                              Text("🎁 Welcome Bonus".tr,
+                                                              Text("🎁 Promotion Bonus".tr,
                                                                   style: const TextStyle(
                                                                     fontFamily: AppThemeData.medium,
                                                                     color: Colors.green,
@@ -664,6 +731,48 @@ class PaymentSelectionScreen extends StatelessWidget {
                                   controller.update();
                                 },
                               ),
+                              // 3. Cash to Driver Option
+                              _buildModernPaymentOptionCard(
+                                isDark: themeChange.getThem(),
+                                title: "Cash to Driver".tr,
+                                subtitle: "Pay cash in hand directly to your driver".tr,
+                                isSelected: controller.selectedRadioTile.value == "Cash",
+                                icon: Icons.payments_rounded,
+                                onTap: () {
+                                  controller.selectedRadioTile.value = "Cash";
+                                  controller.cash.value = true;
+                                  controller.wallet.value = false;
+                                  controller.upi.value = false;
+                                  controller.stripe.value = false;
+                                  controller.razorPay.value = false;
+                                  controller.paypal.value = false;
+                                  controller.payStack.value = false;
+                                  controller.flutterWave.value = false;
+                                  controller.mercadoPago.value = false;
+                                  controller.payFast.value = false;
+                                  controller.xendit.value = false;
+                                  controller.midtrans.value = false;
+                                  controller.orangePay.value = false;
+                                  controller.paymentMethodId.value = "cash";
+                                  controller.getTotalAmount();
+                                  controller.update();
+                                },
+                                trailing: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: AppThemeData.primary200.withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    Constant().amountShow(amount: controller.getTotalAmount().toString()),
+                                    style: TextStyle(
+                                      fontFamily: AppThemeData.bold,
+                                      fontSize: 12.5,
+                                      color: AppThemeData.primary200,
+                                    ),
+                                  ),
+                                ),
+                              ),
                               const SizedBox(height: 10),
                             ],
                           ),
@@ -699,12 +808,71 @@ class PaymentSelectionScreen extends StatelessWidget {
                               }
                             } else if (controller.selectedRadioTile.value == "UPI") {
                               startRazorpayPayment(amount: controller.getTotalAmount().toString());
+                            } else if (controller.selectedRadioTile.value == "Cash") {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                    title: Row(
+                                      children: [
+                                        const Icon(Icons.payments_rounded, color: Colors.green),
+                                        const SizedBox(width: 8),
+                                        Text("Pay with Cash".tr, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                                      ],
+                                    ),
+                                    content: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          "Please hand over ${Constant().amountShow(amount: controller.getTotalAmount().toString())} in cash directly to your driver.".tr,
+                                          style: const TextStyle(fontSize: 14.5),
+                                        ),
+                                        const SizedBox(height: 12),
+                                        Container(
+                                          padding: const EdgeInsets.all(10),
+                                          decoration: BoxDecoration(
+                                            color: Colors.amber.shade50,
+                                            borderRadius: BorderRadius.circular(8),
+                                            border: Border.all(color: Colors.amber.shade200),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.info_outline, color: Colors.amber.shade900, size: 20),
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: Text(
+                                                  "Your driver will confirm receipt of the cash on their app to complete the ride.".tr,
+                                                  style: TextStyle(fontSize: 12, color: Colors.amber.shade900),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    actions: [
+                                      ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: AppThemeData.primary200,
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                        ),
+                                        onPressed: () => Navigator.pop(context),
+                                        child: Text("Understood".tr, style: const TextStyle(color: Colors.white)),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
                             } else {
                               ShowToastDialog.showToast("Please select a payment option".tr);
                             }
                           },
                           child: Text(
-                            "Pay ${Constant().amountShow(amount: controller.getTotalAmount().toString())}".tr,
+                            controller.selectedRadioTile.value == "Cash"
+                                ? "Pay ${Constant().amountShow(amount: controller.getTotalAmount().toString())} in Cash".tr
+                                : "Pay ${Constant().amountShow(amount: controller.getTotalAmount().toString())}".tr,
                             style: const TextStyle(
                               fontFamily: AppThemeData.bold,
                               fontSize: 16,
@@ -1125,6 +1293,35 @@ class PaymentSelectionScreen extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (controller.selectedPromoCode.value.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                          side: const BorderSide(color: Colors.red),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        onPressed: () {
+                          controller.selectedPromoCode.value = "";
+                          controller.selectedPromoValue.value = "";
+                          controller.discountAmount.value = 0.0;
+                          controller.couponCodeController.clear();
+                          final base = (controller.subTotalAmount.value - controller.discountAmount.value) > 0 ? (controller.subTotalAmount.value - controller.discountAmount.value) : 0.0;
+                          controller.taxAmount.value = Constant.calculateTotalTaxes(base, controller.selectedRadioTile.value.toLowerCase());
+                          controller.getTotalAmount();
+                          controller.update();
+                          Navigator.pop(context);
+                          ShowToastDialog.showToast("Coupon removed successfully".tr);
+                        },
+                        child: Text(
+                          "Remove Applied Coupon".tr,
+                          style: const TextStyle(color: Colors.red, fontFamily: 'Poppinsm', fontSize: 14),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),

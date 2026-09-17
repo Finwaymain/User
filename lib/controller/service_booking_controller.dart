@@ -8,7 +8,6 @@ import 'package:finway/model/service_price_estimate_model.dart';
 import 'package:finway/model/service_request_model.dart';
 import 'package:finway/controller/service_history_controller.dart';
 import 'package:finway/service/api.dart';
-import 'package:finway/utils/Preferences.dart';
 
 class ServiceBookingController extends GetxController {
   final Rx<ServiceRequestData?> booking = Rx<ServiceRequestData?>(null);
@@ -37,10 +36,18 @@ class ServiceBookingController extends GetxController {
         'service_names': serviceNames.join('|'),
       };
       if (lat != null && lat.isNotEmpty) params['lat'] = lat;
-      if (lng != null && lng.isNotEmpty) params['lng'] = lng;
+      final userId = ServiceHistoryController.resolveUserId();
+      if (userId > 0) {
+        params['user_id'] = userId.toString();
+      }
+
+      final headers = Map<String, String>.from(API.header);
+      if (userId > 0) {
+        headers['id_user'] = userId.toString();
+      }
 
       final uri = Uri.parse(API.servicePriceEstimate).replace(queryParameters: params);
-      final response = await http.get(uri, headers: API.header).timeout(const Duration(seconds: 20));
+      final response = await http.get(uri, headers: headers).timeout(const Duration(seconds: 20));
       final body = json.decode(response.body);
       if (response.statusCode == 200 && body['success'] == 'success') {
         final data = ServicePriceEstimate.fromJson(Map<String, dynamic>.from(body['data'] as Map));
@@ -242,7 +249,7 @@ class ServiceBookingController extends GetxController {
     }
   }
 
-  Future<bool> payBooking({required int bookingId, required String paymentMethod}) async {
+  Future<bool> payBooking({required int bookingId, required String paymentMethod, bool applyPromotional = true}) async {
     try {
       final userId = ServiceHistoryController.resolveUserId();
       if (userId == 0) {
@@ -262,6 +269,7 @@ class ServiceBookingController extends GetxController {
               'user_id': userId.toString(),
               'booking_id': bookingId.toString(),
               'payment_method': paymentMethod,
+              'apply_promotional': applyPromotional ? '1' : '0',
             }),
           )
           .timeout(const Duration(seconds: 20));
