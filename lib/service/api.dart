@@ -167,6 +167,8 @@ class API {
   static const getSubscriptionPlans = "${baseUrl}get-consumer-plans";
   static const setSubscription = "${baseUrl}set-consumer-subscription";
   static const getSubscriptionHistory = "${baseUrl}get-subscription-history";
+  static const sendPlanEmailOtp = "${baseUrl}plan/send-email-otp";
+  static const verifyPlanEmailOtp = "${baseUrl}plan/verify-email-otp";
 
   // Support Live Chat Endpoints
   static const supportQuickQuestions = "${baseUrl}support/quick-questions";

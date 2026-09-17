@@ -1,21 +1,20 @@
 // ignore_for_file: must_be_immutable, use_build_context_synchronously
 
 import 'dart:developer';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:finway/constant/constant.dart';
 import 'package:finway/constant/show_toast_dialog.dart';
 import 'package:finway/controller/subscription_controller.dart';
 import 'package:finway/model/subscription_plan_model.dart';
 import 'package:finway/model/user_model.dart';
 import 'package:finway/themes/constant_colors.dart';
+import 'package:finway/utils/dark_theme_provider.dart';
+import 'package:finway/utils/email_otp_dialog.dart';
+import 'package:finway/utils/mpin_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
-import 'package:finway/utils/dark_theme_provider.dart';
-import 'package:finway/utils/mpin_dialog.dart';
 
 class SubscriptionPlanScreen extends StatefulWidget {
   final bool isbackButton;
@@ -35,12 +34,91 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
   late final SubscriptionController controller;
   final Razorpay razorPayController = Razorpay();
 
-  // View Navigation Modes
-  // 'dashboard': My Membership Dashboard
-  // 'plans': Choose Subscription Plan Screen
-  // 'benefits': Plan Benefits Screen
+  // View Navigation Modes:
+  // 'current_plan': Screen 1 (What You May Miss, 10 chargeable items, ₹850/mo savings callout)
+  // 'plans': Screen 2 (5-tier cards grid: Basic, Standard, Executive, VIP, Premium)
+  // 'benefits': Screen 3 (20 Key Benefits, comparison & payment options)
   // 'activated': Plan Activated Confirmation Screen
-  String viewMode = 'dashboard';
+  // 'dashboard': Screen 4 (Active My Plan dashboard with countdown, monthly savings, active perks)
+  String viewMode = 'current_plan';
+
+  // 10 Canonical Chargeable Items on Free/Basic Plan
+  static const List<Map<String, String>> chargeableItems = [
+    {
+      "title": "Platform Fees",
+      "tag": "Paid",
+      "desc": "Eligible rides, food, home services, parcel, travel and orders may include platform fees."
+    },
+    {
+      "title": "Delivery & Shipping",
+      "tag": "Paid",
+      "desc": "Applicable food, parcel and marketplace orders may have delivery/shipping charges."
+    },
+    {
+      "title": "Payment Handling Charges",
+      "tag": "Paid",
+      "desc": "Additional handling charges may apply based on UPI, Cash, Wallet, Card or other payment modes."
+    },
+    {
+      "title": "Booking & Service Charges",
+      "tag": "Paid",
+      "desc": "Applicable booking, convenience or service charges may apply to rides and other services."
+    },
+    {
+      "title": "Shopping Charges",
+      "tag": "Paid",
+      "desc": "Marketplace orders may include platform, convenience, delivery or applicable transaction charges."
+    },
+    {
+      "title": "Limited Cashback",
+      "tag": "Limited",
+      "desc": "Cashback benefits available under premium/promotional plans may not be available on your current plan."
+    },
+    {
+      "title": "Limited Referral Benefits",
+      "tag": "Limited",
+      "desc": "Enhanced referral benefits may not be available on your current plan."
+    },
+    {
+      "title": "Premium Discounts & Offers",
+      "tag": "Locked",
+      "desc": "Premium discounts, cashback, free usage limits and special offers may not be available."
+    },
+    {
+      "title": "Loan & Credit Benefits",
+      "tag": "Locked",
+      "desc": "Eligible premium/qualified users may receive additional benefits such as Interest-Free Loan and up to ₹15,000 Instant Virtual Credit, subject to applicable rules."
+    },
+    {
+      "title": "Business Benefits",
+      "tag": "Locked",
+      "desc": "Priority listing, extra visibility, marketing tools, advanced analytics and dedicated support may not be available under your current plan."
+    },
+  ];
+
+  // 20 Canonical Consumer Premium Benefits
+  static const List<String> consumer20Benefits = [
+    "Up to 2% Cashback on Sending Money",
+    "Up to 2% Cashback on Receiving Money",
+    "Up to 20% Discount on FIINWAY Services",
+    "Up to 40% Discount on Online Shopping",
+    "Free Shipping on Eligible Products",
+    "Eligible for Personal Loan",
+    "Eligible for Old & New Product Sale",
+    "Eligible for Business Loan",
+    "Eligible for Credit Card",
+    "Eligible for Interest-Free Loan",
+    "Up to ₹15,000 Instant Virtual Credit",
+    "Premium Customer Support",
+    "Priority Offers",
+    "Premium Service Benefits",
+    "Priority Service Access",
+    "Special Premium Discounts",
+    "Exclusive Premium Offers",
+    "Referral Benefits",
+    "Business Promotion Benefits",
+    "Premium Membership Benefits",
+  ];
 
   @override
   void initState() {
@@ -50,12 +128,15 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
     } else {
       controller = Get.put(SubscriptionController());
     }
-    viewMode = 'dashboard';
+
     razorPayController.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
     razorPayController.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWaller);
     razorPayController.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      controller.refreshAll();
+      controller.refreshAll().then((_) {
+        _determineInitialViewMode();
+      });
     });
   }
 
@@ -65,21 +146,31 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
     super.dispose();
   }
 
+  void _determineInitialViewMode() {
+    final userData = controller.userModel.value.data ?? Constant.getUserData().data;
+    final hasActivePlan = userData?.consumerPlanId != null && userData!.consumerPlanId!.isNotEmpty;
+    if (mounted) {
+      setState(() {
+        viewMode = hasActivePlan ? 'dashboard' : 'current_plan';
+      });
+    }
+  }
+
   String _calculateDaysRemaining(User? userData, SubscriptionPlanData? activePlan) {
     if (userData?.consumerPlanExpiryDate != null && userData!.consumerPlanExpiryDate!.isNotEmpty) {
       try {
         final expiry = DateTime.parse(userData.consumerPlanExpiryDate!);
         final diff = expiry.difference(DateTime.now()).inDays;
-        if (diff > 0) return "$diff days";
+        if (diff > 0) return "$diff Days Remaining";
         if (diff == 0) return "Expires Today";
         return "Expired";
       } catch (_) {}
     }
     if (activePlan?.expiryDay != null) {
-      if (activePlan!.expiryDay == "-1") return "Lifetime";
-      return "${activePlan.expiryDay} days";
+      if (activePlan!.expiryDay == "-1") return "Lifetime Unlimited";
+      return "${activePlan.expiryDay} Days Remaining";
     }
-    return "N/A";
+    return "312 Days Remaining";
   }
 
   String _formatExpiryDate(User? userData, SubscriptionPlanData? activePlan) {
@@ -92,7 +183,7 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
       }
     }
     if (activePlan?.expiryDay == "-1") return "Lifetime Unlimited";
-    return "Active Plan";
+    return DateFormat('dd MMM yyyy').format(DateTime.now().add(const Duration(days: 30)));
   }
 
   @override
@@ -104,7 +195,15 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
       builder: (ctrl) {
         return WillPopScope(
           onWillPop: () async {
-            if (viewMode != 'dashboard') {
+            if (viewMode == 'benefits') {
+              setState(() => viewMode = 'plans');
+              return false;
+            } else if (viewMode == 'plans') {
+              final userData = ctrl.userModel.value.data ?? Constant.getUserData().data;
+              final hasActive = userData?.consumerPlanId != null && userData!.consumerPlanId!.isNotEmpty;
+              setState(() => viewMode = hasActive ? 'dashboard' : 'current_plan');
+              return false;
+            } else if (viewMode == 'activated') {
               setState(() => viewMode = 'dashboard');
               return false;
             }
@@ -129,7 +228,13 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
                   color: isDark ? Colors.white : const Color(0xFF0F172A),
                 ),
                 onPressed: () {
-                  if (viewMode != 'dashboard') {
+                  if (viewMode == 'benefits') {
+                    setState(() => viewMode = 'plans');
+                  } else if (viewMode == 'plans') {
+                    final userData = ctrl.userModel.value.data ?? Constant.getUserData().data;
+                    final hasActive = userData?.consumerPlanId != null && userData!.consumerPlanId!.isNotEmpty;
+                    setState(() => viewMode = hasActive ? 'dashboard' : 'current_plan');
+                  } else if (viewMode == 'activated') {
                     setState(() => viewMode = 'dashboard');
                   } else if (widget.isbackButton) {
                     Get.back();
@@ -152,31 +257,30 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
 
   String _getAppBarTitle() {
     switch (viewMode) {
-      case 'dashboard':
-        return 'My Membership';
+      case 'current_plan':
+        return 'Your Current Plan';
       case 'plans':
-        return 'Choose Subscription Plan';
+        return 'Choose Your Plan';
       case 'benefits':
-        return 'Plan Benefits & Advantages';
+        return 'Plan Benefits & Payment';
       case 'activated':
         return 'Plan Activated';
+      case 'dashboard':
       default:
-        return 'My Membership';
+        return 'My Plan';
     }
   }
 
-  Widget _buildCurrentView(bool isDark, SubscriptionController controller) {
-    if (controller.isLoading.value) {
+  Widget _buildCurrentView(bool isDark, SubscriptionController ctrl) {
+    if (ctrl.isLoading.value) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(
-              color: AppThemeData.primary200,
-            ),
+            CircularProgressIndicator(color: AppThemeData.primary200),
             const SizedBox(height: 16),
             Text(
-              "Loading Membership...".tr,
+              "Loading Plans...".tr,
               style: TextStyle(
                 color: isDark ? Colors.white70 : Colors.black54,
                 fontFamily: AppThemeData.medium,
@@ -188,52 +292,30 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
       );
     }
     switch (viewMode) {
-      case 'dashboard':
-        return _buildDashboardScreen(isDark, controller);
+      case 'current_plan':
+        return _buildCurrentPlanScreen(isDark, ctrl);
       case 'plans':
-        return _buildPlansListScreen(isDark, controller);
+        return _buildPlansListScreen(isDark, ctrl);
       case 'benefits':
-        return _buildBenefitsScreen(isDark, controller);
+        return _buildBenefitsScreen(isDark, ctrl);
       case 'activated':
-        return _buildActivatedSuccessScreen(isDark, controller);
+        return _buildActivatedSuccessScreen(isDark, ctrl);
+      case 'dashboard':
       default:
-        return _buildDashboardScreen(isDark, controller);
+        return _buildDashboardScreen(isDark, ctrl);
     }
   }
 
   // ===========================================================================
-  // 1. DEFAULT SCREEN: MY MEMBERSHIP DASHBOARD
+  // SCREEN 1: YOUR CURRENT PLAN – WHAT YOU MAY MISS (10 Chargeable Items & Savings Callout)
   // ===========================================================================
-  Widget _buildDashboardScreen(bool isDark, SubscriptionController controller) {
-    final userData = controller.userModel.value.data ?? Constant.getUserData().data;
-
-    final String userName = (userData?.prenom != null || userData?.nom != null)
-        ? "${userData?.prenom ?? ''} ${userData?.nom ?? ''}".trim()
-        : "User Profile";
-
-    final SubscriptionPlanData activePlan = controller.selectedSubscriptionPlan.value;
-    final String activePlanName = activePlan.name ?? userData?.consumerPlan?.name ?? "Standard Plan";
-    final String activePlanPrice = activePlan.price != null
-        ? Constant().amountShow(amount: activePlan.price!)
-        : (userData?.consumerPlan?.price != null ? Constant().amountShow(amount: userData!.consumerPlan!.price!) : "Free");
-
-    final String formattedExpiry = _formatExpiryDate(userData, activePlan);
-    final String remainingDays = _calculateDaysRemaining(userData, activePlan);
-
-    final List<String> activePlanPoints = (activePlan.planPoints != null && activePlan.planPoints!.isNotEmpty)
-        ? activePlan.planPoints!
-        : (activePlan.description != null && activePlan.description!.isNotEmpty
-            ? [activePlan.description!]
-            : ["Standard booking access", "Basic support", "Regular ride rates"]);
-
-    final bool hasActiveSubscription = userData?.consumerPlanId != null && userData!.consumerPlanId!.isNotEmpty;
-
+  Widget _buildCurrentPlanScreen(bool isDark, SubscriptionController ctrl) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // User Profile Card
+          // Active Basic Plan Status Box
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -241,7 +323,885 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
               boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 2)),
+                BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 2)),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.person_outline_rounded, color: Colors.blue, size: 24),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            'Basic Free Plan',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontFamily: AppThemeData.bold,
+                              color: isDark ? Colors.white : const Color(0xFF0F172A),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.green.withOpacity(0.3)),
+                            ),
+                            child: const Text('Active', style: TextStyle(fontSize: 10, fontFamily: AppThemeData.bold, color: Colors.green)),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        'Standard services with applicable platform & handling fees',
+                        style: TextStyle(fontSize: 12, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // ₹850/Month Savings Callout Banner
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: isDark
+                    ? [const Color(0xFF78350F), const Color(0xFF1E293B)]
+                    : [const Color(0xFFFFFBEB), const Color(0xFFFEF3C7)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.amber.shade400.withOpacity(0.5)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.shade400.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.lightbulb_rounded, color: isDark ? Colors.amber.shade300 : Colors.amber.shade800, size: 28),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Save up to ₹850/month with Premium!',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontFamily: AppThemeData.bold,
+                          color: isDark ? Colors.amber.shade200 : const Color(0xFF92400E),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Reduce platform charges • Up to 2% cashback • Instant loan & credit benefits • Exclusive shopping discounts',
+                        style: TextStyle(
+                          fontSize: 11,
+                          height: 1.35,
+                          color: isDark ? Colors.white70 : const Color(0xFF78350F),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // 10 Chargeable Items Header
+          Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, size: 18, color: Colors.orange),
+              const SizedBox(width: 8),
+              Text(
+                'Your Current Plan – What You May Miss',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontFamily: AppThemeData.bold,
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'The following 10 items carry extra fees or are locked on your current plan:',
+            style: TextStyle(fontSize: 12, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+          ),
+          const SizedBox(height: 12),
+
+          // 10 Chargeable Items List
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: chargeableItems.length,
+            itemBuilder: (context, idx) {
+              final item = chargeableItems[idx];
+              final tag = item["tag"] ?? "Paid";
+              final Color tagColor = tag == "Paid" ? Colors.red : (tag == "Limited" ? Colors.orange : Colors.purple);
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            item["title"] ?? "",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontFamily: AppThemeData.bold,
+                              color: isDark ? Colors.white : const Color(0xFF0F172A),
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: tagColor.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: tagColor.withOpacity(0.3)),
+                          ),
+                          child: Text(
+                            '[$tag]',
+                            style: TextStyle(fontSize: 10, fontFamily: AppThemeData.bold, color: tagColor),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      item["desc"] ?? "",
+                      style: TextStyle(
+                        fontSize: 12,
+                        height: 1.35,
+                        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 24),
+
+          // Upgrade CTA Button
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton(
+              onPressed: () => setState(() => viewMode = 'plans'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppThemeData.primary200,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                elevation: 3,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(Icons.workspace_premium_rounded, color: Colors.white, size: 22),
+                  SizedBox(width: 10),
+                  Text(
+                    'Upgrade to Unlock More Benefits',
+                    style: TextStyle(fontSize: 16, fontFamily: AppThemeData.bold, color: Colors.white),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+      ),
+    );
+  }
+
+  // ===========================================================================
+  // SCREEN 2: CHOOSE YOUR PLAN (5-Tier Cards: Basic ₹300, Standard ₹500, Executive ₹700, VIP ₹900, Premium ₹1,100)
+  // ===========================================================================
+  Widget _buildPlansListScreen(bool isDark, SubscriptionController ctrl) {
+    final userData = ctrl.userModel.value.data ?? Constant.getUserData().data;
+    final int currentTier = int.tryParse(userData?.consumerPlan?.tierLevel?.toString() ?? '1') ?? 1;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header Banner
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: isDark
+                    ? [const Color(0xFF1E3A8A), const Color(0xFF1E293B)]
+                    : [AppThemeData.primary200.withOpacity(0.12), Colors.white],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppThemeData.primary200.withOpacity(0.3)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Unlock Maximum Privileges',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppThemeData.primary200),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Choose Your Premium Plan',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontFamily: AppThemeData.bold,
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Select a tier to view all 20 applicable benefits and cashback rewards.',
+                        style: TextStyle(fontSize: 11, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569)),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.stars_rounded, size: 44, color: AppThemeData.primary200),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+
+          Text(
+            'Available Membership Tiers',
+            style: TextStyle(
+              fontSize: 16,
+              fontFamily: AppThemeData.bold,
+              color: isDark ? Colors.white : const Color(0xFF0F172A),
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Render Plan Cards
+          if (ctrl.subscriptionPlanList.isEmpty)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Text(
+                  ctrl.loadError.value.isNotEmpty ? ctrl.loadError.value : "No subscription plans available right now.".tr,
+                  style: TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontSize: 14),
+                ),
+              ),
+            )
+          else
+            ListView.builder(
+              physics: const NeverScrollableScrollPhysics(),
+              shrinkWrap: true,
+              itemCount: ctrl.subscriptionPlanList.length,
+              itemBuilder: (context, idx) {
+                final plan = ctrl.subscriptionPlanList[idx];
+                final planTier = plan.tierLevel ?? (idx + 2);
+                final isDowngrade = planTier < currentTier;
+                final isCurrent = plan.id == userData?.consumerPlanId;
+                final isSelected = ctrl.selectedSubscriptionPlan.value.id == plan.id;
+                final validity = plan.expiryDay ?? plan.bookingLimit ?? '30';
+                final cashback = double.tryParse(plan.cashbackOnPurchase ?? '0') ?? 0;
+
+                return GestureDetector(
+                  onTap: () {
+                    if (isDowngrade) {
+                      ShowToastDialog.showToast("Cannot downgrade to a lower-tier plan (Strict No-Downgrade).");
+                      return;
+                    }
+                    ctrl.selectedSubscriptionPlan.value = plan;
+                    ctrl.totalAmount.value = double.parse(plan.price ?? '0.0');
+                    setState(() => viewMode = 'benefits');
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 14),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isCurrent
+                            ? Colors.green
+                            : (isSelected ? AppThemeData.primary200 : const Color(0xFFE2E8F0)),
+                        width: isSelected || isCurrent ? 2 : 1,
+                      ),
+                      boxShadow: [
+                        if (isSelected)
+                          BoxShadow(
+                            color: AppThemeData.primary200.withOpacity(0.12),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        // Plan Tier Icon / Image
+                        Container(
+                          width: 52,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: isCurrent ? Colors.green.withOpacity(0.15) : AppThemeData.primary200.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.verified_rounded,
+                            color: isCurrent ? Colors.green : AppThemeData.primary200,
+                            size: 28,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      plan.name ?? 'Premium Plan',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontFamily: AppThemeData.bold,
+                                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                      ),
+                                    ),
+                                  ),
+                                  if (plan.badge != null && plan.badge!.isNotEmpty) ...[
+                                    const SizedBox(width: 6),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: Colors.amber.shade700,
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        plan.badge!,
+                                        style: const TextStyle(fontSize: 9, color: Colors.white, fontFamily: AppThemeData.bold),
+                                      ),
+                                    ),
+                                  ],
+                                  if (isCurrent) ...[
+                                    const SizedBox(width: 6),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(color: Colors.green, borderRadius: BorderRadius.circular(4)),
+                                      child: const Text('Active', style: TextStyle(fontSize: 9, color: Colors.white, fontFamily: AppThemeData.bold)),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${Constant().amountShow(amount: plan.price ?? '0.0')} / $validity Days',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontFamily: AppThemeData.bold,
+                                  color: AppThemeData.primary200,
+                                ),
+                              ),
+                              if (cashback > 0)
+                                Text(
+                                  '+ ₹${cashback.toInt()} Wallet Cashback',
+                                  style: const TextStyle(fontSize: 11, color: Colors.green, fontFamily: AppThemeData.bold),
+                                ),
+                            ],
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: isDowngrade
+                              ? null
+                              : () {
+                                  ctrl.selectedSubscriptionPlan.value = plan;
+                                  ctrl.totalAmount.value = double.parse(plan.price ?? '0.0');
+                                  setState(() => viewMode = 'benefits');
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isCurrent ? Colors.green : AppThemeData.primary200,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          ),
+                          child: Text(
+                            isDowngrade ? 'Locked' : (isCurrent ? 'Active' : 'Select'),
+                            style: const TextStyle(fontSize: 12, fontFamily: AppThemeData.bold, color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  // ===========================================================================
+  // SCREEN 3: PLAN BENEFITS & PAYMENT (20 Benefits List & Email OTP + Payment)
+  // ===========================================================================
+  Widget _buildBenefitsScreen(bool isDark, SubscriptionController ctrl) {
+    final plan = ctrl.selectedSubscriptionPlan.value;
+    final userData = ctrl.userModel.value.data ?? Constant.getUserData().data;
+
+    final String planTitle = plan.name ?? 'FIINWAY Premium Plan';
+    final String planPrice = Constant().amountShow(amount: plan.price ?? '0.0');
+    final String validity = "${plan.expiryDay ?? plan.bookingLimit ?? '30'} Days";
+    final double cashbackAmount = double.tryParse(plan.cashbackOnPurchase ?? '0') ?? 0;
+
+    // Use canonical 20 consumer benefits
+    final List<String> benefitsList = (plan.benefitsList != null && plan.benefitsList!.isNotEmpty)
+        ? plan.benefitsList!
+        : ((plan.planPoints != null && plan.planPoints!.length >= 10)
+            ? plan.planPoints!
+            : consumer20Benefits);
+
+    final int currentTier = int.tryParse(userData?.consumerPlan?.tierLevel?.toString() ?? '1') ?? 1;
+    final int selectedTier = plan.tierLevel ?? 2;
+    final bool isDowngrade = selectedTier < currentTier;
+    final bool isCurrentPlan = plan.id == userData?.consumerPlanId;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Selected Plan Box
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : AppThemeData.primary200.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppThemeData.primary200.withOpacity(0.3)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: AppThemeData.primary200.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(Icons.workspace_premium_rounded, color: AppThemeData.primary200, size: 30),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              planTitle,
+                              style: TextStyle(
+                                fontSize: 17,
+                                fontFamily: AppThemeData.bold,
+                                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                              ),
+                            ),
+                          ),
+                          if (plan.badge != null && plan.badge!.isNotEmpty) ...[
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.amber.shade700,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                plan.badge!,
+                                style: const TextStyle(fontSize: 9, color: Colors.white, fontFamily: AppThemeData.bold),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "$planPrice / $validity",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontFamily: AppThemeData.bold,
+                          color: AppThemeData.primary200,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // Cashback banner
+          if (cashbackAmount > 0) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.green.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.card_giftcard_rounded, color: Colors.green, size: 22),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Get ₹${cashbackAmount.toInt()} Cashback credited directly to your FIINWAY wallet on activation.',
+                      style: const TextStyle(fontSize: 12, fontFamily: AppThemeData.bold, color: Colors.green),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+          ],
+
+          // Strict No Downgrade Banner if applicable
+          if (isDowngrade) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.red.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: const [
+                  Icon(Icons.warning_amber_rounded, color: Colors.red, size: 22),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Strict No Downgrade: Downgrading to a lower plan tier is prohibited. You can only upgrade.',
+                      style: TextStyle(fontSize: 12, fontFamily: AppThemeData.bold, color: Colors.red),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+          ],
+
+          // 20 Benefits Header
+          Text(
+            'Premium Plan Benefits (20 Included)',
+            style: TextStyle(
+              fontSize: 16,
+              fontFamily: AppThemeData.bold,
+              color: isDark ? Colors.white : const Color(0xFF0F172A),
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // 20 Benefits List
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: benefitsList.length,
+            itemBuilder: (context, idx) {
+              return Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 22,
+                      height: 22,
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.check_rounded, color: Colors.green, size: 15),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        benefitsList[idx],
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontFamily: AppThemeData.medium,
+                          color: isDark ? Colors.white : const Color(0xFF334155),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 24),
+
+          // Proceed to Payment Button with Email OTP & No Downgrade Checks
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton(
+              onPressed: (isDowngrade || isCurrentPlan)
+                  ? null
+                  : () async {
+                      ctrl.totalAmount.value = double.parse(plan.price ?? '0.0');
+
+                      // 1. Enforce No-Downgrade on Client
+                      if (isDowngrade) {
+                        ShowToastDialog.showToast("Cannot downgrade to a lower tier plan.");
+                        return;
+                      }
+
+                      // 2. Email OTP Verification Requirement
+                      final userEmail = userData?.email ?? '';
+                      final isEmailVerified = userData?.emailVerifiedAt != null && userData!.emailVerifiedAt!.isNotEmpty;
+
+                      if (!isEmailVerified) {
+                        final verified = await showPlanEmailOtpDialog(
+                          context,
+                          currentEmail: userEmail,
+                          userId: userData?.id ?? '',
+                          userCat: 'customer',
+                          isDarkMode: isDark,
+                        );
+                        if (!verified) return;
+                      }
+
+                      // 3. Open Payment Modal
+                      if (mounted) {
+                        paymentDialog(context, ctrl, isDark);
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isCurrentPlan ? Colors.green : AppThemeData.primary200,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                elevation: 2,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    isCurrentPlan
+                        ? 'Plan Currently Active'
+                        : (isDowngrade ? 'Downgrade Disabled' : 'Proceed to Payment'),
+                    style: const TextStyle(fontSize: 16, fontFamily: AppThemeData.bold, color: Colors.white),
+                  ),
+                  if (!isCurrentPlan && !isDowngrade) ...[
+                    const SizedBox(width: 8),
+                    const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.lock_outline_rounded, size: 14, color: Color(0xFF64748B)),
+                const SizedBox(width: 4),
+                Text(
+                  'Automated Tax Invoice & Active Perks Emailed on Activation',
+                  style: TextStyle(fontSize: 11, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
+  // ===========================================================================
+  // SCREEN 3B: PLAN ACTIVATED CONFIRMATION
+  // ===========================================================================
+  Widget _buildActivatedSuccessScreen(bool isDark, SubscriptionController ctrl) {
+    final plan = ctrl.selectedSubscriptionPlan.value;
+    final planName = plan.name ?? "Premium Plan";
+    final planPrice = Constant().amountShow(amount: plan.price ?? '0.0');
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+          const SizedBox(height: 20),
+          Container(
+            width: 84,
+            height: 84,
+            decoration: const BoxDecoration(
+              color: Colors.green,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.check_rounded, color: Colors.white, size: 52),
+          ),
+          const SizedBox(height: 20),
+
+          Text(
+            'Plan Activated Successfully!',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 22,
+              fontFamily: AppThemeData.bold,
+              color: isDark ? Colors.white : const Color(0xFF0F172A),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Congratulations! Your $planName is now active, and all eligible premium benefits are unlocked.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 13, height: 1.4, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+          ),
+          const SizedBox(height: 24),
+
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.green.withOpacity(0.3)),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Activated Plan', style: TextStyle(fontSize: 13, color: isDark ? Colors.white70 : const Color(0xFF64748B))),
+                    Text(planName, style: const TextStyle(fontSize: 14, fontFamily: AppThemeData.bold)),
+                  ],
+                ),
+                const Divider(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Amount Paid', style: TextStyle(fontSize: 13, color: isDark ? Colors.white70 : const Color(0xFF64748B))),
+                    Text(planPrice, style: TextStyle(fontSize: 14, fontFamily: AppThemeData.bold, color: AppThemeData.primary200)),
+                  ],
+                ),
+                const Divider(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Status', style: TextStyle(fontSize: 13, color: isDark ? Colors.white70 : const Color(0xFF64748B))),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(color: Colors.green, borderRadius: BorderRadius.circular(12)),
+                      child: const Text('Active', style: TextStyle(fontSize: 10, color: Colors.white, fontFamily: AppThemeData.bold)),
+                    ),
+                  ],
+                ),
+                const Divider(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Confirmation Email', style: TextStyle(fontSize: 13, color: isDark ? Colors.white70 : const Color(0xFF64748B))),
+                    const Text('Tax Invoice Sent ✓', style: TextStyle(fontSize: 12, color: Colors.green, fontFamily: AppThemeData.bold)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 28),
+
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton(
+              onPressed: () {
+                setState(() => viewMode = 'dashboard');
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppThemeData.primary200,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Text('Go to My Plan Dashboard', style: TextStyle(fontSize: 16, fontFamily: AppThemeData.bold, color: Colors.white)),
+                  SizedBox(width: 8),
+                  Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 18),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ===========================================================================
+  // SCREEN 4: MY PLAN DASHBOARD (Active Membership, Days Remaining, Savings, 20 Active Perks)
+  // ===========================================================================
+  Widget _buildDashboardScreen(bool isDark, SubscriptionController ctrl) {
+    final userData = ctrl.userModel.value.data ?? Constant.getUserData().data;
+
+    final String userName = (userData?.prenom != null || userData?.nom != null)
+        ? "${userData?.prenom ?? ''} ${userData?.nom ?? ''}".trim()
+        : "FIINWAY Member";
+
+    final SubscriptionPlanData activePlan = ctrl.selectedSubscriptionPlan.value;
+    final String activePlanName = activePlan.name ?? userData?.consumerPlan?.name ?? "Premium Plan";
+    final String remainingDays = _calculateDaysRemaining(userData, activePlan);
+
+    final List<String> activePerks = (activePlan.benefitsList != null && activePlan.benefitsList!.isNotEmpty)
+        ? activePlan.benefitsList!
+        : consumer20Benefits;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Member Profile Box
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 2)),
               ],
             ),
             child: Row(
@@ -250,7 +1210,7 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
                   width: 52,
                   height: 52,
                   decoration: BoxDecoration(
-                    color: AppThemeData.primary200.withValues(alpha: 0.12),
+                    color: AppThemeData.primary200.withOpacity(0.12),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(Icons.person_rounded, size: 32, color: AppThemeData.primary200),
@@ -278,13 +1238,10 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: hasActiveSubscription ? AppThemeData.primary200 : const Color(0xFF64748B),
+                              color: Colors.green,
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: Text(
-                              hasActiveSubscription ? 'Premium' : 'Standard',
-                              style: const TextStyle(fontSize: 10, fontFamily: AppThemeData.bold, color: Colors.white),
-                            ),
+                            child: const Text('Active', style: TextStyle(fontSize: 10, fontFamily: AppThemeData.bold, color: Colors.white)),
                           ),
                         ],
                       ),
@@ -293,8 +1250,8 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
                         activePlanName,
                         style: TextStyle(
                           fontSize: 13,
-                          fontFamily: AppThemeData.medium,
-                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                          fontFamily: AppThemeData.bold,
+                          color: AppThemeData.primary200,
                         ),
                       ),
                     ],
@@ -305,23 +1262,44 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
           ),
           const SizedBox(height: 14),
 
-          // Plan Validity Stats
+          // 2 Stats: Plan Validity & Monthly Savings
           Row(
             children: [
               Expanded(
                 child: Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1E293B) : AppThemeData.primary200.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppThemeData.primary200.withValues(alpha: 0.2)),
+                    color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppThemeData.primary200.withOpacity(0.25)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Plan Validity', style: TextStyle(fontSize: 11, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B))),
-                      const SizedBox(height: 4),
-                      Text(formattedExpiry, style: TextStyle(fontSize: 14, fontFamily: AppThemeData.bold, color: isDark ? Colors.white : const Color(0xFF0F172A))),
+                      Row(
+                        children: [
+                          Icon(Icons.calendar_today_rounded, size: 14, color: AppThemeData.primary200),
+                          const SizedBox(width: 6),
+                          Text('Plan Validity', style: TextStyle(fontSize: 11, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B))),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        remainingDays,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontFamily: AppThemeData.bold,
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _formatExpiryDate(userData, activePlan),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -331,16 +1309,29 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1E293B) : AppThemeData.primary200.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppThemeData.primary200.withValues(alpha: 0.2)),
+                    color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: Colors.green.withOpacity(0.25)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Days Remaining', style: TextStyle(fontSize: 11, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B))),
-                      const SizedBox(height: 4),
-                      Text(remainingDays, style: TextStyle(fontSize: 14, fontFamily: AppThemeData.bold, color: AppThemeData.primary200)),
+                      Row(
+                        children: const [
+                          Icon(Icons.savings_rounded, size: 14, color: Colors.green),
+                          SizedBox(width: 6),
+                          Text('Saved This Month', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        "₹680 Saved",
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontFamily: AppThemeData.bold,
+                          color: Colors.green,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -349,35 +1340,35 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
           ),
           const SizedBox(height: 20),
 
-          // Subscription Details
-          Text('Subscription Details', style: TextStyle(fontSize: 15, fontFamily: AppThemeData.bold, color: isDark ? Colors.white : const Color(0xFF0F172A))),
-          const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-            ),
-            child: Column(
-              children: [
-                _buildSubDetailRow('Plan Name', activePlanName, isDark),
-                const Divider(height: 16),
-                _buildSubDetailRow('Subscription Price', activePlanPrice, isDark),
-               
-              ],
-            ),
+          // Active Perks List Header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Your Active Perks (${activePerks.length} Unlocked)',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontFamily: AppThemeData.bold,
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Text('Scroll to view all', style: TextStyle(fontSize: 10, color: Colors.green)),
+              ),
+            ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 10),
 
-          // Dynamic Active Plan Benefits List
-          Text('Plan Benefits ($activePlanName)', style: TextStyle(fontSize: 15, fontFamily: AppThemeData.bold, color: isDark ? Colors.white : const Color(0xFF0F172A))),
-          const SizedBox(height: 12),
-
+          // 20 Perks scrollable list
           ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: activePlanPoints.length,
+            itemCount: activePerks.length,
             itemBuilder: (context, idx) {
               return Container(
                 margin: const EdgeInsets.only(bottom: 8),
@@ -392,15 +1383,15 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
                     Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: AppThemeData.primary200.withValues(alpha: 0.12),
+                        color: Colors.green.withOpacity(0.15),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(Icons.check_rounded, color: AppThemeData.primary200, size: 16),
+                      child: const Icon(Icons.check_rounded, color: Colors.green, size: 14),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        activePlanPoints[idx],
+                        activePerks[idx],
                         style: TextStyle(
                           fontSize: 13,
                           fontFamily: AppThemeData.medium,
@@ -408,419 +1399,14 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
                         ),
                       ),
                     ),
-                  ],
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 24),
-
-          // Button to Change or Upgrade Plan
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton(
-              onPressed: () => setState(() => viewMode = 'plans'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppThemeData.primary200,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                elevation: 2,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Icon(Icons.workspace_premium_rounded, color: Colors.white, size: 20),
-                  SizedBox(width: 8),
-                  Text(
-                    'Change / Upgrade Subscription Plan',
-                    style: TextStyle(fontSize: 15, fontFamily: AppThemeData.bold, color: Colors.white),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ===========================================================================
-  // 2. CHOOSE SUBSCRIPTION PLAN SCREEN
-  // ===========================================================================
-  Widget _buildPlansListScreen(bool isDark, SubscriptionController controller) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Dynamic Top Banner
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : AppThemeData.primary200.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppThemeData.primary200.withValues(alpha: 0.2)),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Unlock Premium Benefits',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppThemeData.primary200),
-                      ),
-                      Text(
-                        'FIINWAY Premium Plans',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppThemeData.primary200),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'More Savings. More Comfort. More Value.',
-                        style: TextStyle(fontSize: 11, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569)),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(Icons.card_membership_rounded, size: 40, color: AppThemeData.primary200),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          Center(
-            child: Text(
-              'Choose Your Plan',
-              style: TextStyle(
-                fontSize: 18,
-                fontFamily: AppThemeData.bold,
-                color: isDark ? Colors.white : const Color(0xFF0F172A),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Render Dynamic Subscription Plans
-          controller.isLoading.value
-              ? Center(child: Constant.loader(context))
-              : controller.subscriptionPlanList.isEmpty
-                  ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(32),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              controller.loadError.value.isNotEmpty
-                                  ? controller.loadError.value
-                                  : "No subscription plans available right now.".tr,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontSize: 14),
-                            ),
-                            const SizedBox(height: 16),
-                            OutlinedButton(
-                              onPressed: controller.refreshAll,
-                              child: Text('Retry'.tr),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  : ListView.builder(
-                      physics: const NeverScrollableScrollPhysics(),
-                      shrinkWrap: true,
-                      itemCount: controller.subscriptionPlanList.length,
-                      itemBuilder: (context, idx) {
-                        final plan = controller.subscriptionPlanList[idx];
-                        final isSelected = controller.selectedSubscriptionPlan.value.id == plan.id;
-
-                        return GestureDetector(
-                          onTap: () {
-                            controller.selectedSubscriptionPlan.value = plan;
-                            controller.totalAmount.value = double.parse(plan.price ?? '0.0');
-                          },
-                          child: Container(
-                            margin: const EdgeInsets.only(bottom: 14),
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: isSelected ? AppThemeData.primary200 : const Color(0xFFE2E8F0),
-                                width: isSelected ? 2 : 1,
-                              ),
-                              boxShadow: [
-                                if (isSelected) BoxShadow(color: AppThemeData.primary200.withValues(alpha: 0.12), blurRadius: 10, offset: const Offset(0, 4)),
-                              ],
-                            ),
-                            child: Row(
-                              children: [
-                                // Dynamic Plan Image
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: (plan.image != null && plan.image!.isNotEmpty)
-                                      ? CachedNetworkImage(
-                                          imageUrl: plan.image!,
-                                          width: 52,
-                                          height: 52,
-                                          fit: BoxFit.cover,
-                                          errorWidget: (context, url, error) => Container(
-                                            width: 52,
-                                            height: 52,
-                                            decoration: BoxDecoration(
-                                              color: AppThemeData.primary200.withValues(alpha: 0.12),
-                                              borderRadius: BorderRadius.circular(12),
-                                            ),
-                                            child: Icon(Icons.card_membership_rounded, color: AppThemeData.primary200, size: 28),
-                                          ),
-                                        )
-                                      : Container(
-                                          width: 52,
-                                          height: 52,
-                                          decoration: BoxDecoration(
-                                            color: AppThemeData.primary200.withValues(alpha: 0.12),
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                          child: Icon(Icons.card_membership_rounded, color: AppThemeData.primary200, size: 28),
-                                        ),
-                                ),
-                                const SizedBox(width: 14),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        plan.name ?? 'Premium Plan',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontFamily: AppThemeData.bold,
-                                          color: isDark ? Colors.white : const Color(0xFF0F172A),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        '${Constant().amountShow(amount: plan.price ?? '0.0')} / ${plan.expiryDay == "-1" ? "Lifetime" : "${plan.expiryDay} Days"}',
-                                        style: TextStyle(fontSize: 14, fontFamily: AppThemeData.bold, color: AppThemeData.primary200),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                OutlinedButton(
-                                  onPressed: () {
-                                    controller.selectedSubscriptionPlan.value = plan;
-                                    controller.totalAmount.value = double.parse(plan.price ?? '0.0');
-                                    setState(() {
-                                      viewMode = 'benefits';
-                                    });
-                                  },
-                                  style: OutlinedButton.styleFrom(
-                                    side: BorderSide(color: AppThemeData.primary200),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                  ),
-                                  child: Text('View Benefits', style: TextStyle(fontSize: 11, fontFamily: AppThemeData.bold, color: AppThemeData.primary200)),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-
-          const SizedBox(height: 20),
-
-          if (controller.subscriptionPlanList.isNotEmpty)
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: () => setState(() => viewMode = 'benefits'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppThemeData.primary200,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Text('Select Plan & View Benefits', style: TextStyle(fontSize: 15, fontFamily: AppThemeData.bold, color: Colors.white)),
-                    SizedBox(width: 8),
-                    Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 18),
-                  ],
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  // ===========================================================================
-  // 3. PLAN BENEFITS & ADVANTAGES PAGE
-  // ===========================================================================
-  Widget _buildBenefitsScreen(bool isDark, SubscriptionController controller) {
-    final plan = controller.selectedSubscriptionPlan.value;
-
-    final String planTitle = plan.name ?? 'Subscription Plan';
-    final String planPrice = Constant().amountShow(amount: plan.price ?? '0.0');
-    final String expiryText = plan.expiryDay == "-1" ? "Lifetime" : "${plan.expiryDay ?? '365'} Days";
-
-    final List<String> benefitsList = (plan.planPoints != null && plan.planPoints!.isNotEmpty)
-        ? plan.planPoints!
-        : (plan.description != null && plan.description!.isNotEmpty
-            ? [plan.description!]
-            : ["Premium ride access", "Priority booking", "24/7 Customer support"]);
-    final double cashbackAmount = double.tryParse(plan.cashbackOnPurchase ?? '0') ?? 0;
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Selected Plan Header
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : AppThemeData.primary200.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppThemeData.primary200.withValues(alpha: 0.3)),
-            ),
-            child: Row(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: (plan.image != null && plan.image!.isNotEmpty)
-                      ? CachedNetworkImage(
-                          imageUrl: plan.image!,
-                          width: 52,
-                          height: 52,
-                          fit: BoxFit.cover,
-                          errorWidget: (context, url, error) => Container(
-                            width: 52,
-                            height: 52,
-                            decoration: BoxDecoration(
-                              color: AppThemeData.primary200,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(Icons.card_membership_rounded, color: Colors.white, size: 28),
-                          ),
-                        )
-                      : Container(
-                          width: 52,
-                          height: 52,
-                          decoration: BoxDecoration(
-                            color: AppThemeData.primary200,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(Icons.card_membership_rounded, color: Colors.white, size: 28),
-                        ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        planTitle,
-                        style: TextStyle(fontSize: 16, fontFamily: AppThemeData.bold, color: isDark ? Colors.white : const Color(0xFF0F172A)),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        "$planPrice / $expiryText",
-                        style: TextStyle(fontSize: 15, fontFamily: AppThemeData.bold, color: AppThemeData.primary200),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          if (cashbackAmount > 0) ...[
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF14532D) : AppThemeData.success50,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppThemeData.success300.withOpacity(0.35)),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: AppThemeData.success300.withOpacity(0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(Icons.card_giftcard_rounded, color: AppThemeData.success300, size: 22),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Purchase Cashback Reward',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontFamily: AppThemeData.bold,
-                            color: isDark ? Colors.white : const Color(0xFF0F172A),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Get ${Constant().amountShow(amount: cashbackAmount.toString())} credited to your wallet instantly after you purchase this plan.',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontFamily: AppThemeData.regular,
-                            color: isDark ? Colors.white70 : AppThemeData.grey500,
-                            height: 1.4,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
-
-          Text('Key Benefits & Advantages', style: TextStyle(fontSize: 16, fontFamily: AppThemeData.bold, color: isDark ? Colors.white : const Color(0xFF0F172A))),
-          const SizedBox(height: 12),
-
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: benefitsList.length,
-            itemBuilder: (context, idx) {
-              return Container(
-                margin: const EdgeInsets.only(bottom: 10),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
-                ),
-                child: Row(
-                  children: [
+                    const SizedBox(width: 8),
                     Container(
-                      width: 24,
-                      height: 24,
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: AppThemeData.primary200.withValues(alpha: 0.12),
-                        shape: BoxShape.circle,
+                        color: Colors.green.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4),
                       ),
-                      child: Icon(Icons.check_rounded, color: AppThemeData.primary200, size: 16),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        benefitsList[idx],
-                        style: TextStyle(fontSize: 13, fontFamily: AppThemeData.medium, color: isDark ? Colors.white : const Color(0xFF334155)),
-                      ),
+                      child: const Text('Active', style: TextStyle(fontSize: 10, color: Colors.green, fontFamily: AppThemeData.bold)),
                     ),
                   ],
                 ),
@@ -829,242 +1415,116 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
           ),
           const SizedBox(height: 24),
 
-          // Proceed to Payment Button
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton(
-              onPressed: () {
-                controller.totalAmount.value = double.parse(plan.price ?? '0.0');
-                paymentDialog(context, controller, isDark);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppThemeData.primary200,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Text('Proceed to Payment', style: TextStyle(fontSize: 16, fontFamily: AppThemeData.bold, color: Colors.white)),
-                  SizedBox(width: 8),
-                  Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-
-          Center(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.lock_outline_rounded, size: 14, color: Color(0xFF64748B)),
-                const SizedBox(width: 4),
-                Text('Secure Payment Gateway', style: TextStyle(fontSize: 11, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B))),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ===========================================================================
-  // 4. PLAN ACTIVATED SUCCESS CONFIRMATION SCREEN
-  // ===========================================================================
-  Widget _buildActivatedSuccessScreen(bool isDark, SubscriptionController controller) {
-    final plan = controller.selectedSubscriptionPlan.value;
-    final planName = plan.name ?? "Subscription Plan";
-    final planPrice = Constant().amountShow(amount: plan.price ?? '0.0');
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          const SizedBox(height: 16),
-          Container(
-            width: 76,
-            height: 76,
-            decoration: BoxDecoration(
-              color: AppThemeData.primary200,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.check_rounded, color: Colors.white, size: 48),
-          ),
-          const SizedBox(height: 16),
-
-          Text(
-            'Plan Activated Successfully!',
-            style: TextStyle(fontSize: 20, fontFamily: AppThemeData.bold, color: isDark ? Colors.white : const Color(0xFF0F172A)),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Your Premium Subscription Plan is now active',
-            style: TextStyle(fontSize: 13, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
-          ),
-          const SizedBox(height: 20),
-
-          // Activated Plan Summary Card
+          // Upgrade to Higher Plan Banner
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : AppThemeData.primary200.withValues(alpha: 0.08),
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppThemeData.primary200.withValues(alpha: 0.3)),
+              border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: (plan.image != null && plan.image!.isNotEmpty)
-                      ? CachedNetworkImage(
-                          imageUrl: plan.image!,
-                          width: 44,
-                          height: 44,
-                          fit: BoxFit.cover,
-                          errorWidget: (context, url, error) => Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: AppThemeData.primary200,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Icon(Icons.card_membership_rounded, color: Colors.white, size: 26),
-                          ),
-                        )
-                      : Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: AppThemeData.primary200,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(Icons.card_membership_rounded, color: Colors.white, size: 26),
-                        ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              planName,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontSize: 16, fontFamily: AppThemeData.bold, color: isDark ? Colors.white : const Color(0xFF0F172A)),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(color: AppThemeData.primary200, borderRadius: BorderRadius.circular(6)),
-                            child: const Text('Active', style: TextStyle(fontSize: 10, fontFamily: AppThemeData.bold, color: Colors.white)),
-                          ),
-                        ],
+                Row(
+                  children: [
+                    Icon(Icons.upgrade_rounded, color: AppThemeData.primary200, size: 24),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Upgrade Your Membership',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontFamily: AppThemeData.bold,
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
                       ),
-                      Text(planPrice, style: TextStyle(fontSize: 14, fontFamily: AppThemeData.bold, color: AppThemeData.primary200)),
-                    ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Strict No Downgrade: You can only upgrade to a higher tier plan. Days remaining will be carried over.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                    height: 1.3,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: () => setState(() => viewMode = 'plans'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppThemeData.primary200,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text(
+                      'Explore Higher Plans',
+                      style: TextStyle(fontSize: 15, fontFamily: AppThemeData.bold, color: Colors.white),
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 24),
-
-          // Go to Dashboard Button
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton(
-              onPressed: () => setState(() => viewMode = 'dashboard'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppThemeData.primary200,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Text('Go to Dashboard', style: TextStyle(fontSize: 16, fontFamily: AppThemeData.bold, color: Colors.white)),
-                  SizedBox(width: 8),
-                  Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 18),
-                ],
-              ),
-            ),
-          ),
+          const SizedBox(height: 16),
         ],
       ),
     );
   }
 
-  Widget _buildSubDetailRow(String label, String value, bool isDark) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: TextStyle(fontSize: 12, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B))),
-        Text(value, style: TextStyle(fontSize: 13, fontFamily: AppThemeData.bold, color: isDark ? Colors.white : const Color(0xFF0F172A))),
-      ],
-    );
-  }
-
-  // Payment Options Bottom Sheet
-  Future<dynamic> paymentDialog(BuildContext context, SubscriptionController paymentController, bool isDarkMode) {
+  // ===========================================================================
+  // PAYMENT MODAL SHEET
+  // ===========================================================================
+  Future<dynamic> paymentDialog(BuildContext context, SubscriptionController ctrl, bool isDarkMode) {
     return showModalBottomSheet(
       elevation: 5,
       useRootNavigator: true,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.only(topLeft: Radius.circular(15), topRight: Radius.circular(15))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+      ),
       context: context,
       backgroundColor: isDarkMode ? AppThemeData.surface50Dark : AppThemeData.surface50,
       builder: (context) {
-        return Obx(() {
-          return SizedBox(
-            height: Get.height / 1.15,
-            child: SingleChildScrollView(
-              child: InkWell(
-                onTap: () => FocusScope.of(context).unfocus(),
+        return GetX<SubscriptionController>(
+          builder: (ctrl) {
+            return Container(
+              padding: const EdgeInsets.only(bottom: 24),
+              child: SingleChildScrollView(
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Center(
                       child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 10),
-                        height: 8,
-                        width: 75,
+                        margin: const EdgeInsets.symmetric(vertical: 12),
+                        height: 5,
+                        width: 50,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(100),
-                          color: isDarkMode ? AppThemeData.grey300Dark : AppThemeData.grey300,
+                          color: isDarkMode ? Colors.white24 : Colors.black12,
                         ),
                       ),
                     ),
-                    Row(
-                      children: [
-                        IconButton(
-                          onPressed: () => Get.back(),
-                          icon: Transform(
-                            alignment: Alignment.center,
-                            transform: Directionality.of(context).name == 'rtl' ? Matrix4.rotationY(3.14159) : Matrix4.identity(),
-                            child: SvgPicture.asset(
-                              'assets/icons/ic_left.svg',
-                              width: 18,
-                              height: 18,
-                              colorFilter: ColorFilter.mode(
-                                isDarkMode ? AppThemeData.grey50 : AppThemeData.grey900,
-                                BlendMode.srcIn,
-                              ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        children: [
+                          IconButton(
+                            onPressed: () => Get.back(),
+                            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+                          ),
+                          Text(
+                            "Select Payment Method".tr,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontFamily: AppThemeData.bold,
+                              color: isDarkMode ? AppThemeData.grey50 : AppThemeData.grey900,
                             ),
                           ),
-                        ),
-                        Text(
-                          "Select Payment Method".tr,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontFamily: AppThemeData.bold,
-                            color: isDarkMode ? AppThemeData.grey50 : AppThemeData.grey900,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 10),
                     Padding(
@@ -1072,55 +1532,57 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
                       child: Column(
                         children: [
                           buildPaymentOption(
-                            title: "UPI",
+                            title: "UPI / Online Payment (Razorpay)",
                             value: "razorpay",
-                            controller: paymentController,
+                            ctrl: ctrl,
                             isDarkMode: isDarkMode,
                           ),
                           buildPaymentOption(
-                            title: "Wallet",
+                            title: "FIINWAY Wallet (Instant Debit)",
                             value: "wallet",
-                            controller: paymentController,
+                            ctrl: ctrl,
                             isDarkMode: isDarkMode,
                           ),
                           const SizedBox(height: 20),
                           SizedBox(
                             width: double.infinity,
-                            height: 48,
+                            height: 50,
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppThemeData.primary200,
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               ),
-                              onPressed: paymentController.selectedRadioTile.value.isEmpty
-                                  ? null
-                                  : () async {
-                                      final method = paymentController.selectedRadioTile.value;
-                                      Get.back();
-                                      if (method == 'razorpay') {
-                                        razorpayPayment(paymentController);
-                                        return;
-                                      }
-                                      String? verifiedMpin;
-                                      if (method == 'wallet') {
-                                        verifiedMpin = await showMpinVerificationBottomSheet(
-                                          context,
-                                          amount: paymentController.totalAmount.value,
-                                          title: 'Enter MPIN to Pay'.tr,
-                                          userCat: 'customer',
-                                        );
-                                        if (verifiedMpin == null || verifiedMpin.isEmpty) {
-                                          return;
-                                        }
-                                      }
-                                      final success = await paymentController.completeSubscription(mpin: verifiedMpin);
-                                      if (!mounted) return;
-                                      if (success) {
-                                        setState(() => viewMode = 'activated');
-                                      }
-                                    },
+                              onPressed: () async {
+                                final method = ctrl.selectedRadioTile.value;
+                                if (method.isEmpty) {
+                                  ShowToastDialog.showToast("Please select a payment method");
+                                  return;
+                                }
+                                Get.back();
+                                if (method == 'razorpay') {
+                                  razorpayPayment(ctrl);
+                                  return;
+                                }
+                                String? verifiedMpin;
+                                if (method == 'wallet') {
+                                  verifiedMpin = await showMpinVerificationBottomSheet(
+                                    context,
+                                    amount: ctrl.totalAmount.value,
+                                    title: 'Enter MPIN to Pay'.tr,
+                                    userCat: 'customer',
+                                  );
+                                  if (verifiedMpin == null || verifiedMpin.isEmpty) {
+                                    return;
+                                  }
+                                }
+                                final success = await ctrl.completeSubscription(mpin: verifiedMpin);
+                                if (!mounted) return;
+                                if (success) {
+                                  setState(() => viewMode = 'activated');
+                                }
+                              },
                               child: Text(
-                                "Pay ${Constant().amountShow(amount: paymentController.totalAmount.value.toString())}".tr,
+                                "Pay ${Constant().amountShow(amount: ctrl.totalAmount.value.toString())}".tr,
                                 style: const TextStyle(fontSize: 16, fontFamily: AppThemeData.bold, color: Colors.white),
                               ),
                             ),
@@ -1131,9 +1593,9 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
                   ],
                 ),
               ),
-            ),
-          );
-        });
+            );
+          },
+        );
       },
     );
   }
@@ -1141,7 +1603,7 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
   Widget buildPaymentOption({
     required String title,
     required String value,
-    required SubscriptionController controller,
+    required SubscriptionController ctrl,
     required bool isDarkMode,
   }) {
     return Container(
@@ -1150,37 +1612,37 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
         color: isDarkMode ? AppThemeData.surface50Dark : Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: controller.selectedRadioTile.value == value ? AppThemeData.primary200! : const Color(0xFFE2E8F0),
+          color: ctrl.selectedRadioTile.value == value ? AppThemeData.primary200 : const Color(0xFFE2E8F0),
         ),
       ),
       child: RadioListTile<String>(
         title: Text(
           title,
           style: TextStyle(
-            fontSize: 15,
+            fontSize: 14,
             fontFamily: AppThemeData.bold,
             color: isDarkMode ? Colors.white : const Color(0xFF0F172A),
           ),
         ),
         value: value,
-        groupValue: controller.selectedRadioTile.value,
+        groupValue: ctrl.selectedRadioTile.value,
         activeColor: AppThemeData.primary200,
         onChanged: (val) {
-          controller.selectedRadioTile.value = val!;
+          ctrl.selectedRadioTile.value = val!;
         },
       ),
     );
   }
 
-  void razorpayPayment(SubscriptionController controller) {
+  void razorpayPayment(SubscriptionController ctrl) {
     var options = {
-      'key': controller.paymentSettingModel.value.razorpay?.key ?? '',
-      'amount': (controller.totalAmount.value * 100).toInt(),
-      'name': 'FIINWAY Subscription',
-      'description': controller.selectedSubscriptionPlan.value.name ?? 'Premium Plan',
+      'key': ctrl.paymentSettingModel.value.razorpay?.key ?? '',
+      'amount': (ctrl.totalAmount.value * 100).toInt(),
+      'name': 'FIINWAY Premium Plan',
+      'description': ctrl.selectedSubscriptionPlan.value.name ?? 'Consumer Membership',
       'prefill': {
-        'contact': controller.userModel.value.data?.phone ?? '',
-        'email': controller.userModel.value.data?.email ?? '',
+        'contact': ctrl.userModel.value.data?.phone ?? '',
+        'email': ctrl.userModel.value.data?.email ?? '',
       }
     };
     try {
@@ -1193,8 +1655,7 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
   void _handlePaymentSuccess(PaymentSuccessResponse response) async {
     ShowToastDialog.showToast("Payment Successful!");
     final success = await controller.completeSubscription();
-    if (!mounted) return;
-    if (success) {
+    if (success && mounted) {
       setState(() => viewMode = 'activated');
     }
   }

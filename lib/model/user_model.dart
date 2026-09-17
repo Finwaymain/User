@@ -94,6 +94,7 @@ class User {
     this.consumerPlanId,
     this.consumerPlanExpiryDate,
     this.consumerPlan,
+    this.emailVerifiedAt,
   });
 
   String? id;
@@ -161,6 +162,7 @@ class User {
   String? online;
   String? alternatePhone;
   String? marketplaceEnabled;
+  String? emailVerifiedAt;
 
   factory User.fromJson(Map<String, dynamic> json) => User(
     id: json["id"]?.toString(),
@@ -227,6 +229,7 @@ class User {
     consumerPlanId: json["consumer_plan_id"]?.toString(),
     consumerPlanExpiryDate: json["consumer_plan_expiry_date"]?.toString(),
     consumerPlan: json["consumer_plan"] != null ? SubscriptionPlanData.fromJson(json["consumer_plan"]) : null,
+    emailVerifiedAt: json["email_verified_at"]?.toString(),
   );
 
   Map<String, dynamic> toJson() => {
@@ -294,6 +297,7 @@ class User {
     "consumer_plan_id": consumerPlanId,
     "consumer_plan_expiry_date": consumerPlanExpiryDate,
     "consumer_plan": consumerPlan?.toJson(),
+    "email_verified_at": emailVerifiedAt,
   };
 }
 
