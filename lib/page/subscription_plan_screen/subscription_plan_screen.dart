@@ -37,7 +37,7 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
   // View Navigation Modes:
   // 'current_plan': Screen 1 (What You May Miss, 10 chargeable items, ₹850/mo savings callout)
   // 'plans': Screen 2 (5-tier cards grid: Basic, Standard, Executive, VIP, Premium)
-  // 'benefits': Screen 3 (20 Key Benefits, comparison & payment options)
+  // 'benefits': Screen 3 (Dynamic Benefits list, comparison & payment options)
   // 'activated': Plan Activated Confirmation Screen
   // 'dashboard': Screen 4 (Active My Plan dashboard with countdown, monthly savings, active perks)
   String viewMode = 'current_plan';
@@ -96,29 +96,6 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
     },
   ];
 
-  // 20 Canonical Consumer Premium Benefits
-  static const List<String> consumer20Benefits = [
-    "Up to 2% Cashback on Sending Money",
-    "Up to 2% Cashback on Receiving Money",
-    "Up to 20% Discount on FIINWAY Services",
-    "Up to 40% Discount on Online Shopping",
-    "Free Shipping on Eligible Products",
-    "Eligible for Personal Loan",
-    "Eligible for Old & New Product Sale",
-    "Eligible for Business Loan",
-    "Eligible for Credit Card",
-    "Eligible for Interest-Free Loan",
-    "Up to ₹15,000 Instant Virtual Credit",
-    "Premium Customer Support",
-    "Priority Offers",
-    "Premium Service Benefits",
-    "Priority Service Access",
-    "Special Premium Discounts",
-    "Exclusive Premium Offers",
-    "Referral Benefits",
-    "Business Promotion Benefits",
-    "Premium Membership Benefits",
-  ];
 
   @override
   void initState() {
@@ -591,7 +568,7 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Select a tier to view all 20 applicable benefits and cashback rewards.',
+                        'Select a tier to view all applicable benefits and cashback rewards.',
                         style: TextStyle(fontSize: 11, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569)),
                       ),
                     ],
@@ -773,7 +750,7 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
   }
 
   // ===========================================================================
-  // SCREEN 3: PLAN BENEFITS & PAYMENT (20 Benefits List & Email OTP + Payment)
+  // SCREEN 3: PLAN BENEFITS & PAYMENT (Dynamic Benefits List & Email OTP + Payment)
   // ===========================================================================
   Widget _buildBenefitsScreen(bool isDark, SubscriptionController ctrl) {
     final plan = ctrl.selectedSubscriptionPlan.value;
@@ -784,12 +761,11 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
     final String validity = "${plan.expiryDay ?? plan.bookingLimit ?? '30'} Days";
     final double cashbackAmount = double.tryParse(plan.cashbackOnPurchase ?? '0') ?? 0;
 
-    // Use canonical 20 consumer benefits
+    // Use only admin-configured benefits from API
     final List<String> benefitsList = (plan.benefitsList != null && plan.benefitsList!.isNotEmpty)
         ? plan.benefitsList!
-        : ((plan.planPoints != null && plan.planPoints!.length >= 10)
-            ? plan.planPoints!
-            : consumer20Benefits);
+        : (plan.planPoints ?? []);
+
 
     final int currentTier = int.tryParse(userData?.consumerPlan?.tierLevel?.toString() ?? '1') ?? 1;
     final int selectedTier = plan.tierLevel ?? 2;
@@ -922,9 +898,9 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
             const SizedBox(height: 14),
           ],
 
-          // 20 Benefits Header
+          // Benefits Header
           Text(
-            'Premium Plan Benefits (20 Included)',
+            'Premium Plan Benefits (${benefitsList.length} Included)',
             style: TextStyle(
               fontSize: 16,
               fontFamily: AppThemeData.bold,
@@ -933,7 +909,7 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
           ),
           const SizedBox(height: 10),
 
-          // 20 Benefits List
+          // Benefits List (dynamic from admin panel)
           ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -1171,7 +1147,7 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
   }
 
   // ===========================================================================
-  // SCREEN 4: MY PLAN DASHBOARD (Active Membership, Days Remaining, Savings, 20 Active Perks)
+  // SCREEN 4: MY PLAN DASHBOARD (Active Membership, Days Remaining, Savings, Active Perks)
   // ===========================================================================
   Widget _buildDashboardScreen(bool isDark, SubscriptionController ctrl) {
     final userData = ctrl.userModel.value.data ?? Constant.getUserData().data;
@@ -1184,9 +1160,11 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
     final String activePlanName = activePlan.name ?? userData?.consumerPlan?.name ?? "Premium Plan";
     final String remainingDays = _calculateDaysRemaining(userData, activePlan);
 
+    // Active benefits list from admin panel (no hardcoded fallback)
     final List<String> activePerks = (activePlan.benefitsList != null && activePlan.benefitsList!.isNotEmpty)
         ? activePlan.benefitsList!
-        : consumer20Benefits;
+        : (activePlan.planPoints ?? []);
+
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -1364,7 +1342,7 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
           ),
           const SizedBox(height: 10),
 
-          // 20 Perks scrollable list
+          // Active perks scrollable list
           ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
