@@ -900,7 +900,9 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
 
           // Benefits Header
           Text(
-            'Premium Plan Benefits (${benefitsList.length} Included)',
+            benefitsList.isNotEmpty
+                ? 'Premium Plan Benefits (${benefitsList.length} Included)'
+                : 'Premium Plan Benefits',
             style: TextStyle(
               fontSize: 16,
               fontFamily: AppThemeData.bold,
@@ -910,11 +912,38 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
           const SizedBox(height: 10),
 
           // Benefits List (dynamic from admin panel)
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: benefitsList.length,
-            itemBuilder: (context, idx) {
+          if (benefitsList.isEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              margin: const EdgeInsets.only(bottom: 8),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline_rounded, color: AppThemeData.primary200, size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'All standard member benefits are included in this plan.',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: isDark ? Colors.white70 : const Color(0xFF64748B),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: benefitsList.length,
+              itemBuilder: (context, idx) {
               return Container(
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
