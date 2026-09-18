@@ -28,12 +28,15 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'page/chats_screen/conversation_screen.dart';
 import 'page/completed_ride_screens/payment_selection_screen.dart';
-import 'page/completed_ride_screens/trip_history_screen.dart';
 import 'page/auth_screens/phone_entry_screen.dart';
 import 'page/on_boarding_screen.dart';
 import 'service/localization_service.dart';
 import 'utils/Preferences.dart';
 import 'package:finway/controller/searching_driver_controller.dart';
+import 'package:finway/model/parcel_model.dart';
+import 'package:finway/page/parcel_service_screen/parcel_route_view_screen.dart';
+import 'package:finway/page/parcel_service_screen/parcel_route_osm_view_screen.dart';
+import 'package:finway/page/parcel_service_screen/all_parcel_screen.dart';
 
 class FirebaseService {
   static Future<void> initialize() async {
@@ -144,6 +147,30 @@ class FirebaseService {
           'receiverPhoto':
               json.decode(message.data['message'])['senderPhoto'].toString()
         });
+      } else if (message.data['order_type'] == 'parcel' ||
+          message.data['tag'] == 'parcelconfirmed' ||
+          message.data['tag'] == 'parcelonride' ||
+          message.data['tag'] == 'parcelcompleted') {
+        final statut = message.data['statut'] ?? message.data['status'];
+        if (statut == 'confirmed' || message.data['tag'] == 'parcelconfirmed' || statut == 'on ride' || message.data['tag'] == 'parcelonride') {
+          try {
+            ParcelData pData = ParcelData.fromJson(message.data);
+            var argumentData = {
+              'type': statut == 'on ride' ? 'on_ride'.tr : 'confirmed'.tr,
+              'data': pData
+            };
+            if (Constant.selectedMapType == 'osm') {
+              Get.to(() => const ParcelRouteOsmViewScreen(), arguments: argumentData);
+            } else {
+              Get.to(() => const ParcelRouteViewScreen(), arguments: argumentData);
+            }
+          } catch (e) {
+            log('Error parsing parcelData from notification: $e');
+            Get.to(() => const AllParcelScreen());
+          }
+        } else if (statut == 'completed' || message.data['tag'] == 'parcelcompleted') {
+          Get.to(() => const AllParcelScreen());
+        }
       } else if (message.data['statut'] == "confirmed" ||
           message.data['statut'] == "driver_rejected") {
         if (Get.isRegistered<SearchingDriverController>()) {

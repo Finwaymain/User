@@ -337,11 +337,11 @@ class CartParcelScreen extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                         child: ButtonThem.buildButton(
                           context,
-                          title: "Book Parcel".tr,
+                          title: "Continue to Payment".tr,
                           btnColor: AppThemeData.primary200,
                           txtColor: Colors.white,
                           onPress: () async {
-                            controller.bookParcelRide();
+                            Get.to(() => const ParcelPaymentScreen());
                           },
                         ),
                       ),

@@ -650,8 +650,8 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
                       children: [
                         // Plan Tier Icon / Image
                         Container(
-                          width: 52,
-                          height: 52,
+                          width: 46,
+                          height: 46,
                           decoration: BoxDecoration(
                             color: isCurrent ? Colors.green.withOpacity(0.15) : AppThemeData.primary200.withOpacity(0.12),
                             borderRadius: BorderRadius.circular(12),
@@ -673,7 +673,7 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
                                     child: Text(
                                       plan.name ?? 'Premium Plan',
                                       style: TextStyle(
-                                        fontSize: 16,
+                                        fontSize: 14,
                                         fontFamily: AppThemeData.bold,
                                         color: isDark ? Colors.white : const Color(0xFF0F172A),
                                       ),
@@ -689,7 +689,7 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
                                       ),
                                       child: Text(
                                         plan.badge!,
-                                        style: const TextStyle(fontSize: 9, color: Colors.white, fontFamily: AppThemeData.bold),
+                                        style: const TextStyle(fontSize: 8, color: Colors.white, fontFamily: AppThemeData.bold),
                                       ),
                                     ),
                                   ],
@@ -707,7 +707,7 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
                               Text(
                                 '${Constant().amountShow(amount: plan.price ?? '0.0')} / $validity Days',
                                 style: TextStyle(
-                                  fontSize: 15,
+                                  fontSize: 13,
                                   fontFamily: AppThemeData.bold,
                                   color: AppThemeData.primary200,
                                 ),
@@ -731,11 +731,11 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: isCurrent ? Colors.green : AppThemeData.primary200,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           ),
                           child: Text(
                             isDowngrade ? 'Locked' : (isCurrent ? 'Active' : 'Select'),
-                            style: const TextStyle(fontSize: 12, fontFamily: AppThemeData.bold, color: Colors.white),
+                            style: const TextStyle(fontSize: 11, fontFamily: AppThemeData.bold, color: Colors.white),
                           ),
                         ),
                       ],
