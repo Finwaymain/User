@@ -19,7 +19,6 @@ class CartParcelScreen extends StatelessWidget {
     bool isDarkMode = themeChange.getThem();
 
     return GetX<ParcelServiceController>(
-        init: ParcelServiceController(),
         builder: (controller) {
           return Scaffold(
             resizeToAvoidBottomInset: true,

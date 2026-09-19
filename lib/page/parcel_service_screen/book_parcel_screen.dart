@@ -32,7 +32,6 @@ class BookParcelScreen extends StatelessWidget {
     final Color textSecondary = isDarkMode ? AppThemeData.grey500Dark : AppThemeData.grey500;
 
     return GetX<ParcelServiceController>(
-        init: ParcelServiceController(),
         builder: (controller) {
           return Scaffold(
             backgroundColor: isDarkMode ? const Color(0xFF121212) : const Color(0xFFF5F7FA),
@@ -412,8 +411,6 @@ class BookParcelScreen extends StatelessWidget {
                         ShowToastDialog.showToast("Please Enter Receiver Phone number.");
                       } else if (!isValidReceiver) {
                         ShowToastDialog.showToast("Please Enter valid 10-digit Indian phone number for Receiver.");
-                      } else if (controller.parcelImages.isEmpty) {
-                        ShowToastDialog.showToast("Select parcel image");
                       } else if (controller.senderLocation == null || controller.receiverLocation == null) {
                         ShowToastDialog.showToast("Please select valid pickup and delivery locations.");
                       } else {
@@ -433,10 +430,21 @@ class BookParcelScreen extends StatelessWidget {
                         }
 
                         if (Constant.selectedMapType == 'google') {
-                          controller.getDurationDistance(controller.senderLocation!, controller.receiverLocation!);
+                          await controller.getDurationDistance(controller.senderLocation!, controller.receiverLocation!);
                         } else {
-                          controller.getDurationOSMDistance(controller.senderLocation!, controller.receiverLocation!);
+                          await controller.getDurationOSMDistance(controller.senderLocation!, controller.receiverLocation!);
                         }
+
+                        if (controller.distance.value <= 0) {
+                          ShowToastDialog.showToast("Could not calculate distance. Please check your pickup and drop locations.");
+                          return;
+                        }
+
+                        if (controller.subTotal.value <= 0) {
+                          ShowToastDialog.showToast("Delivery charges are not configured. Please contact support.");
+                          return;
+                        }
+
                         Get.to(() => const CartParcelScreen());
                       }
                     },

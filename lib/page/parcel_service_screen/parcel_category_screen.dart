@@ -14,8 +14,12 @@ class ParcelCategoryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.isRegistered<ParcelServiceController>()
+        ? Get.find<ParcelServiceController>()
+        : Get.put(ParcelServiceController());
+
     return GetX<ParcelServiceController>(
-        init: ParcelServiceController(),
+        init: controller,
         builder: (controller) {
           return Scaffold(
             backgroundColor: ConstantColors.background,

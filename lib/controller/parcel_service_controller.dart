@@ -84,6 +84,11 @@ class ParcelServiceController extends GetxController {
   RxString walletAmount = (Constant.getUserData().data?.amount?.toString() ?? '0').obs;
   @override
   void onInit() {
+    senderDate.value = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    senderTime.value = DateFormat('HH:mm:ss').format(DateTime.now());
+    receiverDate.value = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    receiverTime.value = DateFormat('HH:mm:ss').format(DateTime.now().add(const Duration(hours: 2)));
+
     getParcelCategory();
     paymentSettingModel.value = Constant.getPaymentSetting();
     walletAmount.value = Constant.getUserData().data?.amount?.toString() ?? '0';
@@ -225,17 +230,21 @@ class ParcelServiceController extends GetxController {
 
   Future<void> getDurationOSMDistance(LatLng departureLatLong, LatLng destinationLatLong) async {
     ShowToastDialog.showLoader("Please wait");
-    Constant().getDurationOsmDistance(departureLatLong, destinationLatLong).then((value) {
-      distance.value = double.parse(value['distance'].toString());
-      duration.value = value['duration'].toString();
+    try {
+      var value = await Constant().getDurationOsmDistance(departureLatLong, destinationLatLong);
+      distance.value = double.tryParse(value['distance'].toString()) ?? 0.0;
+      duration.value = value['duration']?.toString() ?? '';
       double weight = double.tryParse(parcelWeightController.text.toString()) ?? 0.0;
       double height = double.tryParse(parcelDimentionController.text.toString()) ?? 0.0;
       double deliveryCharge = double.tryParse(Constant.deliverChargeParcel.toString()) ?? 0.0;
       double weightCharge = double.tryParse(Constant.parcelPerWeightCharge.toString()) ?? 0.0;
       double heightCharge = double.tryParse(Constant.parcelPerHeightCharge.toString()) ?? 0.0;
       subTotal.value = (distance.value * deliveryCharge) + (weight * weightCharge) + (height * heightCharge);
+    } catch (e) {
+      showLog("Error calculating OSM distance: $e");
+    } finally {
       ShowToastDialog.closeLoader();
-    });
+    }
   }
 
   bookParcelRide() async {
@@ -278,10 +287,10 @@ class ParcelServiceController extends GetxController {
       request.fields['parcel_dimension'] = parcelDimentionController.text.trim().toString();
 
       request.fields['parcel_type'] = selectedParcelCategory.value.id ?? '';
-      request.fields['parcel_date'] = senderDate.value.toString();
-      request.fields['parcel_time'] = senderTime.value.toString();
-      request.fields['receive_date'] = receiverDate.value.toString();
-      request.fields['receive_time'] = receiverTime.value.toString();
+      request.fields['parcel_date'] = senderDate.value.isEmpty ? DateFormat('yyyy-MM-dd').format(DateTime.now()) : senderDate.value.toString();
+      request.fields['parcel_time'] = senderTime.value.isEmpty ? DateFormat('HH:mm:ss').format(DateTime.now()) : senderTime.value.toString();
+      request.fields['receive_date'] = receiverDate.value.isEmpty ? DateFormat('yyyy-MM-dd').format(DateTime.now()) : receiverDate.value.toString();
+      request.fields['receive_time'] = receiverTime.value.isEmpty ? DateFormat('HH:mm:ss').format(DateTime.now().add(const Duration(hours: 2))) : receiverTime.value.toString();
       request.fields['amount'] = subTotal.value.toString();
       request.fields['duration'] = duration.value.toString();
 
@@ -296,6 +305,7 @@ class ParcelServiceController extends GetxController {
 
       if (res.statusCode == 200 && response['success']?.toString().toLowerCase() == 'success') {
         ShowToastDialog.closeLoader();
+        Get.delete<ParcelServiceController>();
         Get.offAll(const ParcelSuccessScreen());
         return response;
       } else {

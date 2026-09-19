@@ -117,7 +117,6 @@ class _ParcelPaymentScreenState extends State<ParcelPaymentScreen> {
     final Color divider = isDark ? AppThemeData.grey300Dark : const Color(0xFFE8ECF0);
 
     return GetX<ParcelServiceController>(
-      init: ParcelServiceController(),
       builder: (controller) {
         _ctrl = controller;
         final String amountStr = Constant().amountShow(amount: '${controller.subTotal.value}');
@@ -131,19 +130,14 @@ class _ParcelPaymentScreenState extends State<ParcelPaymentScreen> {
           ),
           body: Column(
             children: [
-
-
-
               Expanded(
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
-                  child: Transform.translate(
-                    offset: const Offset(0, 50),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                           // ─── Order summary card ───────────────────────────
                           _buildCard(
                             card: card,
@@ -288,9 +282,8 @@ class _ParcelPaymentScreenState extends State<ParcelPaymentScreen> {
                     ),
                   ),
                 ),
-              ),
             ],
-          ),
+            ),
 
           // ─── Floating Pay button ──────────────────────────────────────────
           bottomNavigationBar: Container(
