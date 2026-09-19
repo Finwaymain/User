@@ -9,6 +9,7 @@ import 'package:finway/themes/constant_colors.dart';
 import 'package:finway/themes/responsive.dart';
 import 'package:finway/constant/constant.dart';
 import 'package:finway/constant/image_constant.dart';
+import 'package:finway/page/parcel_service_screen/all_parcel_screen.dart';
 import 'package:finway/page/parcel_service_screen/book_parcel_screen.dart';
 
 class ParcelServiceTab extends StatelessWidget {
@@ -34,13 +35,43 @@ class ParcelServiceTab extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 20),
-                    Text(
-                      "Select what are you sending?".tr,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontFamily: AppThemeData.semiBold,
-                        color: isDarkMode ? AppThemeData.grey900Dark : AppThemeData.grey900,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Select what are you sending?".tr,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontFamily: AppThemeData.semiBold,
+                            color: isDarkMode ? AppThemeData.grey900Dark : AppThemeData.grey900,
+                          ),
+                        ),
+                        InkWell(
+                          onTap: () => Get.to(() => const AllParcelScreen()),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: AppThemeData.primary200.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.history_rounded, size: 16, color: AppThemeData.primary200),
+                                const SizedBox(width: 4),
+                                Text(
+                                  "My Parcels".tr,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontFamily: AppThemeData.semiBold,
+                                    color: AppThemeData.primary200,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 12),
                     Container(

@@ -5,6 +5,7 @@ import 'package:finway/constant/constant.dart';
 import 'package:finway/constant/logdata.dart';
 import 'package:finway/constant/show_toast_dialog.dart';
 import 'package:finway/model/parcel_category_model.dart';
+import 'package:finway/model/parcel_model.dart';
 import 'package:finway/model/payment_setting_model.dart';
 import 'package:finway/page/parcel_service_screen/parcel_sucess_screen.dart';
 import 'package:finway/service/api.dart';
@@ -324,7 +325,7 @@ class ParcelServiceController extends GetxController {
       request.fields['source_city'] = senderAddressCity.value.toString().trim();
       request.fields['destination_city'] = receiverAddressCity.value.trim();
 
-      request.fields['distance'] = distance.value.toString();
+      request.fields['distance'] = distance.value.toStringAsFixed(2);
       request.fields['distance_unit'] = Constant.distanceUnit.toString();
 
       request.fields['id_payment'] = paymentMethodId.value.toString();
@@ -344,26 +345,40 @@ class ParcelServiceController extends GetxController {
       request.fields['parcel_time'] = senderTime.value.isEmpty ? DateFormat('HH:mm:ss').format(DateTime.now()) : senderTime.value.toString();
       request.fields['receive_date'] = receiverDate.value.isEmpty ? DateFormat('yyyy-MM-dd').format(DateTime.now()) : receiverDate.value.toString();
       request.fields['receive_time'] = receiverTime.value.isEmpty ? DateFormat('HH:mm:ss').format(DateTime.now().add(const Duration(hours: 2))) : receiverTime.value.toString();
-      request.fields['amount'] = subTotal.value.toString();
+      request.fields['amount'] = subTotal.value.toStringAsFixed(2);
       request.fields['duration'] = duration.value.toString();
 
       var res = await request.send();
       var responseData = await res.stream.toBytes();
+      final responseBodyStr = String.fromCharCodes(responseData);
       showLog("API :: URL :: ${API.bookParcel}");
       showLog("API :: Request Body :: ${jsonEncode(request.fields)} ");
       showLog("API :: Response Status :: ${res.statusCode} ");
-      showLog("API :: Response Body :: ${String.fromCharCodes(responseData)} ");
+      showLog("API :: Response Body :: $responseBodyStr ");
 
-      Map<String, dynamic> response = jsonDecode(String.fromCharCodes(responseData));
+      Map<String, dynamic>? response;
+      try {
+        response = jsonDecode(responseBodyStr);
+      } catch (e) {
+        showLog("JSON decode error: $e");
+      }
 
-      if (res.statusCode == 200 && response['success']?.toString().toLowerCase() == 'success') {
+      if (res.statusCode == 200 && response != null && response['success']?.toString().toLowerCase() == 'success') {
         ShowToastDialog.closeLoader();
         Get.delete<ParcelServiceController>();
-        Get.offAll(const ParcelSuccessScreen());
+        ParcelData? parcelOrderData;
+        if (response['data'] != null && (response['data'] as List).isNotEmpty) {
+          try {
+            parcelOrderData = ParcelData.fromJson(response['data'][0]);
+          } catch (e) {
+            showLog("Error parsing booked parcel data: $e");
+          }
+        }
+        Get.offAll(ParcelSuccessScreen(parcelData: parcelOrderData));
         return response;
       } else {
         ShowToastDialog.closeLoader();
-        final errMsg = response['error'] ?? response['message'] ?? 'Booking failed. Please try again.';
+        final errMsg = response?['error'] ?? response?['message'] ?? 'Booking failed (${res.statusCode}). Please try again.';
         ShowToastDialog.showToast(errMsg.toString());
       }
     } on TimeoutException catch (e) {

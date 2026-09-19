@@ -86,6 +86,16 @@ class _ParcelRouteOsmViewScreenState extends State<ParcelRouteOsmViewScreen> {
         ParcelDetailsModel parcelDetails = ParcelDetailsModel.fromJson(response.data);
         if (parcelDetails.success == 'success' && parcelDetails.rideDetailsdata != null) {
           var data = parcelDetails.rideDetailsdata!;
+          if (data.status != null && data.status != parcelData!.status) {
+            parcelData!.status = data.status;
+            parcelData!.idConducteur = data.idConducteur;
+            parcelData!.nomConducteur = data.nomConducteur;
+            parcelData!.prenomConducteur = data.prenomConducteur;
+            parcelData!.driverPhone = data.driverPhone;
+            parcelData!.driverPhoto = data.driverPhoto;
+            parcelData!.otp = data.otp;
+            if (mounted) setState(() {});
+          }
           if (data.driverLatitude != null && data.driverLatitude!.isNotEmpty &&
               data.driverLongitude != null && data.driverLongitude!.isNotEmpty) {
             double dLat = double.parse(data.driverLatitude!);
@@ -135,12 +145,12 @@ class _ParcelRouteOsmViewScreenState extends State<ParcelRouteOsmViewScreen> {
 
       if (parcelData!.status == "onride" || parcelData!.status == 'confirmed') {
         _fetchDriverLocation();
-        _driverLocationTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
-          _fetchDriverLocation();
-        });
       } else {
         getDirections(dLat: 0.0, dLng: 0.0);
       }
+      _driverLocationTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
+        _fetchDriverLocation();
+      });
       updateCameraLocation(source: departureLatLong!, destination: destinationLatLong!, mapController: mapController);
     }
   }

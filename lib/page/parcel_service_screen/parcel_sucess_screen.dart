@@ -1,4 +1,8 @@
+import 'package:finway/constant/constant.dart';
+import 'package:finway/model/parcel_model.dart';
 import 'package:finway/page/parcel_service_screen/all_parcel_screen.dart';
+import 'package:finway/page/parcel_service_screen/parcel_route_osm_view_screen.dart';
+import 'package:finway/page/parcel_service_screen/parcel_route_view_screen.dart';
 import 'package:finway/themes/button_them.dart';
 import 'package:finway/themes/constant_colors.dart';
 import 'package:finway/themes/responsive.dart';
@@ -7,7 +11,8 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 
 class ParcelSuccessScreen extends StatelessWidget {
-  const ParcelSuccessScreen({super.key});
+  final ParcelData? parcelData;
+  const ParcelSuccessScreen({super.key, this.parcelData});
 
   @override
   Widget build(BuildContext context) {
@@ -41,14 +46,14 @@ class ParcelSuccessScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              SizedBox(height: Responsive.height(15, context)),
+              SizedBox(height: Responsive.height(12, context)),
               Image.asset(
                 'assets/images/parcel_box.gif',
-                width: 200,
-                height: 200,
+                width: 180,
+                height: 180,
                 fit: BoxFit.cover,
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 24),
               Text(
                 'Parcel Request Created Successfully!'.tr,
                 style: TextStyle(
@@ -62,7 +67,7 @@ class ParcelSuccessScreen extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
-                  'Your parcel request has been confirmed. A driver will be assigned shortly, and you’ll be able to track the delivery in real-time!'.tr,
+                  'Your parcel request has been sent to nearby drivers. You can track the delivery and driver location in real-time!'.tr,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: AppThemeData.grey900,
@@ -73,10 +78,30 @@ class ParcelSuccessScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               ButtonThem.buildButton(
-                btnWidthRatio: 0.5,
+                btnWidthRatio: 0.8,
                 context,
-                title: "Track Status".tr,
+                title: "Track Courier on Map".tr,
                 btnColor: AppThemeData.warning200,
+                txtColor: AppThemeData.grey50,
+                onPress: () async {
+                  if (parcelData != null) {
+                    var argumentData = {'type': parcelData!.status ?? 'new', 'data': parcelData};
+                    if (Constant.selectedMapType == "osm") {
+                      Get.offAll(() => const ParcelRouteOsmViewScreen(), arguments: argumentData);
+                    } else {
+                      Get.offAll(() => const ParcelRouteViewScreen(), arguments: argumentData);
+                    }
+                  } else {
+                    Get.offAll(const AllParcelScreen());
+                  }
+                },
+              ),
+              const SizedBox(height: 12),
+              ButtonThem.buildButton(
+                btnWidthRatio: 0.8,
+                context,
+                title: "View All Parcels".tr,
+                btnColor: AppThemeData.primary200,
                 txtColor: AppThemeData.grey50,
                 onPress: () async {
                   Get.offAll(const AllParcelScreen());

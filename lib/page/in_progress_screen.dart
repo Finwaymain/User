@@ -4,10 +4,13 @@ import 'dart:developer' as dev;
 
 import 'package:finway/constant/constant.dart';
 import 'package:finway/model/ride_model.dart';
+import 'package:finway/model/parcel_model.dart';
 import 'package:finway/page/completed_ride_screens/payment_selection_screen.dart';
 import 'package:finway/page/new_ride_screens/searching_driver_screen.dart';
 import 'package:finway/page/route_view_screen/route_view_screen.dart';
 import 'package:finway/page/route_view_screen/route_osm_view_screen.dart';
+import 'package:finway/page/parcel_service_screen/parcel_route_osm_view_screen.dart';
+import 'package:finway/page/parcel_service_screen/parcel_route_view_screen.dart';
 import 'package:finway/themes/constant_colors.dart';
 import 'package:finway/utils/dark_theme_provider.dart';
 import 'package:finway/service/api.dart';
@@ -145,9 +148,40 @@ class _InProgressScreenState extends State<InProgressScreen> {
                 Get.offAll(() => const RouteViewScreen(), arguments: argumentData);
               }
             }
-            return;
           }
         }
+      }
+
+      // Check for active ongoing parcel deliveries
+      try {
+        final parcelResponse = await http.get(
+          Uri.parse('${API.getParcel}?id_user_app=$userId'),
+          headers: API.header,
+        );
+        if (parcelResponse.statusCode == 200) {
+          final pBody = json.decode(parcelResponse.body);
+          if (pBody['success'] == 'success' && pBody['data'] != null) {
+            final allParcels = (pBody['data'] as List)
+                .map((e) => ParcelData.fromJson(e as Map<String, dynamic>))
+                .toList();
+            final activeParcels = allParcels.where((p) =>
+                p.status == 'new' || p.status == 'confirmed' || p.status == 'onride').toList();
+            if (activeParcels.isNotEmpty && mounted) {
+              final activeParcel = activeParcels.first;
+              _isRedirecting = true;
+              _refreshTimer?.cancel();
+              var argumentData = {'type': activeParcel.status ?? 'new', 'data': activeParcel};
+              if (Constant.selectedMapType == 'osm') {
+                Get.offAll(() => const ParcelRouteOsmViewScreen(), arguments: argumentData);
+              } else {
+                Get.offAll(() => const ParcelRouteViewScreen(), arguments: argumentData);
+              }
+              return;
+            }
+          }
+        }
+      } catch (pe) {
+        dev.log('InProgressScreen parcel check error: $pe');
       }
     } catch (e) {
       dev.log('InProgressScreen fetch error: $e');

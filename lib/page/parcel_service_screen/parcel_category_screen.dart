@@ -1,5 +1,6 @@
 import 'package:finway/constant/constant.dart';
 import 'package:finway/model/parcel_category_model.dart';
+import 'package:finway/page/parcel_service_screen/all_parcel_screen.dart';
 import 'package:finway/page/parcel_service_screen/book_parcel_screen.dart';
 import 'package:finway/themes/constant_colors.dart';
 import 'package:finway/themes/appbar_cust.dart';
@@ -26,20 +27,47 @@ class ParcelCategoryScreen extends StatelessWidget {
             appBar: CustomAppbar(
               title: "Select Parcel Category".tr,
               bgColor: AppThemeData.primary200,
+              actions: [
+                IconButton(
+                  tooltip: "My Parcels".tr,
+                  icon: const Icon(Icons.history_rounded, color: Colors.white),
+                  onPressed: () => Get.to(() => const AllParcelScreen()),
+                ),
+              ],
             ),
             body: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10),
               child: Column(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.only(left: 10.0, bottom: 10),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        "What are you sending?".tr,
-                        style: const TextStyle(fontSize: 18),
-                        textAlign: TextAlign.left,
-                      ),
+                    padding: const EdgeInsets.only(left: 10.0, right: 10.0, bottom: 10, top: 6),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "What are you sending?".tr,
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                          textAlign: TextAlign.left,
+                        ),
+                        InkWell(
+                          onTap: () => Get.to(() => const AllParcelScreen()),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.inventory_2_outlined, size: 18, color: AppThemeData.primary200),
+                              const SizedBox(width: 4),
+                              Text(
+                                "My Parcels".tr,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: AppThemeData.primary200,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   controller.isLoading.value
