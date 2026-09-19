@@ -185,45 +185,97 @@ class ParcelServiceController extends GetxController {
     return null;
   }
 
+  void calculateSubTotal() {
+    double weight = double.tryParse(parcelWeightController.text.toString()) ?? 0.0;
+    double height = double.tryParse(parcelDimentionController.text.toString()) ?? 0.0;
+    double deliveryCharge = double.tryParse(Constant.deliverChargeParcel.toString()) ?? 0.0;
+    double weightCharge = double.tryParse(Constant.parcelPerWeightCharge.toString()) ?? 0.0;
+    double heightCharge = double.tryParse(Constant.parcelPerHeightCharge.toString()) ?? 0.0;
+
+    // Default rate fallbacks if not yet configured in admin settings
+    if (deliveryCharge <= 0) deliveryCharge = 15.0;
+    if (weightCharge <= 0) weightCharge = 5.0;
+    if (heightCharge <= 0) heightCharge = 5.0;
+
+    subTotal.value = (distance.value * deliveryCharge) + (weight * weightCharge) + (height * heightCharge);
+  }
+
+  void _fallbackGeolocatorDistance(LatLng departureLatLong, LatLng destinationLatLong) {
+    try {
+      double directMeters = Geolocator.distanceBetween(
+        departureLatLong.latitude,
+        departureLatLong.longitude,
+        destinationLatLong.latitude,
+        destinationLatLong.longitude,
+      );
+      // Apply 1.25x road driving curvature factor
+      double roadMeters = directMeters * 1.25;
+      if (Constant.distanceUnit == "KM") {
+        distance.value = roadMeters / 1000.0;
+      } else {
+        distance.value = roadMeters / 1609.34;
+      }
+      int minutes = ((distance.value / 30.0) * 60).round();
+      if (minutes < 3) minutes = 3;
+      duration.value = minutes >= 60 ? '${minutes ~/ 60} hours ${minutes % 60} mins' : '$minutes mins';
+      calculateSubTotal();
+    } catch (e) {
+      showLog("Geolocator fallback error: $e");
+    }
+  }
+
   Future<dynamic> getDurationDistance(LatLng departureLatLong, LatLng destinationLatLong) async {
     ShowToastDialog.showLoader("Please wait");
-    double originLat, originLong, destLat, destLong;
-    originLat = departureLatLong.latitude;
-    originLong = departureLatLong.longitude;
-    destLat = destinationLatLong.latitude;
-    destLong = destinationLatLong.longitude;
+    try {
+      double originLat = departureLatLong.latitude;
+      double originLong = departureLatLong.longitude;
+      double destLat = destinationLatLong.latitude;
+      double destLong = destinationLatLong.longitude;
 
-    String url = 'https://maps.googleapis.com/maps/api/distancematrix/json';
-    http.Response restaurantToCustomerTime = await http.get(Uri.parse('$url?units=metric&origins=$originLat,'
-        '$originLong&destinations=$destLat,$destLong&key=${Constant.kGoogleApiKey}'));
+      String url = 'https://maps.googleapis.com/maps/api/distancematrix/json';
+      http.Response restaurantToCustomerTime = await http.get(Uri.parse('$url?units=metric&origins=$originLat,'
+          '$originLong&destinations=$destLat,$destLong&key=${Constant.kGoogleApiKey}'));
 
-    showLog("API :: URL :: ${'$url?units=metric&origins=$originLat,'
-        '$originLong&destinations=$destLat,$destLong&key=${Constant.kGoogleApiKey}'}");
-    showLog("API :: Request Header :: ${API.header.toString()} ");
-    showLog("API :: responseStatus :: ${restaurantToCustomerTime.statusCode} ");
-    showLog("API :: responseBody :: ${restaurantToCustomerTime.body} ");
-    var decodedResponse = jsonDecode(restaurantToCustomerTime.body);
+      showLog("API :: URL :: $url?units=metric&origins=$originLat,$originLong&destinations=$destLat,$destLong&key=${Constant.kGoogleApiKey}");
+      showLog("API :: responseStatus :: ${restaurantToCustomerTime.statusCode} ");
+      showLog("API :: responseBody :: ${restaurantToCustomerTime.body} ");
 
-    if (decodedResponse['status'] == 'OK' && decodedResponse['rows'].first['elements'].first['status'] == 'OK') {
-      ShowToastDialog.closeLoader();
-      if (decodedResponse != null) {
+      var decodedResponse = jsonDecode(restaurantToCustomerTime.body);
+
+      if (decodedResponse['status'] == 'OK' && decodedResponse['rows'].first['elements'].first['status'] == 'OK') {
         if (Constant.distanceUnit == "KM") {
           distance.value = decodedResponse['rows'].first['elements'].first['distance']['value'] / 1000.00;
         } else {
           distance.value = decodedResponse['rows'].first['elements'].first['distance']['value'] / 1609.34;
         }
-
         duration.value = decodedResponse['rows'].first['elements'].first['duration']['text'].toString();
+        calculateSubTotal();
+        ShowToastDialog.closeLoader();
+        return decodedResponse;
+      } else {
+        showLog("Google Distance Matrix not OK (${decodedResponse['status']}), falling back to OSRM / Geolocator");
       }
-
-      double weight = double.tryParse(parcelWeightController.text.toString()) ?? 0.0;
-      double height = double.tryParse(parcelDimentionController.text.toString()) ?? 0.0;
-      double deliveryCharge = double.tryParse(Constant.deliverChargeParcel.toString()) ?? 0.0;
-      double weightCharge = double.tryParse(Constant.parcelPerWeightCharge.toString()) ?? 0.0;
-      double heightCharge = double.tryParse(Constant.parcelPerHeightCharge.toString()) ?? 0.0;
-      subTotal.value = (distance.value * deliveryCharge) + (weight * weightCharge) + (height * heightCharge);
-      return decodedResponse;
+    } catch (e) {
+      showLog("Google Distance Matrix error: $e, falling back to OSRM / Geolocator");
     }
+
+    // Fallback 1: OSRM
+    try {
+      var value = await Constant().getDurationOsmDistance(departureLatLong, destinationLatLong);
+      double osmDist = double.tryParse(value['distance'].toString()) ?? 0.0;
+      if (osmDist > 0) {
+        distance.value = osmDist;
+        duration.value = value['duration']?.toString() ?? '';
+        calculateSubTotal();
+        ShowToastDialog.closeLoader();
+        return value;
+      }
+    } catch (e) {
+      showLog("OSRM fallback error: $e");
+    }
+
+    // Fallback 2: Geolocator (device mathematical direct calculation)
+    _fallbackGeolocatorDistance(departureLatLong, destinationLatLong);
     ShowToastDialog.closeLoader();
     return null;
   }
@@ -232,16 +284,17 @@ class ParcelServiceController extends GetxController {
     ShowToastDialog.showLoader("Please wait");
     try {
       var value = await Constant().getDurationOsmDistance(departureLatLong, destinationLatLong);
-      distance.value = double.tryParse(value['distance'].toString()) ?? 0.0;
-      duration.value = value['duration']?.toString() ?? '';
-      double weight = double.tryParse(parcelWeightController.text.toString()) ?? 0.0;
-      double height = double.tryParse(parcelDimentionController.text.toString()) ?? 0.0;
-      double deliveryCharge = double.tryParse(Constant.deliverChargeParcel.toString()) ?? 0.0;
-      double weightCharge = double.tryParse(Constant.parcelPerWeightCharge.toString()) ?? 0.0;
-      double heightCharge = double.tryParse(Constant.parcelPerHeightCharge.toString()) ?? 0.0;
-      subTotal.value = (distance.value * deliveryCharge) + (weight * weightCharge) + (height * heightCharge);
+      double osmDist = double.tryParse(value['distance'].toString()) ?? 0.0;
+      if (osmDist > 0) {
+        distance.value = osmDist;
+        duration.value = value['duration']?.toString() ?? '';
+        calculateSubTotal();
+      } else {
+        _fallbackGeolocatorDistance(departureLatLong, destinationLatLong);
+      }
     } catch (e) {
-      showLog("Error calculating OSM distance: $e");
+      showLog("Error calculating OSM distance: $e, falling back to Geolocator");
+      _fallbackGeolocatorDistance(departureLatLong, destinationLatLong);
     } finally {
       ShowToastDialog.closeLoader();
     }
