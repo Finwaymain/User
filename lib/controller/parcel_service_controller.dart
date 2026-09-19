@@ -328,7 +328,7 @@ class ParcelServiceController extends GetxController {
       request.fields['distance'] = distance.value.toStringAsFixed(2);
       request.fields['distance_unit'] = Constant.distanceUnit.toString();
 
-      request.fields['id_payment'] = paymentMethodId.value.toString();
+      request.fields['id_payment'] = paymentMethodId.value.isNotEmpty ? paymentMethodId.value.toString() : '1';
       request.fields['source_adrs'] = senderAddress.toString().trim();
 
       request.fields['destination_adrs'] = receiverAddress.toString().trim();

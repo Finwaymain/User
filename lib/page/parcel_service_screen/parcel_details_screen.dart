@@ -17,16 +17,202 @@ import 'package:finway/themes/text_field_them.dart';
 import 'package:finway/utils/Preferences.dart';
 import 'package:finway/utils/dark_theme_provider.dart';
 import 'package:finway/widget/StarRating.dart';
+import 'dart:async';
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 
-class ParcelDetailsScreen extends StatelessWidget {
-  ParcelDetailsScreen({super.key});
+class ParcelDetailsScreen extends StatefulWidget {
+  const ParcelDetailsScreen({super.key});
 
+  @override
+  State<ParcelDetailsScreen> createState() => _ParcelDetailsScreenState();
+}
+
+class _ParcelDetailsScreenState extends State<ParcelDetailsScreen> {
   final resonController = TextEditingController();
+  late Razorpay _razorpay;
+  Timer? _pollTimer;
+  ParcelPaymentController? _activeController;
+
+  @override
+  void initState() {
+    super.initState();
+    _razorpay = Razorpay();
+    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+
+    _pollTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (_activeController != null && _activeController!.data.value.id != null) {
+        final st = _activeController!.data.value.status?.toString().toLowerCase() ?? '';
+        if (st != 'completed' && st != 'rejected' && st != 'canceled') {
+          _activeController!.getParcelDetailsData(_activeController!.data.value.id.toString());
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    _razorpay.clear();
+    resonController.dispose();
+    super.dispose();
+  }
+
+  void _handlePaymentSuccess(PaymentSuccessResponse response) async {
+    log('Razorpay UPI success: ${response.paymentId}');
+    ShowToastDialog.showLoader('Verifying payment...'.tr);
+    if (_activeController != null) {
+      var res = await _activeController!.transactionAmountRequest();
+      ShowToastDialog.closeLoader();
+      if (res != null) {
+        _activeController!.data.value.paymentStatus = 'yes';
+        _activeController!.data.refresh();
+        ShowToastDialog.showToast('Payment successful! Driver will now navigate to destination.'.tr);
+      }
+    }
+  }
+
+  void _handlePaymentError(PaymentFailureResponse response) {
+    log('Razorpay payment error: ${response.message}');
+    ShowToastDialog.showToast('Payment failed. Please try again.'.tr);
+  }
+
+  void _handleExternalWallet(ExternalWalletResponse response) {
+    log('Razorpay external wallet: ${response.walletName}');
+    ShowToastDialog.showToast('Payment via ${response.walletName}'.tr);
+  }
+
+  void _payByCash(ParcelPaymentController controller) {
+    Get.defaultDialog(
+      title: "Confirm Cash Payment".tr,
+      content: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Text(
+          "Are you paying ${Constant().amountShow(amount: controller.getTotalAmount().toString())} in cash to the driver at pickup?".tr,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 14),
+        ),
+      ),
+      textConfirm: "Yes, Confirm".tr,
+      textCancel: "Cancel".tr,
+      confirmTextColor: Colors.white,
+      buttonColor: AppThemeData.primary200,
+      onConfirm: () async {
+        Get.back();
+        List taxList = [];
+        for (var v in Constant.taxList) {
+          taxList.add(v.toJson());
+        }
+        Map<String, dynamic> bodyParams = {
+          'id_parcel': controller.data.value.id.toString(),
+          'id_driver': controller.data.value.idConducteur.toString(),
+          'amount': controller.subTotalAmount.value.toString(),
+          'paymethod': 'Cash',
+          'discount': controller.discountAmount.value.toString(),
+          'tip': controller.tipAmount.value.toString(),
+          'tax': taxList,
+          'transaction_id': DateTime.now().microsecondsSinceEpoch.toString(),
+        };
+        var res = await controller.cashPaymentRequest(bodyParams);
+        if (res != null) {
+          controller.data.value.paymentStatus = 'yes';
+          controller.data.refresh();
+          ShowToastDialog.showToast("Cash payment recorded! Driver can now proceed to destination.".tr);
+        }
+      },
+    );
+  }
+
+  void _payByUPI(ParcelPaymentController controller) {
+    final key = controller.paymentSettingModel.value.razorpay?.key ?? '';
+    if (key.isEmpty) {
+      ShowToastDialog.showToast('UPI payment gateway not configured. Please contact support.'.tr);
+      return;
+    }
+    final userData = Constant.getUserData();
+    final userPhone = userData.data?.phone ?? '';
+    final userEmail = userData.data?.email ?? '';
+    final amount = controller.getTotalAmount();
+
+    final options = <String, dynamic>{
+      'key': key,
+      'amount': (amount * 100).round(),
+      'name': 'Fiinway',
+      'currency': 'INR',
+      'description': 'Parcel Delivery #${controller.data.value.id}',
+      'send_sms_hash': true,
+      'method': {'netbanking': false, 'card': false, 'upi': true, 'wallet': false},
+      'prefill': {
+        if (userPhone.isNotEmpty) 'contact': userPhone,
+        if (userEmail.isNotEmpty) 'email': userEmail,
+      },
+    };
+    try {
+      _razorpay.open(options);
+    } catch (e) {
+      log('Razorpay UPI error: $e');
+      ShowToastDialog.showToast('Could not launch UPI app. Please try again.'.tr);
+    }
+  }
+
+  void _payByWallet(ParcelPaymentController controller) {
+    final totalAmount = controller.getTotalAmount();
+    final currentWallet = double.tryParse(controller.walletAmount.value) ?? 0.0;
+    if (currentWallet < totalAmount) {
+      ShowToastDialog.showToast("Insufficient wallet balance (${Constant().amountShow(amount: controller.walletAmount.value)}). Please choose Cash or UPI.".tr);
+      return;
+    }
+    Get.defaultDialog(
+      title: "Pay from Wallet".tr,
+      content: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Column(
+          children: [
+            Text("Wallet Balance: ${Constant().amountShow(amount: controller.walletAmount.value)}", style: const TextStyle(fontSize: 13, color: Colors.grey)),
+            const SizedBox(height: 6),
+            Text("Pay ${Constant().amountShow(amount: totalAmount.toString())} for Parcel #${controller.data.value.id}?", textAlign: TextAlign.center, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+          ],
+        ),
+      ),
+      textConfirm: "Pay Now".tr,
+      textCancel: "Cancel".tr,
+      confirmTextColor: Colors.white,
+      buttonColor: AppThemeData.primary200,
+      onConfirm: () async {
+        Get.back();
+        List taxList = [];
+        for (var v in Constant.taxList) {
+          taxList.add(v.toJson());
+        }
+        Map<String, dynamic> bodyParams = {
+          'id_parcel': controller.data.value.id.toString(),
+          'id_driver': controller.data.value.idConducteur.toString(),
+          'id_user_app': Preferences.getInt(Preferences.userId).toString(),
+          'amount': controller.subTotalAmount.value.toString(),
+          'paymethod': 'Wallet',
+          'discount': controller.discountAmount.value.toString(),
+          'tip': controller.tipAmount.value.toString(),
+          'tax': taxList,
+          'transaction_id': DateTime.now().microsecondsSinceEpoch.toString(),
+          'payment_status': 'success',
+        };
+        var res = await controller.walletDebitAmountRequest(bodyParams);
+        if (res != null) {
+          controller.data.value.paymentStatus = 'yes';
+          controller.walletAmount.value = (currentWallet - totalAmount).toStringAsFixed(2);
+          controller.data.refresh();
+          ShowToastDialog.showToast("Paid successfully from wallet! Driver will now navigate to destination.".tr);
+        }
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +222,7 @@ class ParcelDetailsScreen extends StatelessWidget {
     return GetX<ParcelPaymentController>(
       init: ParcelPaymentController(),
       builder: (controller) {
+        _activeController = controller;
         final parcel = controller.data.value;
         final status = parcel.status?.toString().toLowerCase() ?? '';
         final isPaid = parcel.paymentStatus == "yes";
@@ -74,6 +261,14 @@ class ParcelDetailsScreen extends StatelessWidget {
                             // 2. PROMINENT PICKUP OTP CARD
                             if (_shouldShowOtp(parcel))
                               _buildPickupOtpCard(context, controller, isDark),
+
+                            // 2.1 POST-PICKUP PAYMENT REQUIRED CARD (Cash, UPI, Wallet)
+                            if (status == 'onride' && !isPaid)
+                              _buildPostOtpPaymentCard(context, controller, isDark),
+
+                            // 2.2 PAYMENT COMPLETED CONFIRMATION
+                            if (status == 'onride' && isPaid)
+                              _buildPaymentCompletedCard(context, controller, isDark),
 
                             // 3. Assigned Driver Card (when assigned)
                             if (_hasDriver(parcel))
@@ -114,7 +309,325 @@ class ParcelDetailsScreen extends StatelessWidget {
   bool _shouldShowOtp(dynamic parcel) {
     final status = parcel.status?.toString().toLowerCase() ?? '';
     final otp = parcel.otp?.toString() ?? '';
-    return otp.isNotEmpty && status != 'completed' && status != 'rejected' && status != 'canceled';
+    return otp.isNotEmpty && status != 'onride' && status != 'completed' && status != 'rejected' && status != 'canceled';
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 2.1 POST-PICKUP PAYMENT CARD (Cash, UPI, Wallet)
+  // ──────────────────────────────────────────────────────────────────────────
+  Widget _buildPostOtpPaymentCard(BuildContext context, ParcelPaymentController controller, bool isDark) {
+    final totalAmount = controller.getTotalAmount();
+    final amountFormatted = Constant().amountShow(amount: totalAmount.toString());
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isDark
+              ? [const Color(0xFF2C2205), const Color(0xFF382C07)]
+              : [const Color(0xFFFFF9E6), const Color(0xFFFFF3CC)],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppThemeData.warning200.withValues(alpha: 0.6),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.amber.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppThemeData.warning200,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.payment_rounded, color: Colors.white, size: 18),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Payment Required".tr,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontFamily: AppThemeData.semiBold,
+                        color: isDark ? Colors.amber[300] : const Color(0xFF8A5800),
+                      ),
+                    ),
+                    Text(
+                      "Parcel picked up! Complete payment so driver can navigate to destination.".tr,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontFamily: AppThemeData.regular,
+                        color: isDark ? Colors.grey[300] : const Color(0xFF6B4A08),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: isDark ? Colors.black.withValues(alpha: 0.25) : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppThemeData.warning200.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "Total Payable:".tr,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontFamily: AppThemeData.medium,
+                    color: isDark ? Colors.grey[300] : Colors.grey[700],
+                  ),
+                ),
+                Text(
+                  amountFormatted,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontFamily: AppThemeData.bold,
+                    color: AppThemeData.primary200,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // 3 Action Buttons: Cash, UPI, Wallet
+          Row(
+            children: [
+              // 1. Cash Option
+              Expanded(
+                child: InkWell(
+                  onTap: () => _payByCash(controller),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1B382B) : const Color(0xFFE8F8F0),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppThemeData.success300.withValues(alpha: 0.6),
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.money_rounded, color: AppThemeData.success300, size: 22),
+                        const SizedBox(height: 4),
+                        Text(
+                          "Cash".tr,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontFamily: AppThemeData.semiBold,
+                            color: isDark ? Colors.white : const Color(0xFF0B6634),
+                          ),
+                        ),
+                        Text(
+                          "Pay Driver".tr,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontFamily: AppThemeData.regular,
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+
+              // 2. UPI Option
+              Expanded(
+                child: InkWell(
+                  onTap: () => _payByUPI(controller),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF281E45) : const Color(0xFFF0ECFC),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: const Color(0xFF673AB7).withValues(alpha: 0.6),
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.qr_code_2_rounded, color: Color(0xFF673AB7), size: 22),
+                        const SizedBox(height: 4),
+                        Text(
+                          "UPI".tr,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontFamily: AppThemeData.semiBold,
+                            color: isDark ? Colors.white : const Color(0xFF4527A0),
+                          ),
+                        ),
+                        Text(
+                          "GPay/PhonePe".tr,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontFamily: AppThemeData.regular,
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+
+              // 3. Wallet Option
+              Expanded(
+                child: InkWell(
+                  onTap: () => _payByWallet(controller),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF382216) : const Color(0xFFFFF0E6),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: const Color(0xFFFF6F00).withValues(alpha: 0.6),
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.account_balance_wallet_rounded, color: Color(0xFFFF6F00), size: 22),
+                        const SizedBox(height: 4),
+                        Text(
+                          "Wallet".tr,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontFamily: AppThemeData.semiBold,
+                            color: isDark ? Colors.white : const Color(0xFFE65100),
+                          ),
+                        ),
+                        Text(
+                          Constant().amountShow(amount: controller.walletAmount.value),
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontFamily: AppThemeData.regular,
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+
+          Center(
+            child: TextButton(
+              onPressed: () {
+                Get.to(() => ParcelPaymentSelectionScreen(), arguments: {
+                  "parcelData": controller.data.value,
+                })?.then((v) {
+                  if (controller.data.value.id != null) {
+                    controller.getParcelDetailsData(controller.data.value.id.toString());
+                  }
+                });
+              },
+              child: Text(
+                "More payment options (Cards / NetBanking)".tr,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontFamily: AppThemeData.medium,
+                  color: AppThemeData.primary200,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 2.2 PAYMENT COMPLETED CONFIRMATION
+  // ──────────────────────────────────────────────────────────────────────────
+  Widget _buildPaymentCompletedCard(BuildContext context, ParcelPaymentController controller, bool isDark) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isDark
+              ? [const Color(0xFF102E20), const Color(0xFF183D2C)]
+              : [const Color(0xFFE8F8F0), const Color(0xFFD3F4E3)],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppThemeData.success300.withValues(alpha: 0.6),
+          width: 1.5,
+        ),
+      ),
+      padding: const EdgeInsets.all(14),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppThemeData.success300,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.check_rounded, color: Colors.white, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Payment Completed".tr,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontFamily: AppThemeData.bold,
+                    color: isDark ? Colors.green[300] : const Color(0xFF0B6634),
+                  ),
+                ),
+                Text(
+                  "Delivery in progress. Driver is navigating to destination.".tr,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontFamily: AppThemeData.regular,
+                    color: isDark ? Colors.grey[300] : const Color(0xFF265339),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   bool _hasDriver(dynamic parcel) {

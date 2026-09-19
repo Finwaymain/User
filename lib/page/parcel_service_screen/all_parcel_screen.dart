@@ -179,7 +179,8 @@ class AllParcelScreen extends StatelessWidget {
     final status = data.status?.toString().toLowerCase() ?? '';
     final otp = data.otp?.toString() ?? '';
     final hasDriver = data.idConducteur != null && data.idConducteur.toString() != "null" && data.idConducteur.toString().isNotEmpty && data.idConducteur.toString() != "0";
-    final showOtp = otp.isNotEmpty && status != 'completed' && status != 'rejected' && status != 'canceled';
+    final showOtp = otp.isNotEmpty && status != 'onride' && status != 'completed' && status != 'rejected' && status != 'canceled';
+    final needsPayment = (status == 'onride' || status == 'on ride') && data.paymentStatus != 'yes';
 
     return GestureDetector(
       onTap: () async {
@@ -415,6 +416,78 @@ class AllParcelScreen extends StatelessWidget {
                               ),
                             ),
                           ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+
+            // ⭐ PAYMENT REQUIRED BANNER (Post-OTP) ⭐
+            if (needsPayment) ...[
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: isDark
+                        ? [const Color(0xFF2C2205), const Color(0xFF382C07)]
+                        : [const Color(0xFFFFF9E6), const Color(0xFFFFF3CC)],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppThemeData.warning200.withValues(alpha: 0.6),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: AppThemeData.warning200,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.payment_rounded, size: 14, color: Colors.white),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Payment Required".tr,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontFamily: AppThemeData.semiBold,
+                              color: isDark ? Colors.amber[300] : const Color(0xFF8A5800),
+                            ),
+                          ),
+                          Text(
+                            "Parcel picked up! Pay ${Constant().amountShow(amount: data.amount?.toString() ?? '0')} to start delivery".tr,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontFamily: AppThemeData.regular,
+                              color: isDark ? Colors.grey[300] : const Color(0xFF6B4A08),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppThemeData.primary200,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        "Pay Now".tr,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontFamily: AppThemeData.semiBold,
+                          color: Colors.white,
                         ),
                       ),
                     ),

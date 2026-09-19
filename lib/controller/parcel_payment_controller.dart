@@ -124,18 +124,17 @@ class ParcelPaymentController extends GetxController {
       }
     }
     getAmount();
-    if (data.value.paymentStatus == "yes") {
-      getParcelDetailsData(data.value.id.toString());
-    } else {
-      for (var i = 0; i < Constant.taxList.length; i++) {
-        if (Constant.taxList[i].statut == 'yes') {
-          if (Constant.taxList[i].type == "Fixed") {
-            taxAmount.value += double.parse(Constant.taxList[i].value.toString());
-          } else {
-            taxAmount.value += ((subTotalAmount.value - discountAmount.value) * double.parse(Constant.taxList[i].value!.toString())) / 100;
-          }
+    for (var i = 0; i < Constant.taxList.length; i++) {
+      if (Constant.taxList[i].statut == 'yes') {
+        if (Constant.taxList[i].type == "Fixed") {
+          taxAmount.value += double.parse(Constant.taxList[i].value.toString());
+        } else {
+          taxAmount.value += ((subTotalAmount.value - discountAmount.value) * double.parse(Constant.taxList[i].value!.toString())) / 100;
         }
       }
+    }
+    if (data.value.id != null && data.value.id.toString().isNotEmpty) {
+      getParcelDetailsData(data.value.id.toString());
     }
     update();
   }
@@ -178,16 +177,37 @@ class ParcelPaymentController extends GetxController {
 
       if (response.statusCode == 200 && responseBody['success'] == "success") {
         ParcelDetailsModel parcelDetailsModel = ParcelDetailsModel.fromJson(responseBody);
+        if (parcelDetailsModel.rideDetailsdata != null) {
+          var p = parcelDetailsModel.rideDetailsdata!;
+          if (p.status != null) data.value.status = p.status;
+          if (p.paymentStatus != null) data.value.paymentStatus = p.paymentStatus;
+          if (p.idConducteur != null) data.value.idConducteur = p.idConducteur;
+          if (p.prenomConducteur != null) data.value.prenomConducteur = p.prenomConducteur;
+          if (p.nomConducteur != null) data.value.nomConducteur = p.nomConducteur;
+          if (p.driverPhone != null) data.value.driverPhone = p.driverPhone;
+          if (p.photoPath != null) data.value.photoPath = p.photoPath;
+          if (p.driverName != null) data.value.driverName = p.driverName;
+          data.refresh();
+        }
 
-        subTotalAmount.value = double.parse(parcelDetailsModel.rideDetailsdata!.amount.toString());
-        tipAmount.value = double.parse(parcelDetailsModel.rideDetailsdata!.tip.toString());
-        discountAmount.value = double.parse(parcelDetailsModel.rideDetailsdata!.discount.toString());
-        for (var i = 0; i < parcelDetailsModel.rideDetailsdata!.taxModel!.length; i++) {
-          if (parcelDetailsModel.rideDetailsdata!.taxModel![i].statut! == 'yes') {
-            if (parcelDetailsModel.rideDetailsdata!.taxModel![i].type == "Fixed") {
-              taxAmount.value += double.parse(parcelDetailsModel.rideDetailsdata!.taxModel![i].value.toString());
-            } else {
-              taxAmount.value += ((subTotalAmount.value - discountAmount.value) * double.parse(parcelDetailsModel.rideDetailsdata!.taxModel![i].value!.toString())) / 100;
+        if (parcelDetailsModel.rideDetailsdata?.amount != null) {
+          subTotalAmount.value = double.parse(parcelDetailsModel.rideDetailsdata!.amount.toString());
+        }
+        if (parcelDetailsModel.rideDetailsdata?.tip != null) {
+          tipAmount.value = double.parse(parcelDetailsModel.rideDetailsdata!.tip.toString());
+        }
+        if (parcelDetailsModel.rideDetailsdata?.discount != null) {
+          discountAmount.value = double.parse(parcelDetailsModel.rideDetailsdata!.discount.toString());
+        }
+        if (parcelDetailsModel.rideDetailsdata?.taxModel != null) {
+          taxAmount.value = 0.0;
+          for (var i = 0; i < parcelDetailsModel.rideDetailsdata!.taxModel!.length; i++) {
+            if (parcelDetailsModel.rideDetailsdata!.taxModel![i].statut! == 'yes') {
+              if (parcelDetailsModel.rideDetailsdata!.taxModel![i].type == "Fixed") {
+                taxAmount.value += double.parse(parcelDetailsModel.rideDetailsdata!.taxModel![i].value.toString());
+              } else {
+                taxAmount.value += ((subTotalAmount.value - discountAmount.value) * double.parse(parcelDetailsModel.rideDetailsdata!.taxModel![i].value!.toString())) / 100;
+              }
             }
           }
         }

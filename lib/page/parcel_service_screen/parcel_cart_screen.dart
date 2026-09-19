@@ -1,6 +1,5 @@
 import 'package:finway/constant/constant.dart';
 import 'package:finway/controller/parcel_service_controller.dart';
-import 'package:finway/page/parcel_service_screen/parcel_payment_screen.dart';
 import 'package:finway/themes/appbar_cust.dart';
 import 'package:finway/themes/button_them.dart';
 import 'package:finway/themes/constant_colors.dart';
@@ -336,11 +335,14 @@ class CartParcelScreen extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                         child: ButtonThem.buildButton(
                           context,
-                          title: "Continue to Payment".tr,
+                          title: "Book Parcel Now".tr,
                           btnColor: AppThemeData.primary200,
                           txtColor: Colors.white,
                           onPress: () async {
-                            Get.to(() => const ParcelPaymentScreen());
+                            if (controller.paymentMethodId.value.isEmpty) {
+                              controller.paymentMethodId.value = '1';
+                            }
+                            controller.bookParcelRide();
                           },
                         ),
                       ),
