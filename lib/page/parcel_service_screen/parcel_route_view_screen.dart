@@ -3,6 +3,7 @@ import 'package:finway/constant/constant.dart';
 import 'package:finway/constant/show_toast_dialog.dart';
 import 'package:finway/controller/dash_board_controller.dart';
 import 'package:finway/controller/parcel_details_controller.dart';
+import 'package:finway/controller/parcel_order_controller.dart';
 import 'package:finway/model/parcel_model.dart';
 import 'package:finway/model/parcel_details_model.dart';
 import 'package:finway/themes/button_them.dart';
@@ -472,58 +473,64 @@ class _ParcelRouteViewScreenState extends State<ParcelRouteViewScreen> {
                                             Get.back();
                                           },
                                           onPressPositive: () {
-                                            if (parcelData!.status.toString() == "new") {
-                                              Map<String, String> bodyParams = {
-                                                'parcel_id': parcelData!.id.toString(),
-                                                'reason': resonController.text.toString(),
-                                              };
-                                              controllerRideDetails.rejectParcel(bodyParams).then((value) {
-                                                Get.back();
-                                                if (value != null) {
-                                                  showDialog(
-                                                      context: context,
-                                                      builder: (BuildContext context) {
-                                                        return CustomDialogBox(
-                                                          title: "Cancel Successfully".tr,
-                                                          descriptions: "Parcel Successfully cancel.".tr,
-                                                          onPress: () {
-                                                            Get.back();
-                                                          },
-                                                          img: Image.asset('assets/images/green_checked.png'),
-                                                        );
-                                                      });
-                                                }
-                                              });
-                                            } else {
-                                              Map<String, String> bodyParams = {
-                                                'id_parcel': parcelData!.id.toString(),
-                                                'id_user': parcelData!.idConducteur.toString(),
-                                                'name': "${parcelData!.senderName}",
-                                                'from_id': Preferences.getInt(Preferences.userId).toString(),
-                                                'user_cat': controllerRideDetails.userModel!.data!.userCat.toString(),
-                                                'reason': resonController.text.toString(),
-                                              };
-                                              controllerRideDetails.canceledParcel(bodyParams).then((value) {
-                                                Get.back();
-                                                if (value != null) {
-                                                  showDialog(
-                                                      context: context,
-                                                      builder: (BuildContext context) {
-                                                        return CustomDialogBox(
-                                                          title: "Cancel Successfully".tr,
-                                                          descriptions: "Parcel Successfully cancel.".tr,
-                                                          onPress: () {
-                                                            Get.back();
-                                                            Get.back();
-                                                            Get.back();
-                                                          },
-                                                          img: Image.asset('assets/images/green_checked.png'),
-                                                        );
-                                                      });
-                                                }
-                                              });
-                                            }
-                                          },
+                                             if (parcelData!.status.toString() == "new") {
+                                               Map<String, String> bodyParams = {
+                                                 'parcel_id': parcelData!.id.toString(),
+                                                 'reason': resonController.text.toString(),
+                                               };
+                                               controllerRideDetails.rejectParcel(bodyParams).then((value) {
+                                                 Get.back();
+                                                 if (value != null) {
+                                                   if (Get.isRegistered<ParcelOrderController>()) {
+                                                     Get.find<ParcelOrderController>().getParcel();
+                                                   }
+                                                   showDialog(
+                                                       context: context,
+                                                       builder: (BuildContext context) {
+                                                         return CustomDialogBox(
+                                                           title: "Cancel Successfully".tr,
+                                                           descriptions: "Parcel Successfully cancel.".tr,
+                                                           onPress: () {
+                                                             Get.back();
+                                                             Get.back();
+                                                           },
+                                                           img: Image.asset('assets/images/green_checked.png'),
+                                                         );
+                                                       });
+                                                 }
+                                               });
+                                             } else {
+                                               Map<String, String> bodyParams = {
+                                                 'id_parcel': parcelData!.id.toString(),
+                                                 'id_user': parcelData!.idConducteur?.toString() ?? '',
+                                                 'name': "${parcelData!.senderName}",
+                                                 'from_id': Preferences.getInt(Preferences.userId).toString(),
+                                                 'user_cat': controllerRideDetails.userModel?.data?.userCat?.toString() ?? 'user_app',
+                                                 'reason': resonController.text.toString(),
+                                               };
+                                               controllerRideDetails.canceledParcel(bodyParams).then((value) {
+                                                 Get.back();
+                                                 if (value != null) {
+                                                   if (Get.isRegistered<ParcelOrderController>()) {
+                                                     Get.find<ParcelOrderController>().getParcel();
+                                                   }
+                                                   showDialog(
+                                                       context: context,
+                                                       builder: (BuildContext context) {
+                                                         return CustomDialogBox(
+                                                           title: "Cancel Successfully".tr,
+                                                           descriptions: "Parcel Successfully cancel.".tr,
+                                                           onPress: () {
+                                                             Get.back();
+                                                             Get.back();
+                                                           },
+                                                           img: Image.asset('assets/images/green_checked.png'),
+                                                         );
+                                                       });
+                                                 }
+                                               });
+                                             }
+                                           },
                                         );
                                       },
                                     );

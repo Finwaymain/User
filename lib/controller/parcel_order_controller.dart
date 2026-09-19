@@ -60,11 +60,11 @@ class ParcelOrderController extends GetxController {
         completedParcelList.clear();
         rejectedParcelList.clear();
         for (var parcel in model.data!) {
-          if (parcel.status == "rejected" || parcel.status == "driver_rejected") {
+          if (parcel.status == "rejected" || parcel.status == "driver_rejected" || parcel.status == "canceled" || parcel.status == "cancelled") {
             rejectedParcelList.add(parcel);
           } else if (parcel.status == "completed") {
             completedParcelList.add(parcel);
-          } else if (parcel.status != "canceled") {
+          } else {
             newParcelList.add(parcel);
           }
         }
