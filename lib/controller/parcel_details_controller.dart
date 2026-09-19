@@ -34,16 +34,17 @@ class ParcelDetailsController extends GetxController {
       showLog("API :: responseBody :: ${response.body} ");
       Map<String, dynamic> responseBody = json.decode(response.body);
 
-      if (response.statusCode == 200 && responseBody['success'] == "success") {
+      final success = responseBody['success']?.toString().toLowerCase();
+      if (response.statusCode == 200 && success == "success") {
         ShowToastDialog.closeLoader();
         return responseBody;
-      } else if (response.statusCode == 200 && responseBody['success'] == "Failed") {
+      } else if (response.statusCode == 200 && (success == "failed" || success == "false")) {
         ShowToastDialog.closeLoader();
-        ShowToastDialog.showToast(responseBody['error']);
+        ShowToastDialog.showToast(responseBody['error']?.toString() ?? responseBody['message']?.toString() ?? 'Failed');
       } else {
         ShowToastDialog.closeLoader();
-        ShowToastDialog.showToast('Something want wrong. Please try again later');
-        throw Exception('Failed to load album');
+        ShowToastDialog.showToast(responseBody['error']?.toString() ?? 'Something went wrong. Please try again later');
+        throw Exception('Failed to cancel parcel');
       }
     } on TimeoutException catch (e) {
       ShowToastDialog.closeLoader();
@@ -70,16 +71,17 @@ class ParcelDetailsController extends GetxController {
       showLog("API :: responseBody :: ${response.body} ");
       Map<String, dynamic> responseBody = json.decode(response.body);
 
-      if (response.statusCode == 200 && responseBody['success'] == "success") {
+      final success = responseBody['success']?.toString().toLowerCase();
+      if (response.statusCode == 200 && success == "success") {
         ShowToastDialog.closeLoader();
         return responseBody;
-      } else if (response.statusCode == 200 && responseBody['success'] == "Failed") {
+      } else if (response.statusCode == 200 && (success == "failed" || success == "false")) {
         ShowToastDialog.closeLoader();
-        ShowToastDialog.showToast(responseBody['error']);
+        ShowToastDialog.showToast(responseBody['error']?.toString() ?? responseBody['message']?.toString() ?? 'Failed');
       } else {
         ShowToastDialog.closeLoader();
-        ShowToastDialog.showToast('Something want wrong. Please try again later');
-        throw Exception('Failed to load album');
+        ShowToastDialog.showToast(responseBody['error']?.toString() ?? 'Something went wrong. Please try again later');
+        throw Exception('Failed to cancel parcel');
       }
     } on TimeoutException catch (e) {
       ShowToastDialog.closeLoader();

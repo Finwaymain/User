@@ -4,6 +4,7 @@ import 'package:finway/constant/constant.dart';
 import 'package:finway/controller/parcel_order_controller.dart';
 import 'package:finway/model/parcel_model.dart';
 import 'package:finway/page/complaint/add_complaint_screen.dart';
+import 'package:finway/page/features/Texi/texi_dash_board.dart';
 import 'package:finway/page/parcel_service_screen/parcel_details_screen.dart';
 import 'package:finway/page/review_screens/add_review_screen.dart';
 import 'package:finway/themes/appbar_cust.dart';
@@ -40,8 +41,11 @@ class AllParcelScreen extends StatelessWidget {
               isLeadingIcon: false,
               onClick: () {
                 log("::::::All Parcels::::::");
-                Get.back();
-                // Get.offAll(TexiDashboard());
+                if (Navigator.of(context).canPop()) {
+                  Get.back();
+                } else {
+                  Get.offAll(() => TexiDashboard());
+                }
               },
             ),
             body: Stack(

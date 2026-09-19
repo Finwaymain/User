@@ -4,6 +4,7 @@ import 'package:finway/constant/show_toast_dialog.dart';
 import 'package:finway/controller/dash_board_controller.dart';
 import 'package:finway/controller/parcel_details_controller.dart';
 import 'package:finway/controller/parcel_order_controller.dart';
+import 'package:finway/page/parcel_service_screen/all_parcel_screen.dart';
 import 'package:finway/model/parcel_model.dart';
 import 'package:finway/model/parcel_details_model.dart';
 import 'package:finway/themes/button_them.dart';
@@ -492,7 +493,10 @@ class _ParcelRouteViewScreenState extends State<ParcelRouteViewScreen> {
                                                            descriptions: "Parcel Successfully cancel.".tr,
                                                            onPress: () {
                                                              Get.back();
-                                                             Get.back();
+                                                             if (Get.isRegistered<ParcelOrderController>()) {
+                                                               Get.find<ParcelOrderController>().getParcel();
+                                                             }
+                                                             Get.offAll(() => const AllParcelScreen());
                                                            },
                                                            img: Image.asset('assets/images/green_checked.png'),
                                                          );
@@ -522,7 +526,10 @@ class _ParcelRouteViewScreenState extends State<ParcelRouteViewScreen> {
                                                            descriptions: "Parcel Successfully cancel.".tr,
                                                            onPress: () {
                                                              Get.back();
-                                                             Get.back();
+                                                             if (Get.isRegistered<ParcelOrderController>()) {
+                                                               Get.find<ParcelOrderController>().getParcel();
+                                                             }
+                                                             Get.offAll(() => const AllParcelScreen());
                                                            },
                                                            img: Image.asset('assets/images/green_checked.png'),
                                                          );

@@ -4,6 +4,7 @@ import 'package:finway/controller/parcel_payment_controller.dart';
 import 'package:finway/controller/parcel_order_controller.dart';
 import 'package:finway/model/tax_model.dart';
 import 'package:finway/page/chats_screen/FullScreenImageViewer.dart';
+import 'package:finway/page/parcel_service_screen/all_parcel_screen.dart';
 import 'package:finway/page/parcel_service_screen/parcel_payment_selection_screen.dart';
 import 'package:finway/page/parcel_service_screen/parcel_route_osm_view_screen.dart';
 import 'package:finway/page/parcel_service_screen/parcel_route_view_screen.dart';
@@ -256,7 +257,10 @@ class ParcelDetailsScreen extends StatelessWidget {
                                                             descriptions: "Parcel Successfully cancel.".tr,
                                                             onPress: () {
                                                               Get.back();
-                                                              Get.back();
+                                                              if (Get.isRegistered<ParcelOrderController>()) {
+                                                                Get.find<ParcelOrderController>().getParcel();
+                                                              }
+                                                              Get.offAll(() => const AllParcelScreen());
                                                             },
                                                             img: Image.asset('assets/images/green_checked.png'),
                                                           );
@@ -284,10 +288,13 @@ class ParcelDetailsScreen extends StatelessWidget {
                                                           return CustomDialogBox(
                                                             title: "Cancel Successfully".tr,
                                                             descriptions: "Parcel Successfully cancel.".tr,
-                                                            onPress: () {
-                                                              Get.back();
-                                                              Get.back();
-                                                            },
+                                                             onPress: () {
+                                                               Get.back();
+                                                               if (Get.isRegistered<ParcelOrderController>()) {
+                                                                 Get.find<ParcelOrderController>().getParcel();
+                                                               }
+                                                               Get.offAll(() => const AllParcelScreen());
+                                                             },
                                                             img: Image.asset('assets/images/green_checked.png'),
                                                           );
                                                         });
