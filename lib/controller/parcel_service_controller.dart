@@ -78,8 +78,6 @@ class ParcelServiceController extends GetxController {
   RxBool orangePay = false.obs;
   RxBool midtrans = false.obs;
   RxBool upi = false.obs;
-  RxBool isSimulatingUPI = false.obs;
-  RxString upiStepText = "".obs;
   RxString paymentMethodType = "Select Method".obs;
   RxString paymentMethodId = "".obs;
   List<XFile> parcelImages = [];
@@ -320,57 +318,6 @@ class ParcelServiceController extends GetxController {
     }
   }
 
-  Future<void> simulateUPILaunch(VoidCallback onSuccess) async {
-    isSimulatingUPI.value = true;
-    upiStepText.value = "Connecting to UPI gateway...".tr;
-    await Future.delayed(const Duration(seconds: 1));
-    upiStepText.value = "Redirecting to installed BHIM UPI app...".tr;
-    await Future.delayed(const Duration(seconds: 1));
-    upiStepText.value = "Simulating transaction security handshake...".tr;
-    await Future.delayed(const Duration(seconds: 1));
-    isSimulatingUPI.value = false;
-    
-    // Show beautiful success dialog
-    await Get.dialog(
-      Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.check_circle_outline, color: Colors.green, size: 70),
-              const SizedBox(height: 20),
-              Text(
-                "Payment Successful".tr,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                "Your UPI transaction was completed successfully.".tr,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.grey),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppThemeData.primary200,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-                onPressed: () {
-                  Get.back();
-                },
-                child: Text("OK".tr, style: const TextStyle(color: Colors.white)),
-              )
-            ],
-          ),
-        ),
-      ),
-      barrierDismissible: false,
-    );
-    
-    onSuccess();
-  }
 
   onCameraClick(context) {
     final action = CupertinoActionSheet(
