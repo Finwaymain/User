@@ -1,29 +1,23 @@
 import 'dart:developer';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:finway/constant/constant.dart';
+import 'package:finway/constant/image_constant.dart';
+import 'package:finway/constant/show_toast_dialog.dart';
 import 'package:finway/controller/parcel_order_controller.dart';
 import 'package:finway/model/parcel_model.dart';
-import 'package:finway/page/complaint/add_complaint_screen.dart';
 import 'package:finway/page/features/Texi/texi_dash_board.dart';
 import 'package:finway/page/parcel_service_screen/parcel_details_screen.dart';
-import 'package:finway/page/review_screens/add_review_screen.dart';
 import 'package:finway/themes/appbar_cust.dart';
-import 'package:finway/themes/button_them.dart';
-import 'package:finway/themes/responsive.dart';
+import 'package:finway/themes/constant_colors.dart';
 import 'package:finway/utils/dark_theme_provider.dart';
 import 'package:finway/widget/StarRating.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:location/location.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:text_scroll/text_scroll.dart';
-
-import '../../constant/image_constant.dart';
-import '../../constant/show_toast_dialog.dart';
-import '../../themes/constant_colors.dart';
 
 class AllParcelScreen extends StatelessWidget {
   const AllParcelScreen({super.key});
@@ -31,629 +25,602 @@ class AllParcelScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeChange = Provider.of<DarkThemeProvider>(context);
+    final isDark = themeChange.getThem();
+
     return GetX<ParcelOrderController>(
-        init: ParcelOrderController(),
-        builder: (controller) {
-          return Scaffold(
-            appBar: CustomAppbar(
-              bgColor: AppThemeData.primary200,
-              title: 'All Parcels'.tr,
-              isLeadingIcon: false,
-              onClick: () {
-                log("::::::All Parcels::::::");
-                if (Navigator.of(context).canPop()) {
-                  Get.back();
-                } else {
-                  Get.offAll(() => TexiDashboard());
-                }
-              },
-            ),
-            body: Stack(
-              alignment: AlignmentDirectional.topStart,
-              children: [
-                Container(
-                  color: AppThemeData.primary200,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Expanded(flex: 1, child: SizedBox()),
-                      Expanded(
-                        flex: 10,
-                        child: Container(
-                          color: themeChange.getThem() ? AppThemeData.surface50Dark : AppThemeData.surface50,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SafeArea(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(
-                        height: 20,
-                      ),
-                      Expanded(
-                        child: Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 16),
-                          height: Responsive.height(70, context),
-                          color: themeChange.getThem() ? AppThemeData.surface50Dark : AppThemeData.surface50,
-                          child: Theme(
-                            data: ThemeData(
-                              tabBarTheme: TabBarThemeData(
-                                indicatorColor: AppThemeData.primary200,
-                              ),
-                            ),
-                            child: DefaultTabController(
-                              length: 3,
-                              child: Column(children: [
-                                TabBar(
+      init: ParcelOrderController(),
+      builder: (controller) {
+        return Scaffold(
+          backgroundColor: isDark ? AppThemeData.surface50Dark : AppThemeData.surface50,
+          appBar: CustomAppbar(
+            bgColor: AppThemeData.primary200,
+            title: 'All Parcels'.tr,
+            isLeadingIcon: false,
+            onClick: () {
+              log("::::::All Parcels::::::");
+              if (Navigator.of(context).canPop()) {
+                Get.back();
+              } else {
+                Get.offAll(() => TexiDashboard());
+              }
+            },
+          ),
+          body: Stack(
+            alignment: AlignmentDirectional.topStart,
+            children: [
+              Container(
+                height: 80,
+                color: AppThemeData.primary200,
+              ),
+              SafeArea(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        color: isDark ? AppThemeData.surface50Dark : AppThemeData.surface50,
+                        child: DefaultTabController(
+                          length: 3,
+                          child: Column(
+                            children: [
+                              // Modern Pill Tab Bar
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: isDark ? const Color(0xFF1E2620) : Colors.white,
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+                                  ),
+                                ),
+                                padding: const EdgeInsets.all(4),
+                                child: TabBar(
                                   isScrollable: false,
                                   indicatorSize: TabBarIndicatorSize.tab,
-                                  indicatorColor: AppThemeData.primary200,
-                                  indicatorWeight: 0.1,
-                                  labelPadding: const EdgeInsets.symmetric(vertical: 8),
+                                  indicator: BoxDecoration(
+                                    color: AppThemeData.primary200,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  labelColor: Colors.white,
+                                  unselectedLabelColor: isDark ? Colors.grey[400] : Colors.grey[600],
                                   dividerColor: Colors.transparent,
-                                  labelColor: AppThemeData.primary200,
-                                  automaticIndicatorColorAdjustment: true,
-                                  labelStyle: TextStyle(fontFamily: AppThemeData.medium, fontSize: 16, color: AppThemeData.primary200),
-                                  unselectedLabelStyle:
-                                      TextStyle(fontFamily: AppThemeData.regular, fontSize: 16, color: themeChange.getThem() ? AppThemeData.grey300Dark : AppThemeData.grey400),
+                                  labelStyle: const TextStyle(
+                                    fontFamily: AppThemeData.semiBold,
+                                    fontSize: 14,
+                                  ),
+                                  unselectedLabelStyle: const TextStyle(
+                                    fontFamily: AppThemeData.regular,
+                                    fontSize: 14,
+                                  ),
                                   tabs: [
-                                    Tab(
-                                      text: 'New'.tr,
+                                    Tab(text: 'Active'.tr),
+                                    Tab(text: 'Completed'.tr),
+                                    Tab(text: 'Rejected'.tr),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+
+                              Expanded(
+                                child: TabBarView(
+                                  children: [
+                                    // 1. Active / New Tab
+                                    RefreshIndicator(
+                                      onRefresh: () => controller.getParcel(),
+                                      child: controller.isLoading.value
+                                          ? const Center(child: CircularProgressIndicator())
+                                          : controller.newParcelList.isEmpty
+                                              ? Constant.emptyView(context, "No active parcel bookings.".tr, false)
+                                              : ListView.builder(
+                                                  padding: const EdgeInsets.only(bottom: 20),
+                                                  physics: const BouncingScrollPhysics(),
+                                                  itemCount: controller.newParcelList.length,
+                                                  itemBuilder: (context, index) {
+                                                    return buildHistory(context, controller, controller.newParcelList[index]);
+                                                  },
+                                                ),
                                     ),
-                                    Tab(
-                                      text: 'Completed'.tr,
+
+                                    // 2. Completed Tab
+                                    RefreshIndicator(
+                                      onRefresh: () => controller.getParcel(),
+                                      child: controller.isLoading.value
+                                          ? const Center(child: CircularProgressIndicator())
+                                          : controller.completedParcelList.isEmpty
+                                              ? Constant.emptyView(context, "You have not completed any parcel.".tr, false)
+                                              : ListView.builder(
+                                                  padding: const EdgeInsets.only(bottom: 20),
+                                                  physics: const BouncingScrollPhysics(),
+                                                  itemCount: controller.completedParcelList.length,
+                                                  itemBuilder: (context, index) {
+                                                    return buildHistory(context, controller, controller.completedParcelList[index]);
+                                                  },
+                                                ),
                                     ),
-                                    Tab(
-                                      text: 'Rejected'.tr,
+
+                                    // 3. Rejected / Cancelled Tab
+                                    RefreshIndicator(
+                                      onRefresh: () => controller.getParcel(),
+                                      child: controller.isLoading.value
+                                          ? const Center(child: CircularProgressIndicator())
+                                          : controller.rejectedParcelList.isEmpty
+                                              ? Constant.emptyView(context, "No rejected parcels.".tr, false)
+                                              : ListView.builder(
+                                                  padding: const EdgeInsets.only(bottom: 20),
+                                                  physics: const BouncingScrollPhysics(),
+                                                  itemCount: controller.rejectedParcelList.length,
+                                                  itemBuilder: (context, index) {
+                                                    return buildHistory(context, controller, controller.rejectedParcelList[index]);
+                                                  },
+                                                ),
                                     ),
                                   ],
                                 ),
-                                Expanded(
-                                  child: TabBarView(children: [
-                                    SizedBox(
-                                      child: RefreshIndicator(
-                                        onRefresh: () => controller.getParcel(),
-                                        child: controller.isLoading.value
-                                            ? SizedBox()
-                                            : controller.newParcelList.isEmpty
-                                                ? Constant.emptyView(context, "You have not booked any parcel.", false)
-                                                : ListView.builder(
-                                                    padding: EdgeInsets.zero,
-                                                    physics: const BouncingScrollPhysics(),
-                                                    itemCount: controller.newParcelList.length,
-                                                    shrinkWrap: true,
-                                                    itemBuilder: (context, index) {
-                                                      return buildHistory(context, controller, controller.newParcelList[index]);
-                                                    },
-                                                  ),
-                                      ),
-                                    ),
-                                    SizedBox(
-                                      child: RefreshIndicator(
-                                        onRefresh: () => controller.getParcel(),
-                                        child: controller.isLoading.value
-                                            ? SizedBox()
-                                            : controller.completedParcelList.isEmpty
-                                                ? Constant.emptyView(context, "You have not Completed any parcel.", false)
-                                                : ListView.builder(
-                                                    padding: EdgeInsets.zero,
-                                                    physics: const BouncingScrollPhysics(),
-                                                    itemCount: controller.completedParcelList.length,
-                                                    shrinkWrap: true,
-                                                    itemBuilder: (context, index) {
-                                                      return buildHistory(context, controller, controller.completedParcelList[index]);
-                                                    },
-                                                  ),
-                                      ),
-                                    ),
-                                    SizedBox(
-                                      child: RefreshIndicator(
-                                        onRefresh: () => controller.getParcel(),
-                                        child: controller.isLoading.value
-                                            ? SizedBox()
-                                            : controller.rejectedParcelList.isEmpty
-                                                ? Constant.emptyView(context, "You have not rejected any parcel.", false)
-                                                : ListView.builder(
-                                                    padding: EdgeInsets.zero,
-                                                    physics: const BouncingScrollPhysics(),
-                                                    itemCount: controller.rejectedParcelList.length,
-                                                    shrinkWrap: true,
-                                                    itemBuilder: (context, index) {
-                                                      return buildHistory(context, controller, controller.rejectedParcelList[index]);
-                                                    },
-                                                  ),
-                                      ),
-                                    ),
-                                  ]),
-                                )
-                              ]),
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          );
-        });
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
-  buildHistory(context, ParcelOrderController controller, ParcelData data) {
+  Widget buildHistory(BuildContext context, ParcelOrderController controller, ParcelData data) {
     final themeChange = Provider.of<DarkThemeProvider>(context);
+    final isDark = themeChange.getThem();
+    final status = data.status?.toString().toLowerCase() ?? '';
+    final otp = data.otp?.toString() ?? '';
+    final hasDriver = data.idConducteur != null && data.idConducteur.toString() != "null" && data.idConducteur.toString().isNotEmpty && data.idConducteur.toString() != "0";
+    final showOtp = otp.isNotEmpty && status != 'completed' && status != 'rejected' && status != 'canceled';
+
     return GestureDetector(
       onTap: () async {
         log("Parcel Click :: ${data.toJson().toString()}");
-
-        await Get.to(ParcelDetailsScreen(), arguments: {
+        await Get.to(() => ParcelDetailsScreen(), arguments: {
           "parcelData": data,
         })?.then((v) {
           controller.getParcel();
         });
       },
       child: Container(
-        margin: const EdgeInsets.only(top: 22),
+        margin: const EdgeInsets.only(bottom: 14),
         decoration: BoxDecoration(
-            border: Border.all(
-          color: themeChange.getThem() ? AppThemeData.grey200Dark : AppThemeData.grey200,
-        )),
-        child: Stack(
+          color: isDark ? AppThemeData.surface50Dark : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+          border: Border.all(
+            color: isDark ? AppThemeData.grey200Dark.withValues(alpha: 0.5) : AppThemeData.grey200,
+            width: 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Top Row: Order ID + Status Badge
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Column(
-                              children: [
-                                SvgPicture.asset(
-                                  'assets/icons/ic_location.svg',
-                                  colorFilter: ColorFilter.mode(
-                                    AppThemeData.success300,
-                                    BlendMode.srcIn,
-                                  ),
-                                ),
-                                Container(
-                                  width: 2,
-                                  height: 60,
-                                  color: themeChange.getThem() ? AppThemeData.grey200Dark : AppThemeData.grey200,
-                                )
-                              ],
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppThemeData.primary200.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(6),
                             ),
-                            const SizedBox(
-                              width: 10,
-                            ),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    data.senderName.toString(),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontFamily: AppThemeData.medium,
-                                      color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
-                                    ),
-                                  ),
-                                  Text(
-                                    data.source.toString(),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontFamily: AppThemeData.regular,
-                                      color: themeChange.getThem() ? AppThemeData.grey400 : AppThemeData.grey300Dark,
-                                    ),
-                                  ),
-                                ],
+                            child: Text(
+                              "#${data.id ?? ''}",
+                              style: TextStyle(
+                                fontFamily: AppThemeData.semiBold,
+                                fontSize: 13,
+                                color: AppThemeData.primary200,
                               ),
                             ),
-                            const Divider(),
-                            Align(
-                                alignment: Alignment.topRight,
-                                child: data.status == "new"
-                                    ? statusTile(title: 'New', bgColor: AppThemeData.primary50.withAlpha(200), txtColor: AppThemeData.primary200)
-                                    : data.status == "onride"
-                                        ? statusTile(title: 'Active', bgColor: AppThemeData.primary50.withAlpha(200), txtColor: AppThemeData.primary200)
-                                        : data.status == "confirmed"
-                                            ? statusTile(title: 'Confirmed', bgColor: AppThemeData.primary50.withAlpha(200), txtColor: AppThemeData.primary200)
-                                            : data.status == "completed"
-                                                ? statusTile(title: 'Completed', bgColor: AppThemeData.success50.withAlpha(200), txtColor: AppThemeData.success300)
-                                                : statusTile(title: 'Rejected', bgColor: AppThemeData.error50.withAlpha(200), txtColor: AppThemeData.error200)),
-                          ],
-                        ),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            SvgPicture.asset(
-                              'assets/icons/ic_location.svg',
-                              colorFilter: ColorFilter.mode(
-                                AppThemeData.warning200,
-                                BlendMode.srcIn,
-                              ),
-                            ),
-                            const SizedBox(
-                              width: 5,
-                            ),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    data.receiverName.toString(),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontFamily: AppThemeData.medium,
-                                      color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
-                                    ),
-                                  ),
-                                  Text(
-                                    data.destination.toString(),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontFamily: AppThemeData.regular,
-                                      color: themeChange.getThem() ? AppThemeData.grey400 : AppThemeData.grey300Dark,
-                                    ),
-                                  ),
-                                ],
+                          ),
+                          if (data.title != null && data.title.toString().isNotEmpty) ...[
+                            const SizedBox(width: 8),
+                            Text(
+                              data.title.toString(),
+                              style: TextStyle(
+                                fontFamily: AppThemeData.medium,
+                                fontSize: 13,
+                                color: isDark ? Colors.grey[400] : Colors.grey[600],
                               ),
                             ),
                           ],
-                        ),
-                      ]),
+                        ],
+                      ),
+                      _buildStatusBadge(status),
                     ],
                   ),
-                ),
-                (data.status.toString() == "confirmed" && Constant.rideOtp.toString().toLowerCase() == 'yes'.toLowerCase())
-                    ? Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-                        child: Text(
-                          "${"OTP : ".tr}${data.otp.toString()}",
-                          style: TextStyle(
-                            fontFamily: AppThemeData.medium,
-                            color: themeChange.getThem() ? AppThemeData.grey400 : AppThemeData.grey300Dark,
-                            fontSize: 14,
-                          ),
-                        ),
-                      )
-                    : Container(
-                        height: 1,
-                        color: themeChange.getThem() ? AppThemeData.grey200Dark : AppThemeData.grey200,
-                      ),
-                Visibility(
-                  visible: data.status.toString() != "confirmed" || Constant.rideOtp.toString().toLowerCase() == 'no'.toLowerCase(),
-                  child: const SizedBox(
-                    height: 10,
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  const SizedBox(height: 14),
+
+                  // Route Addresses
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Column(
+                        children: [
+                          Container(
+                            width: 12,
+                            height: 12,
+                            decoration: BoxDecoration(
+                              color: AppThemeData.success300,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 2),
+                            ),
+                          ),
+                          Container(
+                            width: 2,
+                            height: 38,
+                            margin: const EdgeInsets.symmetric(vertical: 2),
+                            color: isDark ? Colors.grey[700] : Colors.grey[300],
+                          ),
+                          Container(
+                            width: 12,
+                            height: 12,
+                            decoration: BoxDecoration(
+                              color: AppThemeData.warning200,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 2),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            TextScroll("${double.parse(data.distance.toString()).toStringAsFixed(int.parse(Constant.decimal!))} ${data.distanceUnit}",
-                                mode: TextScrollMode.bouncing,
-                                pauseBetween: const Duration(seconds: 2),
-                                style: TextStyle(
-                                  fontFamily: AppThemeData.semiBold,
-                                  color: AppThemeData.primary200,
-                                  fontSize: 18,
-                                )),
-                            const SizedBox(
-                              height: 2,
+                            // Sender Address
+                            Text(
+                              data.source?.toString() ?? '',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontFamily: AppThemeData.medium,
+                                color: isDark ? Colors.white : Colors.black87,
+                              ),
                             ),
-                            Text('Distance'.tr,
-                                maxLines: 1,
-                                style: TextStyle(
-                                  fontFamily: AppThemeData.regular,
-                                  color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
-                                  fontSize: 12,
-                                )),
+                            const SizedBox(height: 24),
+                            // Destination Address
+                            Text(
+                              data.destination?.toString() ?? '',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontFamily: AppThemeData.medium,
+                                color: isDark ? Colors.white : Colors.black87,
+                              ),
+                            ),
                           ],
-                        ),
-                      ),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              TextScroll(data.duration.toString(),
-                                  mode: TextScrollMode.bouncing,
-                                  pauseBetween: const Duration(seconds: 2),
-                                  style: TextStyle(
-                                    fontFamily: AppThemeData.semiBold,
-                                    color: AppThemeData.primary200,
-                                    fontSize: 18,
-                                  )),
-                              const SizedBox(
-                                height: 2,
-                              ),
-                              Text('Duration'.tr,
-                                  maxLines: 1,
-                                  style: TextStyle(
-                                    fontFamily: AppThemeData.regular,
-                                    color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
-                                    fontSize: 12,
-                                  )),
-                            ],
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 20),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(Constant().amountShow(amount: data.amount.toString()),
-                                  maxLines: 1,
-                                  style: TextStyle(
-                                    fontFamily: AppThemeData.semiBold,
-                                    color: AppThemeData.primary200,
-                                    fontSize: 18,
-                                  )),
-                              const SizedBox(
-                                height: 2,
-                              ),
-                              Text("Amount".tr,
-                                  style: TextStyle(
-                                    fontFamily: AppThemeData.regular,
-                                    color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
-                                    fontSize: 12,
-                                  )),
-                            ],
-                          ),
                         ),
                       ),
                     ],
                   ),
-                ),
-                if ((data.status.toString() != "new" || data.status.toString() != "canceled") && data.idConducteur.toString() != "null")
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-                    child: Row(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(80),
-                          child: CachedNetworkImage(
-                            imageUrl: data.driverPhoto.toString(),
-                            height: 60,
-                            width: 60,
-                            fit: BoxFit.cover,
-                            placeholder: (context, url) => Constant.loader(context),
-                            errorWidget: (context, url, error) => Image.asset(
-                              ImageConstant.logo,
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 8.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text("${data.driverName}",
-                                    style: TextStyle(
-                                      fontFamily: AppThemeData.semiBold,
-                                      color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900,
-                                      fontSize: 16,
-                                      letterSpacing: 0.6,
-                                    )),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    StarRating(
-                                      size: 20,
-                                      rating: data.moyenne != "null" ? double.parse(data.moyenne.toString()) : 0.0,
-                                      color: AppThemeData.warning200,
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Row(
-                              children: [
-                                Row(
-                                  children: [
-                                    data.status == "new" || data.status == "active" || data.status == "confirmed" || data.status == "onride"
-                                        ? Padding(
-                                            padding: const EdgeInsets.only(left: 10),
-                                            child: InkWell(
-                                                onTap: () async {
-                                                  ShowToastDialog.showLoader("Please wait");
-                                                  final Location currentLocation = Location();
-                                                  LocationData location = await currentLocation.getLocation();
-                                                  ShowToastDialog.closeLoader();
-                                                  await Share.share(
-                                                    'https://www.google.com/maps/search/?api=1&query=${location.latitude},${location.longitude}',
-                                                    subject: "Cabme".tr,
-                                                  );
-                                                  // await FlutterShareMe()
-                                                  //     .shareToWhatsApp(msg: 'https://www.google.com/maps/search/?api=1&query=${location.latitude},${location.longitude}');
-                                                },
-                                                child: Container(
-                                                  alignment: Alignment.center,
-                                                  height: 44,
-                                                  width: 44,
-                                                  decoration: BoxDecoration(
-                                                    shape: BoxShape.circle,
-                                                    color: AppThemeData.secondary200,
-                                                  ),
-                                                  child: SvgPicture.asset(
-                                                    'assets/icons/ic_share.svg',
-                                                    height: 20,
-                                                    width: 20,
-                                                    colorFilter: ColorFilter.mode(
-                                                      themeChange.getThem() ? AppThemeData.surface50Dark : AppThemeData.surface50,
-                                                      BlendMode.srcIn,
-                                                    ),
-                                                  ),
-                                                )),
-                                          )
-                                        : const Offstage(),
-                                  ],
-                                ),
-                                Visibility(
-                                    visible: data.status == "completed" || data.status == "rejected",
-                                    child: ButtonThem.buildIconButton(
-                                      btnWidthRatio: 0.3,
-                                      radius: 50,
-                                      btnHeight: 50,
-                                      context,
-                                      title: 'Ratings'.tr,
-                                      btnColor: AppThemeData.info200,
-                                      txtColor: AppThemeData.grey900,
-                                      iconColor: AppThemeData.grey900,
-                                      iconSize: 18.0,
-                                      txtSize: 14,
-                                      icon: Icons.add,
-                                      onPress: () async {
-                                        Get.to(const AddReviewScreen(), arguments: {
-                                          "data": data,
-                                          "ride_type": "parcel",
-                                        })!
-                                            .then((value) {});
-                                      },
-                                    )),
-                                Visibility(
-                                  visible: data.status == "new" || data.status == "active" || data.status == "confirmed" || data.status == "onride",
-                                  child: Row(
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.only(left: 10),
-                                        child: InkWell(
-                                            onTap: () {
-                                              Constant.makePhoneCall(data.driverPhone.toString());
-                                            },
-                                            child: Container(
-                                              alignment: Alignment.center,
-                                              height: 44,
-                                              width: 44,
-                                              decoration: BoxDecoration(
-                                                shape: BoxShape.circle,
-                                                color: AppThemeData.warning200,
-                                              ),
-                                              child: SvgPicture.asset(
-                                                'assets/icons/call_icon.svg',
-                                                height: 20,
-                                                width: 20,
-                                                colorFilter: ColorFilter.mode(
-                                                  themeChange.getThem() ? AppThemeData.surface50Dark : AppThemeData.surface50,
-                                                  BlendMode.srcIn,
-                                                ),
-                                              ),
-                                            )),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            // Padding(
-                            //   padding: const EdgeInsets.only(
-                            //     top: 5.0,
-                            //   ),
-                            //   child: Text(data.parcelDate.toString(), style: TextStyle(color: themeChange.getThem() ? AppThemeData.grey900Dark : AppThemeData.grey900, fontSize: 16)),
-                            // ),
-                          ],
-                        )
-                      ],
-                    ),
-                  ),
-                Visibility(
-                  visible: data.status.toString() == "completed",
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 10.0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                            child: ButtonThem.buildButton(context, title: data.paymentStatus == "yes" ? "Paid".tr : "Pay Now".tr, txtColor: Colors.white, onPress: () async {
-                          if (data.paymentStatus == "yes") {
-                          } else {
-                            await Get.to(ParcelDetailsScreen(), arguments: {
-                              "parcelData": data,
-                            })?.then((v) {
-                              controller.getParcel();
-                            });
-                          }
-                        })),
-                      ],
-                    ),
-                  ),
-                ),
-                Visibility(
-                    visible: data.status == "completed",
-                    child: Padding(
-                        padding: const EdgeInsets.only(top: 10.0),
-                        child: ButtonThem.buildBorderButton(
-                          context,
-                          title: 'Add Complaint'.tr,
-                          btnColor: themeChange.getSystemThem() ? Colors.transparent : AppThemeData.surface50,
-                          txtColor: AppThemeData.primary200,
-                          btnBorderColor: AppThemeData.primary200,
-                          onPress: () async {
-                            Get.to(AddComplaintScreen(), arguments: {
-                              "data": data,
-                              "ride_type": "parcel",
-                            })!
-                                .then((value) {});
-                          },
-                        ))),
-              ],
+                ],
+              ),
             ),
+
+            // ⭐ PROMINENT PICKUP OTP BANNER ⭐
+            if (showOtp) ...[
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: isDark
+                        ? [const Color(0xFF102E20), const Color(0xFF183D2C)]
+                        : [const Color(0xFFE6F8EF), const Color(0xFFD3F4E3)],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppThemeData.success300.withValues(alpha: 0.4),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: AppThemeData.success300,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.lock, size: 14, color: Colors.white),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Pickup Verification OTP".tr,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontFamily: AppThemeData.medium,
+                              color: isDark ? Colors.green[300] : const Color(0xFF0B6634),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            otp,
+                            style: TextStyle(
+                              fontSize: 18,
+                              letterSpacing: 2,
+                              fontFamily: AppThemeData.bold,
+                              color: isDark ? Colors.white : const Color(0xFF0B6634),
+                            ),
+                          ),
+                          Text(
+                            "Share with driver at pickup".tr,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontFamily: AppThemeData.regular,
+                              color: isDark ? Colors.grey[400] : const Color(0xFF2E6545),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Copy Button
+                    InkWell(
+                      onTap: () {
+                        Clipboard.setData(ClipboardData(text: otp));
+                        HapticFeedback.lightImpact();
+                        ShowToastDialog.showToast("OTP $otp copied to clipboard".tr);
+                      },
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.white.withValues(alpha: 0.12) : Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: AppThemeData.success300.withValues(alpha: 0.5),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.copy_rounded, size: 14, color: AppThemeData.success300),
+                            const SizedBox(width: 4),
+                            Text(
+                              "Copy".tr,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontFamily: AppThemeData.semiBold,
+                                color: isDark ? Colors.white : const Color(0xFF0B6634),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+
+            // 3-Stat Summary Container
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: isDark ? AppThemeData.surface50Dark.withValues(alpha: 0.7) : AppThemeData.surface50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildStatItem("Distance".tr, "${data.distance ?? '0'} ${data.distanceUnit ?? 'KM'}", isDark),
+                  Container(width: 1, height: 22, color: isDark ? Colors.grey[800] : Colors.grey[300]),
+                  _buildStatItem("Duration".tr, data.duration?.toString() ?? '--', isDark),
+                  Container(width: 1, height: 22, color: isDark ? Colors.grey[800] : Colors.grey[300]),
+                  _buildStatItem("Amount".tr, Constant().amountShow(amount: data.amount?.toString() ?? '0'), isDark),
+                ],
+              ),
+            ),
+
+            // Driver strip (when assigned)
+            if (hasDriver) ...[
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: data.driverPhoto != null &&
+                              data.driverPhoto.toString().isNotEmpty &&
+                              (data.driverPhoto.toString().startsWith("http://") || data.driverPhoto.toString().startsWith("https://"))
+                          ? CachedNetworkImage(
+                              imageUrl: data.driverPhoto.toString(),
+                              width: 40,
+                              height: 40,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) => Container(width: 40, height: 40, color: Colors.grey[200]),
+                              errorWidget: (context, url, error) => Image.asset(ImageConstant.logo, width: 40, height: 40),
+                            )
+                          : Image.asset(ImageConstant.logo, width: 40, height: 40),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            data.driverName?.toString().isNotEmpty == true
+                                ? data.driverName.toString()
+                                : "${data.prenomConducteur ?? ''} ${data.nomConducteur ?? ''}".trim(),
+                            style: TextStyle(
+                              fontFamily: AppThemeData.semiBold,
+                              fontSize: 14,
+                              color: isDark ? Colors.white : Colors.black87,
+                            ),
+                          ),
+                          Row(
+                            children: [
+                              StarRating(
+                                size: 13,
+                                rating: double.tryParse(data.moyenneDriver?.toString() ?? data.moyenne?.toString() ?? '5.0') ?? 5.0,
+                                color: AppThemeData.warning200,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Share Location
+                    InkWell(
+                      onTap: () async {
+                        ShowToastDialog.showLoader("Please wait");
+                        final Location currentLocation = Location();
+                        LocationData location = await currentLocation.getLocation();
+                        ShowToastDialog.closeLoader();
+                        await Share.share(
+                          'https://www.google.com/maps/search/?api=1&query=${location.latitude},${location.longitude}',
+                          subject: "Fiinway Parcel".tr,
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppThemeData.secondary200.withValues(alpha: 0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.share_rounded, color: AppThemeData.secondary200, size: 18),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+
+                    // Call Driver
+                    if (data.driverPhone?.toString().isNotEmpty == true)
+                      InkWell(
+                        onTap: () => Constant.makePhoneCall(data.driverPhone.toString()),
+                        borderRadius: BorderRadius.circular(20),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppThemeData.success300.withValues(alpha: 0.14),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.phone_in_talk_rounded, color: AppThemeData.success300, size: 18),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+
+            const SizedBox(height: 14),
           ],
         ),
       ),
     );
   }
 
-  Widget statusTile({required String title, Color? bgColor, Color? txtColor}) {
+  Widget _buildStatusBadge(String status) {
+    Color bg;
+    Color fg;
+    String label;
+
+    switch (status) {
+      case 'confirmed':
+        bg = AppThemeData.success300.withValues(alpha: 0.14);
+        fg = AppThemeData.success300;
+        label = "Confirmed".tr;
+        break;
+      case 'onride':
+      case 'on ride':
+        bg = AppThemeData.warning200.withValues(alpha: 0.18);
+        fg = AppThemeData.warning200;
+        label = "In Transit".tr;
+        break;
+      case 'completed':
+        bg = AppThemeData.primary200.withValues(alpha: 0.15);
+        fg = AppThemeData.primary200;
+        label = "Completed".tr;
+        break;
+      case 'canceled':
+      case 'rejected':
+        bg = Colors.red.withValues(alpha: 0.12);
+        fg = Colors.red;
+        label = "Cancelled".tr;
+        break;
+      case 'new':
+      default:
+        bg = Colors.blue.withValues(alpha: 0.12);
+        fg = Colors.blue;
+        label = "Pending Driver".tr;
+        break;
+    }
+
     return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(4),
-        color: bgColor,
+        color: bg,
+        borderRadius: BorderRadius.circular(16),
       ),
-      alignment: Alignment.center,
-      height: 32,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        child: Text(
-          title.tr,
-          style: TextStyle(fontSize: 14, color: txtColor, fontFamily: AppThemeData.medium),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontFamily: AppThemeData.semiBold,
+          color: fg,
         ),
       ),
+    );
+  }
+
+  Widget _buildStatItem(String label, String value, bool isDark) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 13,
+            fontFamily: AppThemeData.semiBold,
+            color: AppThemeData.primary200,
+          ),
+        ),
+        const SizedBox(height: 1),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            fontFamily: AppThemeData.regular,
+            color: isDark ? Colors.grey[400] : Colors.grey[600],
+          ),
+        ),
+      ],
     );
   }
 }
