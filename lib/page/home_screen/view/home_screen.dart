@@ -82,6 +82,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
 
   // Local map variables
   MapController? mainMapController;
+  Position? _currentUserPosition;
   String currentAddress = "Locating your position...";
   String etaText = "4 min away";
   bool isMapReady = false;
@@ -112,6 +113,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
         Position position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high,
         );
+        _currentUserPosition = position;
         final userGeoPoint = GeoPoint(
           latitude: position.latitude,
           longitude: position.longitude,
@@ -517,8 +519,23 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                             VerticalIconWithText(
                               icon: Icons.fastfood_outlined,
                               text: 'Food Order',
-                              onTap: () {
-                                final url = OnboardingUrl.build('/onboarding/food.html');
+                              onTap: () async {
+                                final extra = <String, String>{
+                                  'radius': '25',
+                                };
+                                if (_currentUserPosition != null) {
+                                  extra['lat'] = _currentUserPosition!.latitude.toString();
+                                  extra['lng'] = _currentUserPosition!.longitude.toString();
+                                } else {
+                                  try {
+                                    final pos = await Geolocator.getLastKnownPosition();
+                                    if (pos != null) {
+                                      extra['lat'] = pos.latitude.toString();
+                                      extra['lng'] = pos.longitude.toString();
+                                    }
+                                  } catch (_) {}
+                                }
+                                final url = OnboardingUrl.build('/onboarding/food.html', extra: extra);
                                 Get.to(
                                   () => WebViewScreen(url: url, title: 'Food Ordering'.tr),
                                   transition: Transition.rightToLeftWithFade,
