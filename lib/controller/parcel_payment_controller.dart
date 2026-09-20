@@ -261,16 +261,16 @@ class ParcelPaymentController extends GetxController {
       showLog("API :: responseBody :: ${response.body} ");
       Map<String, dynamic> responseBody = json.decode(response.body);
 
-      if (response.statusCode == 200 && responseBody['success'] == "Success") {
+      final success = responseBody['success']?.toString().toLowerCase();
+      if (response.statusCode == 200 && success == "success") {
         ShowToastDialog.closeLoader();
         return responseBody;
-      } else if (response.statusCode == 200 && responseBody['success'] == "Failed") {
+      } else if (response.statusCode == 200 && (success == "failed" || responseBody['error'] != null)) {
         ShowToastDialog.closeLoader();
-        ShowToastDialog.showToast(responseBody['error']);
+        ShowToastDialog.showToast(responseBody['error'] ?? "Wallet payment failed");
       } else {
         ShowToastDialog.closeLoader();
-        ShowToastDialog.showToast('Something want wrong. Please try again later');
-        throw Exception('Failed to load album');
+        ShowToastDialog.showToast(responseBody['error'] ?? 'Something went wrong. Please try again later');
       }
     } on TimeoutException catch (e) {
       ShowToastDialog.closeLoader();
@@ -297,8 +297,7 @@ class ParcelPaymentController extends GetxController {
       showLog("API :: responseBody :: ${response.body} ");
       Map<String, dynamic> responseBody = json.decode(response.body);
 
-      if (response.statusCode == 200 && responseBody['success'].toString().toLowerCase() == "Success".toString().toLowerCase()) {
-        // transactionAmountRequest();
+      if (response.statusCode == 200 && responseBody['success'].toString().toLowerCase() == "success") {
         ShowToastDialog.closeLoader();
         return responseBody;
       } else if (response.statusCode == 200 && responseBody['success'] == "Failed") {
@@ -306,8 +305,7 @@ class ParcelPaymentController extends GetxController {
         ShowToastDialog.showToast(responseBody['error']);
       } else {
         ShowToastDialog.closeLoader();
-        ShowToastDialog.showToast('Something want wrong. Please try again later');
-        throw Exception('Failed to load album');
+        ShowToastDialog.showToast('Something went wrong. Please try again later');
       }
     } on TimeoutException catch (e) {
       ShowToastDialog.closeLoader();
@@ -329,11 +327,15 @@ class ParcelPaymentController extends GetxController {
     for (var v in Constant.taxList) {
       taxList.add(v.toJson());
     }
+    String method = selectedRadioTile.value;
+    if (method.isEmpty || method == 'null') {
+      method = 'RazorPay';
+    }
     Map<String, dynamic> bodyParams = {
       'id_parcel': data.value.id.toString(),
       'id_driver': data.value.idConducteur.toString(),
       'amount': subTotalAmount.value.toString(),
-      'paymethod': selectedRadioTile.value,
+      'paymethod': method,
       'discount': discountAmount.value.toString(),
       'tax': taxList,
       'tip': tipAmount.value.toString(),
@@ -349,16 +351,16 @@ class ParcelPaymentController extends GetxController {
       showLog("API :: responseBody :: ${response.body} ");
       Map<String, dynamic> responseBody = json.decode(response.body);
 
-      if (response.statusCode == 200 && responseBody['success'] == "Success") {
+      final success = responseBody['success']?.toString().toLowerCase();
+      if (response.statusCode == 200 && success == "success") {
         ShowToastDialog.closeLoader();
         return responseBody;
-      } else if (response.statusCode == 200 && responseBody['success'] == "Failed") {
+      } else if (response.statusCode == 200 && (success == "failed" || responseBody['error'] != null)) {
         ShowToastDialog.closeLoader();
-        ShowToastDialog.showToast(responseBody['error']);
+        ShowToastDialog.showToast(responseBody['error'] ?? "Payment failed");
       } else {
         ShowToastDialog.closeLoader();
-        ShowToastDialog.showToast('Something want wrong. Please try again later');
-        throw Exception('Failed to load album');
+        ShowToastDialog.showToast(responseBody['error'] ?? 'Something went wrong. Please try again later');
       }
     } on TimeoutException catch (e) {
       ShowToastDialog.closeLoader();

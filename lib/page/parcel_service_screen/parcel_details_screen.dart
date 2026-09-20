@@ -89,46 +89,6 @@ class _ParcelDetailsScreenState extends State<ParcelDetailsScreen> {
     ShowToastDialog.showToast('Payment via ${response.walletName}'.tr);
   }
 
-  void _payByCash(ParcelPaymentController controller) {
-    Get.defaultDialog(
-      title: "Confirm Cash Payment".tr,
-      content: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Text(
-          "Are you paying ${Constant().amountShow(amount: controller.getTotalAmount().toString())} in cash to the driver at pickup?".tr,
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 14),
-        ),
-      ),
-      textConfirm: "Yes, Confirm".tr,
-      textCancel: "Cancel".tr,
-      confirmTextColor: Colors.white,
-      buttonColor: AppThemeData.primary200,
-      onConfirm: () async {
-        Get.back();
-        List taxList = [];
-        for (var v in Constant.taxList) {
-          taxList.add(v.toJson());
-        }
-        Map<String, dynamic> bodyParams = {
-          'id_parcel': controller.data.value.id.toString(),
-          'id_driver': controller.data.value.idConducteur.toString(),
-          'amount': controller.subTotalAmount.value.toString(),
-          'paymethod': 'Cash',
-          'discount': controller.discountAmount.value.toString(),
-          'tip': controller.tipAmount.value.toString(),
-          'tax': taxList,
-          'transaction_id': DateTime.now().microsecondsSinceEpoch.toString(),
-        };
-        var res = await controller.cashPaymentRequest(bodyParams);
-        if (res != null) {
-          controller.data.value.paymentStatus = 'yes';
-          controller.data.refresh();
-          ShowToastDialog.showToast("Cash payment recorded! Driver can now proceed to destination.".tr);
-        }
-      },
-    );
-  }
 
   void _payByUPI(ParcelPaymentController controller) {
     final key = controller.paymentSettingModel.value.razorpay?.key ?? '';
@@ -417,79 +377,38 @@ class _ParcelDetailsScreenState extends State<ParcelDetailsScreen> {
           // 3 Action Buttons: Cash, UPI, Wallet
           Row(
             children: [
-              // 1. Cash Option
-              Expanded(
-                child: InkWell(
-                  onTap: () => _payByCash(controller),
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1B382B) : const Color(0xFFE8F8F0),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppThemeData.success300.withValues(alpha: 0.6),
-                      ),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.money_rounded, color: AppThemeData.success300, size: 22),
-                        const SizedBox(height: 4),
-                        Text(
-                          "Cash".tr,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontFamily: AppThemeData.semiBold,
-                            color: isDark ? Colors.white : const Color(0xFF0B6634),
-                          ),
-                        ),
-                        Text(
-                          "Pay Driver".tr,
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontFamily: AppThemeData.regular,
-                            color: isDark ? Colors.grey[400] : Colors.grey[600],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-
-              // 2. UPI Option
+              // 1. UPI Option
               Expanded(
                 child: InkWell(
                   onTap: () => _payByUPI(controller),
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
                       color: isDark ? const Color(0xFF281E45) : const Color(0xFFF0ECFC),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: const Color(0xFF673AB7).withValues(alpha: 0.6),
+                        width: 1.5,
                       ),
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.qr_code_2_rounded, color: Color(0xFF673AB7), size: 22),
-                        const SizedBox(height: 4),
+                        const Icon(Icons.qr_code_2_rounded, color: Color(0xFF673AB7), size: 26),
+                        const SizedBox(height: 6),
                         Text(
-                          "UPI".tr,
+                          "UPI (Instant)".tr,
                           style: TextStyle(
-                            fontSize: 13,
+                            fontSize: 14,
                             fontFamily: AppThemeData.semiBold,
                             color: isDark ? Colors.white : const Color(0xFF4527A0),
                           ),
                         ),
                         Text(
-                          "GPay/PhonePe".tr,
+                          "GPay / PhonePe / Paytm".tr,
                           style: TextStyle(
-                            fontSize: 10,
+                            fontSize: 11,
                             fontFamily: AppThemeData.regular,
                             color: isDark ? Colors.grey[400] : Colors.grey[600],
                           ),
@@ -499,41 +418,42 @@ class _ParcelDetailsScreenState extends State<ParcelDetailsScreen> {
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
 
-              // 3. Wallet Option
+              // 2. Wallet Option
               Expanded(
                 child: InkWell(
                   onTap: () => _payByWallet(controller),
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
                       color: isDark ? const Color(0xFF382216) : const Color(0xFFFFF0E6),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: const Color(0xFFFF6F00).withValues(alpha: 0.6),
+                        width: 1.5,
                       ),
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.account_balance_wallet_rounded, color: Color(0xFFFF6F00), size: 22),
-                        const SizedBox(height: 4),
+                        const Icon(Icons.account_balance_wallet_rounded, color: Color(0xFFFF6F00), size: 26),
+                        const SizedBox(height: 6),
                         Text(
-                          "Wallet".tr,
+                          "Smart Value".tr,
                           style: TextStyle(
-                            fontSize: 13,
+                            fontSize: 14,
                             fontFamily: AppThemeData.semiBold,
                             color: isDark ? Colors.white : const Color(0xFFE65100),
                           ),
                         ),
                         Text(
-                          Constant().amountShow(amount: controller.walletAmount.value),
+                          "Bal: ${Constant().amountShow(amount: controller.walletAmount.value)}",
                           style: TextStyle(
-                            fontSize: 10,
-                            fontFamily: AppThemeData.regular,
-                            color: isDark ? Colors.grey[400] : Colors.grey[600],
+                            fontSize: 11,
+                            fontFamily: AppThemeData.medium,
+                            color: isDark ? Colors.orange[200] : const Color(0xFFB23B00),
                           ),
                         ),
                       ],
@@ -543,28 +463,33 @@ class _ParcelDetailsScreenState extends State<ParcelDetailsScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 12),
 
-          Center(
-            child: TextButton(
-              onPressed: () {
-                Get.to(() => ParcelPaymentSelectionScreen(), arguments: {
-                  "parcelData": controller.data.value,
-                })?.then((v) {
-                  if (controller.data.value.id != null) {
-                    controller.getParcelDetailsData(controller.data.value.id.toString());
-                  }
-                });
-              },
-              child: Text(
-                "More payment options (Cards / NetBanking)".tr,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontFamily: AppThemeData.medium,
-                  color: AppThemeData.primary200,
-                  decoration: TextDecoration.underline,
-                ),
+          // Cash Notice (Collected by driver only)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1B382B) : const Color(0xFFE8F8F0),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: AppThemeData.success300.withValues(alpha: 0.4),
               ),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.payments_outlined, color: AppThemeData.success300, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    "Paying with Cash? Hand cash directly to your driver. The driver will confirm cash receipt on their app.".tr,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontFamily: AppThemeData.medium,
+                      color: isDark ? Colors.green[200] : const Color(0xFF0B6634),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
