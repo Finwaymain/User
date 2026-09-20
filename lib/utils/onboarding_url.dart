@@ -32,15 +32,56 @@ class OnboardingUrl {
     return '';
   }
 
+  static String userName() {
+    final user = Constant.getUserData().data;
+    if (user != null) {
+      final prenom = user.prenom ?? '';
+      final nom = user.nom ?? '';
+      final full = '$prenom $nom'.trim();
+      if (full.isNotEmpty) return full;
+    }
+    final userStr = Preferences.getString(Preferences.user);
+    if (userStr.isNotEmpty) {
+      try {
+        final map = jsonDecode(userStr);
+        final name = (map['name'] ?? map['data']?['name'] ?? map['prenom'] ?? map['data']?['prenom'] ?? '').toString();
+        if (name.isNotEmpty) return name;
+      } catch (_) {}
+    }
+    return '';
+  }
+
+  static String walletBalance() {
+    final user = Constant.getUserData().data;
+    if (user != null && user.amount != null) {
+      return user.amount.toString();
+    }
+    final userStr = Preferences.getString(Preferences.user);
+    if (userStr.isNotEmpty) {
+      try {
+        final map = jsonDecode(userStr);
+        final amt = (map['amount'] ?? map['data']?['amount'] ?? '').toString();
+        if (amt.isNotEmpty) return amt;
+      } catch (_) {}
+    }
+    return '0';
+  }
+
   static String build(
     String path, {
     Map<String, String> extra = const {},
   }) {
     final params = <String, String>{
       'accesstoken': accessToken(),
+      'token': accessToken(),
       'user_id': userId(),
       'id_user': userId(),
       'phone': phone(),
+      'name': userName(),
+      'username': userName(),
+      'customer_name': userName(),
+      'wallet_balance': walletBalance(),
+      'balance': walletBalance(),
       'user_type': 'customer',
       'user_cat': 'customer',
       ...extra,
