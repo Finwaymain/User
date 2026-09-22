@@ -549,8 +549,12 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                                     if (lng.isNotEmpty) 'lng': lng,
                                     if (lat.isNotEmpty) 'latitude': lat,
                                     if (lng.isNotEmpty) 'longitude': lng,
+                                    if (Constant.kGoogleApiKey != null && Constant.kGoogleApiKey!.isNotEmpty)
+                                      'google_map_api_key': Constant.kGoogleApiKey!,
+                                    'city': 'Ujjain',
                                   },
                                 );
+                                debugPrint('FOOD_ORDER :: Launching with URL: $url');
                                 Get.to(
                                   () => WebViewScreen(url: url, title: 'Food Ordering'.tr),
                                   transition: Transition.rightToLeftWithFade,
