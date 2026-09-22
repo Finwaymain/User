@@ -521,13 +521,21 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                                 String lat = '';
                                 String lng = '';
                                 try {
-                                  Position? position = await Geolocator.getLastKnownPosition();
-                                  if (position == null) {
-                                    position = await Geolocator.getCurrentPosition(
-                                      desiredAccuracy: LocationAccuracy.medium,
-                                      timeLimit: const Duration(seconds: 3),
-                                    );
+                                  LocationPermission permission = await Geolocator.checkPermission();
+                                  if (permission == LocationPermission.denied) {
+                                    permission = await Geolocator.requestPermission();
                                   }
+
+                                  Position? position;
+                                  if (permission == LocationPermission.always || permission == LocationPermission.whileInUse) {
+                                    try {
+                                      position = await Geolocator.getCurrentPosition(
+                                        desiredAccuracy: LocationAccuracy.high,
+                                        timeLimit: const Duration(seconds: 8),
+                                      );
+                                    } catch (_) {}
+                                  }
+                                  position ??= await Geolocator.getLastKnownPosition();
                                   if (position != null) {
                                     lat = position.latitude.toString();
                                     lng = position.longitude.toString();
