@@ -418,11 +418,12 @@ class WalletOverviewTab extends StatelessWidget {
                   _loanCard(
                     isDark: isDark,
                     width: cardWidth,
-                    bgColor: isDark ? const Color(0xFF064E3B).withOpacity(0.3) : const Color(0xFFF0FDF4),
+                    bgColor: isDark ? const Color(0xFF064E3B).withValues(alpha: 0.3) : const Color(0xFFEDFDF4),
                     borderColor: isDark ? const Color(0xFF065F46) : const Color(0xFFDCFCE7),
                     iconBgColor: isDark ? const Color(0xFF065F46) : const Color(0xFFDCFCE7),
                     iconColor: const Color(0xFF16A34A),
-                    icon: Icons.savings_rounded,
+                    imageAsset: 'assets/images/loan_interest_free.png',
+                    fallbackIcon: Icons.savings_rounded,
                     title: 'Interest Free\nLoan',
                     subtitle: 'Upto ₹2,00,000',
                     subtitleColor: const Color(0xFF16A34A),
@@ -439,14 +440,15 @@ class WalletOverviewTab extends StatelessWidget {
                   _loanCard(
                     isDark: isDark,
                     width: cardWidth,
-                    bgColor: isDark ? const Color(0xFF1E3A8A).withOpacity(0.3) : const Color(0xFFEFF6FF),
+                    bgColor: isDark ? const Color(0xFF1E3A8A).withValues(alpha: 0.3) : const Color(0xFFEFF6FF),
                     borderColor: isDark ? const Color(0xFF1E40AF) : const Color(0xFFDBEAFE),
                     iconBgColor: isDark ? const Color(0xFF1E40AF) : const Color(0xFFDBEAFE),
                     iconColor: const Color(0xFF2563EB),
-                    icon: Icons.assignment_turned_in_rounded,
+                    imageAsset: 'assets/images/loan_zero_cibil.png',
+                    fallbackIcon: Icons.assignment_turned_in_rounded,
                     title: '0 CIBIL\nLoan',
                     subtitle: 'Upto ₹5,00,000',
-                    subtitleColor: const Color(0xFF2563EB),
+                    subtitleColor: const Color(0xFF64748B),
                     buttonColor: const Color(0xFF2563EB),
                     onTap: () => _openLoanWebview(
                       cardType: '0 CIBIL Loan',
@@ -460,14 +462,15 @@ class WalletOverviewTab extends StatelessWidget {
                   _loanCard(
                     isDark: isDark,
                     width: cardWidth,
-                    bgColor: isDark ? const Color(0xFF78350F).withOpacity(0.3) : const Color(0xFFFFFBEB),
+                    bgColor: isDark ? const Color(0xFF78350F).withValues(alpha: 0.3) : const Color(0xFFFFFBEB),
                     borderColor: isDark ? const Color(0xFF92400E) : const Color(0xFFFEF3C7),
                     iconBgColor: isDark ? const Color(0xFF92400E) : const Color(0xFFFEF3C7),
                     iconColor: const Color(0xFFEA580C),
-                    icon: Icons.speed_rounded,
+                    imageAsset: 'assets/images/loan_low_cibil.png',
+                    fallbackIcon: Icons.speed_rounded,
                     title: 'Low CIBIL\nLoan',
                     subtitle: 'Fast Approval',
-                    subtitleColor: const Color(0xFFD97706),
+                    subtitleColor: const Color(0xFF64748B),
                     buttonColor: const Color(0xFFEA580C),
                     isGradientButton: true,
                     gradientColors: const [Color(0xFFF97316), Color(0xFFEA580C)],
@@ -493,7 +496,8 @@ class WalletOverviewTab extends StatelessWidget {
     required Color borderColor,
     required Color iconBgColor,
     required Color iconColor,
-    required IconData icon,
+    required String imageAsset,
+    required IconData fallbackIcon,
     required String title,
     required String subtitle,
     required Color subtitleColor,
@@ -517,16 +521,24 @@ class WalletOverviewTab extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 36,
-              height: 36,
+              width: 38,
+              height: 38,
               decoration: BoxDecoration(
                 color: iconBgColor,
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                icon,
-                color: iconColor,
-                size: 20,
+              child: ClipOval(
+                child: Image.asset(
+                  imageAsset,
+                  width: 38,
+                  height: 38,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Icon(
+                    fallbackIcon,
+                    color: iconColor,
+                    size: 20,
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 10),
@@ -602,7 +614,7 @@ class WalletOverviewTab extends StatelessWidget {
       final nom = user?.nom ?? '';
       final fullName = ('$prenom $nom').trim().isNotEmpty
           ? ('$prenom $nom').trim()
-          : (user?.name ?? 'Valued Customer');
+          : 'Valued Customer';
       final mobile = user?.phone ?? '';
       final pocketNumber = user?.acNo ?? '';
 
