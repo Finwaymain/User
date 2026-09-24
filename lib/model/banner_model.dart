@@ -31,33 +31,51 @@ class BannerModel {
 }
 
 class BannerModelData {
-  String id;
-  String title;
-  String description;
-  String image;
-  String status;
-  DateTime createdAt;
-  DateTime updatedAt;
+  String? id;
+  String? title;
+  String? alt;
+  String? link;
+  String? targetApp;
+  String? description;
+  String? image;
+  String? status;
+  DateTime? createdAt;
+  DateTime? updatedAt;
 
   BannerModelData({
-    required this.id,
-    required this.title,
-    required this.description,
-    required this.image,
-    required this.status,
-    required this.createdAt,
-    required this.updatedAt,
+    this.id,
+    this.title,
+    this.alt,
+    this.link,
+    this.targetApp,
+    this.description,
+    this.image,
+    this.status,
+    this.createdAt,
+    this.updatedAt,
   });
 
   factory BannerModelData.fromJson(Map<String, dynamic> json) {
+    DateTime? parseDate(dynamic date) {
+      if (date == null) return null;
+      try {
+        return DateTime.parse(date.toString());
+      } catch (_) {
+        return null;
+      }
+    }
+
     return BannerModelData(
-      id: json['id'],
-      title: json['title'],
-      description: json['description'],
-      image: json['image'],
-      status: json['status'],
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
+      id: json['id']?.toString(),
+      title: json['title']?.toString(),
+      alt: json['alt']?.toString(),
+      link: json['link']?.toString(),
+      targetApp: json['target_app']?.toString(),
+      description: json['description']?.toString(),
+      image: json['image']?.toString(),
+      status: json['status']?.toString(),
+      createdAt: parseDate(json['created_at']),
+      updatedAt: parseDate(json['updated_at']),
     );
   }
 
@@ -65,11 +83,14 @@ class BannerModelData {
     return {
       'id': id,
       'title': title,
+      'alt': alt,
+      'link': link,
+      'target_app': targetApp,
       'description': description,
       'image': image,
       'status': status,
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
+      'created_at': createdAt?.toIso8601String(),
+      'updated_at': updatedAt?.toIso8601String(),
     };
   }
 }

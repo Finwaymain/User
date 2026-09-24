@@ -49,6 +49,7 @@ import '../../wallet/wallet_screen.dart';
 import '../controller/main_home_controller.dart';
 import '../widget/vertical_icon_with_text.dart';
 import '../widget/vertical_line_section.dart';
+import '../widget/home_banner_slider.dart';
 import 'dart:math' as maths;
 import 'package:finway/constant/show_toast_dialog.dart';
 import 'package:finway/model/payStackURLModel.dart';
@@ -373,7 +374,8 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                           ),
                         ),
 
-                        
+                        // Sliding promotional banners from admin panel
+                        const HomeBannerSlider(appType: 'user'),
 
                         // Header Row with fixed height to prevent vertical misalignment
                         Row(
