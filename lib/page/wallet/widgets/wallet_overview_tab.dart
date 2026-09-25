@@ -625,9 +625,10 @@ class WalletOverviewTab extends StatelessWidget {
         'name': fullName,
         'mobile': mobile,
         'pocket_number': pocketNumber,
+        'user_type': 'customer',
       };
 
-      final uri = Uri.parse("https://api.fiinway.com/loans/coming-soon")
+      final uri = Uri.parse("https://api.fiinway.com/finance")
           .replace(queryParameters: queryParams);
 
       Get.to(() => WebViewScreen(
