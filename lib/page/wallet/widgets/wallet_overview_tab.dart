@@ -623,12 +623,20 @@ class WalletOverviewTab extends StatelessWidget {
         'title': title,
         'amount': amount,
         'name': fullName,
+        'phone': mobile,
         'mobile': mobile,
         'pocket_number': pocketNumber,
         'user_type': 'customer',
       };
 
-      final uri = Uri.parse("https://api.fiinway.com/finance")
+      String subPath = '';
+      if (cardType == '0 CIBIL Loan' || cardType == 'Interest Free Loan') {
+        subPath = '/zero-cibil/intro';
+      } else if (cardType == 'Low CIBIL Loan') {
+        subPath = '/cash-loan/apply';
+      }
+
+      final uri = Uri.parse("https://api.fiinway.com/finance$subPath")
           .replace(queryParameters: queryParams);
 
       Get.to(() => WebViewScreen(
