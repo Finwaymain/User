@@ -385,7 +385,7 @@ class WalletOverviewTab extends StatelessWidget {
               child: const Row(
                 children: [
                   Text(
-                    'View Details',
+                    'View All',
                     style: TextStyle(
                       color: Color(0xFF16A34A),
                       fontFamily: AppThemeData.semiBold,
@@ -628,6 +628,7 @@ class WalletOverviewTab extends StatelessWidget {
         'mobile': mobile,
         'pocket_number': pocketNumber,
         'user_type': 'customer',
+        'hide_header': '1',
       };
 
       String subPath = '';
@@ -640,7 +641,7 @@ class WalletOverviewTab extends StatelessWidget {
       final uri = Uri.parse("https://api.fiinway.com/finance$subPath")
           .replace(queryParameters: queryParams);
 
-      Get.to(() => FinanceScreen(initialUrl: uri.toString()));
+      Get.to(() => FinanceScreen(initialUrl: uri.toString(), isTab: false));
     });
   }
 }
