@@ -40,7 +40,7 @@ class _MainDashboardState extends State<MainDashboard> {
 
   final List<Widget> _screens = [
     MainHomeScreen(),
-    const FinanceScreen(isTab: true), // index 1: Loans tab (keeps bottom nav visible)
+    const SizedBox.shrink(), // index 1: Loans tab — navigates imperatively via _onTabSelected
     InProgressScreen(),
     const ServiceHistoryScreen(showScaffold: false),
     InProgressScreen(),
@@ -118,6 +118,10 @@ class _MainDashboardState extends State<MainDashboard> {
   }
 
   void _onTabSelected(int index) {
+    if (index == 1) {
+      Get.to(() => const FinanceScreen());
+      return;
+    }
     if (index == 4) {
       Get.to(() => WalletScreen());
       return;
@@ -150,8 +154,8 @@ class _MainDashboardState extends State<MainDashboard> {
         builder: (controller) {
           return Scaffold(
             backgroundColor: isDarkMode ? AppThemeData.surface50Dark : AppThemeData.surface50,
-            appBar: currentIndex == 1 ? null : CustomAppBar(),
-            drawer: currentIndex == 1 ? null : CustomDrawer(),
+            appBar: CustomAppBar(),
+            drawer: CustomDrawer(),
             body: Stack(
               children: [
                 Positioned.fill(

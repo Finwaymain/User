@@ -13,20 +13,12 @@ class FinanceScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final phone = Constant.getUserData().data?.phone ?? '';
-    var url = initialUrl ?? 'https://api.fiinway.com/finance?phone=$phone';
+    final encodedPhone = Uri.encodeComponent(phone);
+    var url = initialUrl ?? 'https://api.fiinway.com/finance?phone=$encodedPhone';
     if (!url.contains('hide_header=')) {
       final sep = url.contains('?') ? '&' : '?';
       url = '$url${sep}hide_header=1';
     }
-
-    final webView = Padding(
-      padding: EdgeInsets.only(bottom: isTab ? 65.0 : 0.0),
-      child: WebViewScreen(
-        url: url,
-        title: 'Loans',
-        showAppBar: false,
-      ),
-    );
 
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),
@@ -40,7 +32,11 @@ class FinanceScreen extends StatelessWidget {
         ),
         elevation: 0,
       ),
-      body: webView,
+      body: WebViewScreen(
+        url: url,
+        title: 'Loans',
+        showAppBar: false,
+      ),
     );
   }
 }
