@@ -48,6 +48,7 @@ import 'package:finway/page/features/SmartValue/AccountDetails/view/account_deta
 import 'package:finway/page/features/SmartValue/MyQR/view/my_qr_view.dart';
 import 'package:finway/page/features/SmartValue/Payout/view/payout_screen.dart';
 import 'package:finway/page/features/SmartValue/ScanAndTransfer/view/scanner_and_transfer_screen.dart';
+import 'package:finway/page/finance/finance_screen.dart';
 
 class WalletScreen extends StatelessWidget {
   WalletScreen({super.key});
@@ -103,12 +104,28 @@ class WalletScreen extends StatelessWidget {
             url: walletUrl,
             title: 'Smart Value',
             showAppBar: false,
+            onNavigationRequest: (request) {
+              final url = request.url;
+              if (url.contains('/finance')) {
+                var navUrl = url;
+                if (!navUrl.startsWith('http')) {
+                  navUrl = 'https://api.fiinway.com$navUrl';
+                }
+                Get.to(() => FinanceScreen(initialUrl: navUrl, isTab: false));
+                return NavigationDecision.prevent;
+              }
+              return NavigationDecision.navigate;
+            },
             onBridgeAction: (data) {
               if (data['_controller'] is WebViewController) {
                 activeWebViewController = data['_controller'] as WebViewController;
               }
               final action = data['action'];
-              if (action == 'topup') {
+              if (action == 'open_finance' || action == 'finance' || action == 'loan') {
+                final targetUrl = data['url'] ?? 'https://api.fiinway.com/finance';
+                Get.to(() => FinanceScreen(initialUrl: targetUrl.toString(), isTab: false));
+                return;
+              } else if (action == 'topup') {
                 if (!Preferences.getBoolean(Preferences.isLogin)) {
                   Get.to(() => const PhoneEntryScreen());
                 } else {

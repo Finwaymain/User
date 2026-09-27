@@ -18,6 +18,7 @@ class WebViewScreen extends StatefulWidget {
   final String title;
   final bool showAppBar;
   final void Function(Map<String, dynamic> data)? onBridgeAction;
+  final NavigationDecision Function(NavigationRequest request)? onNavigationRequest;
 
   const WebViewScreen({
     super.key,
@@ -25,6 +26,7 @@ class WebViewScreen extends StatefulWidget {
     required this.title,
     this.showAppBar = true,
     this.onBridgeAction,
+    this.onNavigationRequest,
   });
 
   @override
@@ -162,6 +164,12 @@ class _WebViewScreenState extends State<WebViewScreen> {
       )
       ..setNavigationDelegate(
         NavigationDelegate(
+          onNavigationRequest: (NavigationRequest request) {
+            if (widget.onNavigationRequest != null) {
+              return widget.onNavigationRequest!(request);
+            }
+            return NavigationDecision.navigate;
+          },
           onPageStarted: (String url) {
             setState(() {
               isLoading = true;
