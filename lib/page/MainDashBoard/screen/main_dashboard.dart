@@ -26,6 +26,7 @@ import '../../completed_ride_screens/payment_selection_screen.dart';
 import '../../../controller/service_history_controller.dart';
 
 import '../../search_services/search_all_services_screen.dart';
+import '../../finance/finance_screen.dart';
 
 class MainDashboard extends StatefulWidget {
   const MainDashboard({super.key});
@@ -39,7 +40,7 @@ class _MainDashboardState extends State<MainDashboard> {
 
   final List<Widget> _screens = [
     MainHomeScreen(),
-    const SearchAllServicesScreen(isTab: true),
+    const SizedBox.shrink(), // index 1: Loans tab — navigates imperatively via _onTabSelected
     InProgressScreen(),
     const ServiceHistoryScreen(showScaffold: false),
     InProgressScreen(),
@@ -117,6 +118,10 @@ class _MainDashboardState extends State<MainDashboard> {
   }
 
   void _onTabSelected(int index) {
+    if (index == 1) {
+      Get.to(() => const FinanceScreen());
+      return;
+    }
     if (index == 4) {
       Get.to(() => WalletScreen());
       return;

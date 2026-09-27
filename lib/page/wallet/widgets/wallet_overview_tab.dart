@@ -7,6 +7,7 @@ import 'package:finway/page/features/SmartValue/MyQR/view/my_qr_view.dart';
 import 'package:finway/page/features/SmartValue/ScanAndTransfer/view/scanner_and_transfer_screen.dart';
 import 'package:finway/page/subscription_plan_screen/subscription_plan_screen.dart';
 import 'package:finway/page/web_view_screen/web_view_screen.dart';
+import 'package:finway/page/finance/finance_screen.dart';
 import 'package:finway/themes/constant_colors.dart';
 import 'package:finway/utils/Preferences.dart';
 import 'package:flutter/material.dart';
@@ -639,10 +640,7 @@ class WalletOverviewTab extends StatelessWidget {
       final uri = Uri.parse("https://api.fiinway.com/finance$subPath")
           .replace(queryParameters: queryParams);
 
-      Get.to(() => WebViewScreen(
-            url: uri.toString(),
-            title: title,
-          ));
+      Get.to(() => FinanceScreen(initialUrl: uri.toString()));
     });
   }
 }
