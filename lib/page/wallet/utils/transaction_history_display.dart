@@ -144,6 +144,8 @@ class TransactionHistoryDisplay {
         return Icons.admin_panel_settings_rounded;
       case 'topup':
         return Icons.account_balance_wallet_rounded;
+      case 'upi':
+        return Icons.qr_code_2_rounded;
       case 'withdraw':
         return Icons.south_west_rounded;
       case 'reward':
@@ -174,6 +176,8 @@ class TransactionHistoryDisplay {
         return const Color(0xFFDC2626); // Crimson Red
       case 'topup':
         return const Color(0xFF059669); // Emerald Green
+      case 'upi':
+        return const Color(0xFF0284C7); // Sky / Tech Blue
       case 'withdraw':
         return const Color(0xFF2563EB); // Sky Blue
       case 'reward':
@@ -204,6 +208,8 @@ class TransactionHistoryDisplay {
         return const Color(0xFFFEE2E2); // Soft Crimson Light Red
       case 'topup':
         return const Color(0xFFD1FAE5); // Soft Mint
+      case 'upi':
+        return const Color(0xFFE0F2FE); // Soft Light Blue
       case 'withdraw':
         return const Color(0xFFDBEAFE); // Soft Blue
       case 'reward':

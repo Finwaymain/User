@@ -33,6 +33,7 @@ class User {
     this.id,
     this.mPin,
     this.acNo,
+    this.upiQrData,
     this.startDate,
     this.endDate,
     this.startDate2,
@@ -163,11 +164,13 @@ class User {
   String? alternatePhone;
   String? marketplaceEnabled;
   String? emailVerifiedAt;
+  String? upiQrData;
 
   factory User.fromJson(Map<String, dynamic> json) => User(
     id: json["id"]?.toString(),
     mPin: json["m_pin"]?.toString(),
     acNo: json["ac_no"]?.toString(),
+    upiQrData: json["upi_qr_data"]?.toString(),
     startDate: json["start_date"]?.toString(),
     endDate: json["end_date"]?.toString(),
     startDate2: json["start_date2"]?.toString(),
@@ -236,6 +239,7 @@ class User {
     "id": id,
     "m_pin": mPin,
     "ac_no": acNo,
+    "upi_qr_data": upiQrData,
     "start_date": startDate,
     "end_date": endDate,
     "start_date2": startDate2,

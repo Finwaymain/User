@@ -38,8 +38,10 @@ class QRController extends GetxController with GetTickerProviderStateMixin {
 
   @override
   void onInit() {
-    super.onInit();
-    qrData = "${Constant.getUserData().data?.acNo}";
+    final user = Constant.getUserData().data;
+    qrData = (user?.upiQrData != null && user!.upiQrData!.isNotEmpty)
+        ? user.upiQrData!
+        : "${user?.acNo}";
 
     // Get QR data from arguments with better handling
     final args = Get.arguments;
