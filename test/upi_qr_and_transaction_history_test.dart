@@ -14,6 +14,7 @@ void main() {
       expect(upiUri, contains('pa=fiinway@icici'));
       expect(upiUri, contains('tr=708012345678'));
       expect(upiUri, contains('tn=Fiinway%20Wallet%20708012345678'));
+      expect(upiUri, contains('mc=5411'));
       expect(upiUri, contains('cu=INR'));
     });
 
