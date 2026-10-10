@@ -45,9 +45,9 @@ class TransactionHistoryDisplay {
       return data.counterpartyName!.trim();
     }
     final desc = data.description ?? '';
-    final toMatch = RegExp(r'\bto\s+(.+)$', caseSensitive: false).firstMatch(desc);
+    final toMatch = RegExp(r'\bto\s+(.+?)(?:\s+via\s+|\s*\(|$)', caseSensitive: false).firstMatch(desc);
     if (toMatch != null) return toMatch.group(1)!.trim();
-    final fromMatch = RegExp(r'\bfrom\s+(.+)$', caseSensitive: false).firstMatch(desc);
+    final fromMatch = RegExp(r'\bfrom\s+(.+?)(?:\s+via\s+|\s*\(|$)', caseSensitive: false).firstMatch(desc);
     if (fromMatch != null) return fromMatch.group(1)!.trim();
 
     final lower = desc.toLowerCase();
