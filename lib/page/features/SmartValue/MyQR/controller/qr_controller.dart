@@ -1,5 +1,6 @@
 
 
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -9,11 +10,14 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:gal/gal.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../../constant/constant.dart';
+import '../../../../../service/api.dart';
 import '../../../../../themes/constant_colors.dart';
+import '../../../../../utils/Preferences.dart';
 
 class QRController extends GetxController with GetTickerProviderStateMixin {
   // Animation Controllers
@@ -33,32 +37,94 @@ class QRController extends GetxController with GetTickerProviderStateMixin {
   // Global key for capturing QR widget
   GlobalKey qrKey = GlobalKey();
 
-  // QR Data
-  String qrData = '';
+  // QR Data (Reactive RxString so UI updates when backend refreshes)
+  final qrData = ''.obs;
+
+  /// Helper to generate a valid NPCI UPI Intent URI for a given account number
+  static String buildUpiUri({required String acNo, String? name}) {
+    final cleanAcNo = acNo.trim();
+    if (cleanAcNo.isEmpty) return '';
+    final displayName = (name != null && name.trim().isNotEmpty)
+        ? "Fiinway - ${name.trim()}"
+        : "Fiinway";
+    final encodedPn = Uri.encodeComponent(displayName);
+    final encodedTn = Uri.encodeComponent('Fiinway Wallet $cleanAcNo');
+    return "upi://pay?pa=fiinway@icici&pn=$encodedPn&tr=$cleanAcNo&tn=$encodedTn&cu=INR";
+  }
+
+  /// Ensure the string is a valid UPI URI. If raw numeric ac_no is passed, format it into UPI URI.
+  static String sanitizeUpiQr(String? raw, {String? acNo, String? name}) {
+    final str = (raw ?? '').trim();
+    if (str.startsWith('upi://pay') || (str.contains('pa=') && str.contains('tr='))) {
+      return str;
+    }
+    final effectiveAc = str.isNotEmpty ? str : (acNo ?? '').trim();
+    return buildUpiUri(acNo: effectiveAc, name: name);
+  }
 
   @override
   void onInit() {
+    super.onInit();
     final user = Constant.getUserData().data;
-    qrData = (user?.upiQrData != null && user!.upiQrData!.isNotEmpty)
+    final fullName = "${user?.prenom ?? ''} ${user?.nom ?? ''}".trim();
+
+    String initial = (user?.upiQrData != null && user!.upiQrData!.isNotEmpty)
         ? user.upiQrData!
-        : "${user?.acNo}";
+        : '';
 
-    // Get QR data from arguments with better handling
+    // Check if arguments override QR data
     final args = Get.arguments;
-    if (args != null && args is Map) {
-      qrData = args['qrData']?.toString() ?? '';
+    if (args != null && args is Map && args['qrData'] != null) {
+      initial = args['qrData'].toString();
     }
 
-    // Debug print to check QR data
-    print('QR Data received: "$qrData"'); // Debug print
+    // Initialize with guaranteed UPI format so PhonePe/GPay can scan immediately
+    qrData.value = sanitizeUpiQr(
+      initial,
+      acNo: user?.acNo,
+      name: fullName,
+    );
 
-    if (qrData.isEmpty) {
-      print('Warning: QR data is empty!'); // Debug print
-
-    }
+    print('QR Data initialized: "${qrData.value}"');
 
     _initializeAnimations();
     _startAnimations();
+    _fetchFreshUpiQrData();
+  }
+
+  /// Asynchronously fetch the latest UPI QR payload from the backend
+  Future<void> _fetchFreshUpiQrData() async {
+    try {
+      final user = Constant.getUserData().data;
+      final acNo = user?.acNo;
+      if (acNo == null || acNo.isEmpty) return;
+
+      final response = await http.post(
+        Uri.parse(API.accountDetails),
+        headers: API.header,
+        body: jsonEncode({"ac_no": acNo}),
+      ).timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        if (body['res'] == 'success' && body['data'] != null) {
+          final serverUpi = body['data']['upi_qr_data']?.toString();
+          if (serverUpi != null && serverUpi.isNotEmpty) {
+            qrData.value = serverUpi;
+            print('QR Data updated from server: "$serverUpi"');
+
+            // Save to cached user preferences so it's instantly available next time
+            final curUser = Constant.getUserData();
+            if (curUser.data != null) {
+              curUser.data!.upiQrData = serverUpi;
+              Preferences.setString(Preferences.user, jsonEncode(curUser.toJson()));
+            }
+          }
+        }
+      }
+    } catch (e) {
+      print('Silent refresh of UPI QR failed: $e');
+    }
   }
 
   void _initializeAnimations() {
@@ -187,18 +253,19 @@ class QRController extends GetxController with GetTickerProviderStateMixin {
       HapticFeedback.lightImpact();
 
       // Check if QR data is available
-      if (qrData.isEmpty) {
+      final dataToCopy = qrData.value;
+      if (dataToCopy.isEmpty) {
         _showErrorSnackbar('No QR data available to copy');
         return;
       }
 
       // Copy to clipboard
-      await Clipboard.setData(ClipboardData(text: qrData));
+      await Clipboard.setData(ClipboardData(text: dataToCopy));
 
       // Verify clipboard data
       final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
-      if (clipboardData?.text == qrData) {
-        _showSuccessSnackbar('QR data copied to clipboard!\n"${qrData.length > 50 ? '${qrData.substring(0, 50)}...' : qrData}"');
+      if (clipboardData?.text == dataToCopy) {
+        _showSuccessSnackbar('QR data copied to clipboard!\n"${dataToCopy.length > 50 ? '${dataToCopy.substring(0, 50)}...' : dataToCopy}"');
       } else {
         _showErrorSnackbar('Failed to verify clipboard data');
       }

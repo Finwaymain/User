@@ -176,22 +176,23 @@ class MyQRScreen extends StatelessWidget {
                                           ),
                                         ],
                                       ),
-                                      child: controller.qrData.isNotEmpty
+                                      child: Obx(() => controller.qrData.value.isNotEmpty
                                           ? QrImageView(
-                                              data: controller.qrData,
+                                              data: controller.qrData.value,
                                               version: QrVersions.auto,
+                                              errorCorrectionLevel: QrErrorCorrectLevel.M,
                                               size: 220,
                                               gapless: false,
                                               foregroundColor: Colors.black,
                                               backgroundColor: Colors.white,
                                               eyeStyle: const QrEyeStyle(
-                                                eyeShape: QrEyeShape.circle,
+                                                eyeShape: QrEyeShape.square,
                                                 color: Colors.black,
                                               ),
                                               dataModuleStyle:
                                                   const QrDataModuleStyle(
                                                 dataModuleShape:
-                                                    QrDataModuleShape.circle,
+                                                    QrDataModuleShape.square,
                                                 color: Colors.black,
                                               ),
                                             )
@@ -212,7 +213,7 @@ class MyQRScreen extends StatelessWidget {
                                                   ),
                                                 ),
                                               ),
-                                            ),
+                                            )),
                                     ),
 
                                     const SizedBox(height: 24),

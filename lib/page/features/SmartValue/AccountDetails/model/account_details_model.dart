@@ -119,6 +119,7 @@ class AccountData {
     String? adminCommission;
 
     String? driverOnRide;
+    String? upiQrData;
 
     static int? _asInt(dynamic value) {
         if (value == null) return null;
@@ -223,11 +224,13 @@ class AccountData {
         adminCommission = _asString(json['adminCommission'] ?? json['admin_commission']);
 
         driverOnRide = _asString(json['driver_on_ride']);
+        upiQrData = _asString(json['upi_qr_data']);
     }
 
     Map<String, dynamic> toJson() {
         final Map<String, dynamic> data = <String, dynamic>{};
 
+        data['upi_qr_data'] = upiQrData;
         data['id'] = id;
         data['m_pin'] = mPin;
         data['ac_no'] = acNo;
