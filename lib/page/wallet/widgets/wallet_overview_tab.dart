@@ -377,11 +377,7 @@ class WalletOverviewTab extends StatelessWidget {
               style: _sectionStyle(isDark),
             ),
             GestureDetector(
-              onTap: () => _openLoanWebview(
-                cardType: 'Loans & Credit',
-                title: 'Loans & Credit',
-                amount: 'Up to ₹5,00,000',
-              ),
+              onTap: () => _requireLogin(() => Get.to(() => const FinanceScreen())),
               child: const Row(
                 children: [
                   Text(
