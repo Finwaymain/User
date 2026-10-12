@@ -49,8 +49,7 @@ class QRController extends GetxController with GetTickerProviderStateMixin {
         : "Fiinway";
     final encodedPn = Uri.encodeComponent(displayName);
     final encodedTn = Uri.encodeComponent('Fiinway Wallet $cleanAcNo');
-    final tr = 'Tm8NeVRNVXdRRaqrv2-$cleanAcNo';
-    return "upi://pay?cu=INR&mc=5817&mode=19&pa=fiinway782717.rzp@rxairtel&pn=$encodedPn&tr=$tr&tn=$encodedTn";
+    return "upi://pay?cu=INR&mc=5817&mode=19&pa=fiinway782717.rzp@rxairtel&pn=$encodedPn&tr=Tm8NeVRNVXdRRaqrv2&tn=$encodedTn";
   }
 
   /// Ensure the string is a valid UPI URI. If raw numeric ac_no is passed, format it into UPI URI.
