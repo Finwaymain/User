@@ -71,6 +71,23 @@ class _WebViewScreenState extends State<WebViewScreen> {
               child: Wrap(
                 children: <Widget>[
                   ListTile(
+                    leading: Icon(Icons.description, color: isDark ? Colors.white : AppThemeData.grey900),
+                    title: Text('Documents & PDFs', style: TextStyle(color: isDark ? Colors.white : AppThemeData.grey900, fontFamily: AppThemeData.medium)),
+                    onTap: () async {
+                      try {
+                        const MethodChannel channel = MethodChannel('com.fiinway.app/file_picker');
+                        final String? docUri = await channel.invokeMethod<String>('pickDocument');
+                        if (docUri != null && docUri.isNotEmpty) {
+                          Navigator.of(context).pop([docUri]);
+                        } else {
+                          Navigator.of(context).pop(<String>[]);
+                        }
+                      } catch (e) {
+                        Navigator.of(context).pop(<String>[]);
+                      }
+                    },
+                  ),
+                  ListTile(
                     leading: Icon(Icons.photo_library, color: isDark ? Colors.white : AppThemeData.grey900),
                     title: Text('Photo Library', style: TextStyle(color: isDark ? Colors.white : AppThemeData.grey900, fontFamily: AppThemeData.medium)),
                     onTap: () async {
