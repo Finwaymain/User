@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 import 'package:finway/constant/constant.dart';
 import 'package:finway/controller/wallet_controller.dart';
 import 'package:finway/page/auth_screens/phone_entry_screen.dart';
@@ -385,7 +388,7 @@ class WalletOverviewTab extends StatelessWidget {
               child: const Row(
                 children: [
                   Text(
-                    'View All',
+                    'View Details',
                     style: TextStyle(
                       color: Color(0xFF16A34A),
                       fontFamily: AppThemeData.semiBold,
@@ -405,194 +408,249 @@ class WalletOverviewTab extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            // Calculate width to neatly fit 3 cards with 8px spacing
-            final cardWidth = ((constraints.maxWidth - 16) / 3).clamp(112.0, 160.0);
-
-            return SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              child: Row(
-                children: [
-                  // Card 1: Interest Free Loan
-                  _loanCard(
-                    isDark: isDark,
-                    width: cardWidth,
-                    bgColor: const Color(0xFFEBFAF3),
-                    borderColor: const Color(0xFFDCFCE7),
-                    iconBgColor: const Color(0xFFDCFCE7),
-                    iconColor: const Color(0xFF16A34A),
-                    imageAsset: 'assets/images/loan_interest_free.png',
-                    fallbackIcon: Icons.savings_rounded,
-                    title: 'Interest Free\nLoan',
-                    subtitle: 'Upto ₹2,00,000',
-                    subtitleColor: const Color(0xFF16A34A),
-                    buttonColor: const Color(0xFF16A34A),
-                    onTap: () => _openLoanWebview(
-                      cardType: 'Interest Free Loan',
-                      title: 'Interest Free Loan',
-                      amount: '₹2,00,000',
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-
-                  // Card 2: 0 CIBIL Loan
-                  _loanCard(
-                    isDark: isDark,
-                    width: cardWidth,
-                    bgColor: const Color(0xFFEDF5FF),
-                    borderColor: const Color(0xFFDBEAFE),
-                    iconBgColor: const Color(0xFFDBEAFE),
-                    iconColor: const Color(0xFF2563EB),
-                    imageAsset: 'assets/images/loan_zero_cibil.png',
-                    fallbackIcon: Icons.assignment_turned_in_rounded,
-                    title: '0 CIBIL\nLoan',
-                    subtitle: 'Upto ₹5,00,000',
-                    subtitleColor: const Color(0xFF64748B),
-                    buttonColor: const Color(0xFF2563EB),
-                    onTap: () => _openLoanWebview(
-                      cardType: '0 CIBIL Loan',
-                      title: '0 CIBIL Loan',
-                      amount: '₹5,00,000',
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-
-                  // Card 3: Low CIBIL Loan
-                  _loanCard(
-                    isDark: isDark,
-                    width: cardWidth,
-                    bgColor: const Color(0xFFFEF4E8),
-                    borderColor: const Color(0xFFFED7AA),
-                    iconBgColor: const Color(0xFFFED7AA),
-                    iconColor: const Color(0xFFEA580C),
-                    imageAsset: 'assets/images/loan_low_cibil.png',
-                    fallbackIcon: Icons.speed_rounded,
-                    title: 'Low CIBIL\nLoan',
-                    subtitle: 'Fast Approval',
-                    subtitleColor: const Color(0xFF64748B),
-                    buttonColor: const Color(0xFFEA580C),
-                    isGradientButton: true,
-                    gradientColors: const [Color(0xFFF97316), Color(0xFFEA580C)],
-                    onTap: () => _openLoanWebview(
-                      cardType: 'Low CIBIL Loan',
-                      title: 'Low CIBIL Loan',
-                      amount: 'Fast Approval',
-                    ),
-                  ),
-                ],
+        // Row 1: 4 Cards
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Card 1: Interest Free Loan
+            Expanded(
+              child: _gridLoanCard(
+                bgColor: const Color(0xFFF0FDF4),
+                borderColor: const Color(0xFFDCFCE7),
+                imageAsset: 'assets/images/loan_interest_free.png',
+                title: 'Interest Free\nLoan',
+                subtitle: 'Upto ₹2,00,000',
+                subtitleColor: const Color(0xFF16A34A),
+                buttonText: 'Apply Now',
+                buttonColor: const Color(0xFF16A34A),
+                onTap: () => _openLoanWebview(
+                  cardType: 'Interest Free Loan',
+                  title: 'Interest Free Loan',
+                  amount: '₹2,00,000',
+                ),
               ),
-            );
-          },
+            ),
+            const SizedBox(width: 6),
+            // Card 2: 0 CIBIL Loan
+            Expanded(
+              child: _gridLoanCard(
+                bgColor: const Color(0xFFEFF6FF),
+                borderColor: const Color(0xFFDBEAFE),
+                imageAsset: 'assets/images/loan_zero_cibil.png',
+                title: '0 CIBIL\nLoan',
+                subtitle: 'Upto ₹5,00,000',
+                subtitleColor: const Color(0xFF64748B),
+                buttonText: 'Apply Now',
+                buttonColor: const Color(0xFF2563EB),
+                onTap: () => _openLoanWebview(
+                  cardType: '0 CIBIL Loan',
+                  title: '0 CIBIL Loan',
+                  amount: '₹5,00,000',
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            // Card 3: Low CIBIL Loan
+            Expanded(
+              child: _gridLoanCard(
+                bgColor: const Color(0xFFFFF7ED),
+                borderColor: const Color(0xFFFED7AA),
+                imageAsset: 'assets/images/loan_low_cibil.png',
+                title: 'Low CIBIL\nLoan',
+                subtitle: 'Fast Approval',
+                subtitleColor: const Color(0xFF64748B),
+                buttonText: 'Apply Now',
+                buttonColor: const Color(0xFFEA580C),
+                onTap: () => _openLoanWebview(
+                  cardType: 'Low CIBIL Loan',
+                  title: 'Low CIBIL Loan',
+                  amount: 'Fast Approval',
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            // Card 4: CIBIL Score Check
+            Expanded(
+              child: _gridLoanCard(
+                bgColor: const Color(0xFFF5F3FF),
+                borderColor: const Color(0xFFEDE9FE),
+                imageAsset: 'assets/images/loan_cibil_check.png',
+                title: 'CIBIL\nScore Check',
+                subtitle: 'Free & Instant',
+                subtitleColor: const Color(0xFF64748B),
+                buttonText: 'Check Now',
+                buttonColor: const Color(0xFF6366F1),
+                onTap: () => _openAffiliateUrl(
+                  'https://EasyPe.o18a.com/c?o=21966472&m=26892&a=761563&sub_aff_id={replace_it}',
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        // Row 2: 4 Cards
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Card 5: Novio FD Credit Card
+            Expanded(
+              child: _gridLoanCard(
+                bgColor: const Color(0xFFF0FDF4),
+                borderColor: const Color(0xFFDCFCE7),
+                imageAsset: 'assets/images/loan_novio_card.png',
+                title: 'Novio FD\nCredit Card',
+                subtitle: 'FD Backed\nEasy Approval',
+                subtitleColor: const Color(0xFF64748B),
+                buttonText: 'Apply Now',
+                buttonColor: const Color(0xFF16A34A),
+                onTap: () => _openAffiliateUrl(
+                  'https://EasyPe.o18a.com/c?o=21966470&m=26892&a=761563&sub_aff_id={replace_it}',
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            // Card 6: SBI Credit Card
+            Expanded(
+              child: _gridLoanCard(
+                bgColor: const Color(0xFFEFF6FF),
+                borderColor: const Color(0xFFDBEAFE),
+                imageAsset: 'assets/images/loan_sbi_card.png',
+                title: 'SBI\nCredit Card',
+                subtitle: 'Multiple Cards\nGreat Rewards',
+                subtitleColor: const Color(0xFF64748B),
+                buttonText: 'Apply Now',
+                buttonColor: const Color(0xFF2563EB),
+                onTap: () => _openSbiCreditCardFlow(context),
+              ),
+            ),
+            const SizedBox(width: 6),
+            // Card 7: Personal Loan
+            Expanded(
+              child: _gridLoanCard(
+                bgColor: const Color(0xFFFFF7ED),
+                borderColor: const Color(0xFFFED7AA),
+                imageAsset: 'assets/images/loan_personal_loan.png',
+                title: 'Personal\nLoan',
+                subtitle: 'Upto ₹50 Lakh',
+                subtitleColor: const Color(0xFF64748B),
+                buttonText: 'Apply Now',
+                buttonColor: const Color(0xFFEA580C),
+                onTap: () => _openAffiliateUrl(
+                  'https://EasyPe.o18a.com/c?o=21983875&m=26892&a=761563&sub_aff_id={replace_it}',
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            // Card 8: Business Loan
+            Expanded(
+              child: _gridLoanCard(
+                bgColor: const Color(0xFFF5F3FF),
+                borderColor: const Color(0xFFEDE9FE),
+                imageAsset: 'assets/images/loan_business_loan.png',
+                title: 'Business\nLoan',
+                subtitle: 'Upto ₹1 Crore',
+                subtitleColor: const Color(0xFF64748B),
+                buttonText: 'Apply Now',
+                buttonColor: const Color(0xFF6366F1),
+                onTap: () => _openBusinessLoanAndPrivateFunding(),
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
-  Widget _loanCard({
-    required bool isDark,
-    required double width,
+  Widget _gridLoanCard({
     required Color bgColor,
     required Color borderColor,
-    required Color iconBgColor,
-    required Color iconColor,
     required String imageAsset,
-    required IconData fallbackIcon,
     required String title,
     required String subtitle,
     required Color subtitleColor,
+    required String buttonText,
     required Color buttonColor,
-    bool isGradientButton = false,
-    List<Color>? gradientColors,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: width,
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 8),
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: borderColor, width: 1),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: iconBgColor,
-                shape: BoxShape.circle,
-              ),
-              child: ClipOval(
+            SizedBox(
+              height: 32,
+              width: double.infinity,
+              child: Center(
                 child: Image.asset(
                   imageAsset,
-                  width: 38,
-                  height: 38,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Icon(
-                    fallbackIcon,
-                    color: iconColor,
-                    size: 20,
-                  ),
+                  height: 32,
+                  fit: BoxFit.contain,
                 ),
               ),
             ),
-            const SizedBox(height: 10),
-            Text(
-              title,
-              maxLines: 2,
-              style: TextStyle(
-                fontFamily: AppThemeData.bold,
-                fontSize: 12.5,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF0F172A),
-                height: 1.2,
+            const SizedBox(height: 6),
+            SizedBox(
+              height: 26,
+              child: Text(
+                title,
+                maxLines: 2,
+                style: const TextStyle(
+                  fontFamily: AppThemeData.bold,
+                  fontSize: 10.0,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF0F172A),
+                  height: 1.15,
+                ),
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontFamily: AppThemeData.semiBold,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: subtitleColor,
+            const SizedBox(height: 3),
+            SizedBox(
+              height: 24,
+              child: Text(
+                subtitle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: AppThemeData.semiBold,
+                  fontSize: 8.5,
+                  fontWeight: FontWeight.w600,
+                  color: subtitleColor,
+                  height: 1.15,
+                ),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 6),
             Container(
               width: double.infinity,
-              height: 28,
+              height: 22,
               decoration: BoxDecoration(
-                color: isGradientButton ? null : buttonColor,
-                gradient: isGradientButton && gradientColors != null
-                    ? LinearGradient(colors: gradientColors)
-                    : null,
-                borderRadius: BorderRadius.circular(14),
+                color: buttonColor,
+                borderRadius: BorderRadius.circular(11),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Apply Now',
-                    style: TextStyle(
+                    buttonText,
+                    style: const TextStyle(
                       fontFamily: AppThemeData.bold,
-                      fontSize: 10.5,
+                      fontSize: 8.5,
                       fontWeight: FontWeight.w700,
                       color: Colors.white,
                     ),
                   ),
-                  SizedBox(width: 2),
-                  Icon(
+                  const SizedBox(width: 1),
+                  const Icon(
                     Icons.chevron_right_rounded,
-                    size: 14,
+                    size: 11,
                     color: Colors.white,
                   ),
                 ],
@@ -602,6 +660,275 @@ class WalletOverviewTab extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _openAffiliateUrl(String template) {
+    _requireLogin(() async {
+      final user = Constant.getUserData().data;
+      String phone = (user?.phone ?? '').trim();
+      phone = phone.replaceAll(RegExp(r'[^0-9]'), '');
+      if (phone.length > 10) {
+        phone = phone.substring(phone.length - 10);
+      }
+      if (phone.isEmpty) {
+        phone = user?.id?.toString() ?? 'fiinway';
+      }
+
+      final targetUrl = template.replaceAll('{replace_it}', phone);
+      final uri = Uri.parse(targetUrl);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        await launchUrl(uri);
+      }
+    });
+  }
+
+  void _openBusinessLoanAndPrivateFunding() {
+    _requireLogin(() {
+      final user = Constant.getUserData().data;
+      final prenom = user?.prenom ?? '';
+      final nom = user?.nom ?? '';
+      final fullName = ('$prenom $nom').trim().isNotEmpty
+          ? ('$prenom $nom').trim()
+          : 'Valued Customer';
+      final mobile = user?.phone ?? '';
+      final pocketNumber = user?.acNo ?? '';
+
+      final queryParams = {
+        'phone': mobile,
+        'mobile': mobile,
+        'name': fullName,
+        'pocket_number': pocketNumber,
+        'user_type': 'customer',
+        'hide_header': '1',
+      };
+
+      final uri = Uri.parse("https://api.fiinway.com/finance/large-funding/intro")
+          .replace(queryParameters: queryParams);
+
+      Get.to(() => FinanceScreen(initialUrl: uri.toString(), isTab: false));
+    });
+  }
+
+  void _openSbiCreditCardFlow(BuildContext context) {
+    _requireLogin(() {
+      final user = Constant.getUserData().data;
+      final prenom = user?.prenom ?? '';
+      final nom = user?.nom ?? '';
+      final fullName = ('$prenom $nom').trim().isNotEmpty
+          ? ('$prenom $nom').trim()
+          : '';
+      final mobile = user?.phone ?? '';
+      final email = user?.email ?? '';
+
+      final nameController = TextEditingController(text: fullName);
+      final phoneController = TextEditingController(text: mobile);
+      final emailController = TextEditingController(text: email);
+      final refCodeController = TextEditingController();
+
+      bool isSubmitting = false;
+
+      Get.bottomSheet(
+        StatefulBuilder(
+          builder: (context, setSheetState) {
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+            return Container(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 26,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: Image.asset(
+                              'assets/images/loan_sbi_card.png',
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'SBI Credit Card Application',
+                                style: TextStyle(
+                                  fontFamily: AppThemeData.bold,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              Text(
+                                'Fill details to proceed to official SBI Card portal',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Color(0xFF64748B),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('Full Name *', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 4),
+                    TextField(
+                      controller: nameController,
+                      decoration: InputDecoration(
+                        hintText: 'Enter your name as per PAN',
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text('Mobile Number *', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 4),
+                    TextField(
+                      controller: phoneController,
+                      keyboardType: TextInputType.phone,
+                      decoration: InputDecoration(
+                        hintText: 'Enter 10-digit mobile number',
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text('Email Address (Optional)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 4),
+                    TextField(
+                      controller: emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: InputDecoration(
+                        hintText: 'Enter your email address',
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text('Referral Code (Optional)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 4),
+                    TextField(
+                      controller: refCodeController,
+                      textCapitalization: TextCapitalization.characters,
+                      decoration: InputDecoration(
+                        hintText: 'Enter referral code if any',
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 44,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2563EB),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        onPressed: isSubmitting
+                            ? null
+                            : () async {
+                                final enteredName = nameController.text.trim();
+                                final enteredPhone = phoneController.text.trim();
+                                if (enteredName.isEmpty) {
+                                  Get.snackbar('Required', 'Please enter your Full Name',
+                                      snackPosition: SnackPosition.BOTTOM);
+                                  return;
+                                }
+                                if (enteredPhone.isEmpty || enteredPhone.length < 10) {
+                                  Get.snackbar('Required', 'Please enter a valid 10-digit mobile number',
+                                      snackPosition: SnackPosition.BOTTOM);
+                                  return;
+                                }
+
+                                setSheetState(() => isSubmitting = true);
+
+                                String redirectUrl =
+                                    'https://EasyPe.o18a.com/c?o=21983875&m=26892&a=761563&sub_aff_id=$enteredPhone';
+
+                                try {
+                                  final response = await http.post(
+                                    Uri.parse('https://api.fiinway.com/api/v1/finance/affiliate-lead'),
+                                    headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+                                    body: jsonEncode({
+                                      'name': enteredName,
+                                      'phone': enteredPhone,
+                                      'email': emailController.text.trim(),
+                                      'referral_code': refCodeController.text.trim(),
+                                      'lender_name': 'SBI Credit Card',
+                                    }),
+                                  );
+                                  if (response.statusCode == 200) {
+                                    final data = jsonDecode(response.body);
+                                    if (data['redirect_url'] != null && data['redirect_url'].toString().isNotEmpty) {
+                                      redirectUrl = data['redirect_url'].toString();
+                                    }
+                                  }
+                                } catch (_) {}
+
+                                if (Get.isBottomSheetOpen == true) {
+                                  Get.back();
+                                }
+
+                                final uri = Uri.parse(redirectUrl);
+                                if (await canLaunchUrl(uri)) {
+                                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                } else {
+                                  await launchUrl(uri);
+                                }
+                              },
+                        child: isSubmitting
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                              )
+                            : const Text(
+                                'Proceed to SBI Card ›',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+        isScrollControlled: true,
+      );
+    });
   }
 
   void _openLoanWebview({
