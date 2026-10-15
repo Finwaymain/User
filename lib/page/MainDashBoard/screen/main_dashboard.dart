@@ -26,7 +26,6 @@ import '../../completed_ride_screens/payment_selection_screen.dart';
 import '../../../controller/service_history_controller.dart';
 
 import '../../search_services/search_all_services_screen.dart';
-import '../../finance/finance_screen.dart';
 
 class MainDashboard extends StatefulWidget {
   const MainDashboard({super.key});
