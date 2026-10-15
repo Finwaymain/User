@@ -40,7 +40,7 @@ class _MainDashboardState extends State<MainDashboard> {
 
   final List<Widget> _screens = [
     MainHomeScreen(),
-    const SizedBox.shrink(), // index 1: Loans tab — navigates imperatively via _onTabSelected
+    const SearchAllServicesScreen(isTab: true),
     InProgressScreen(),
     const ServiceHistoryScreen(showScaffold: false),
     InProgressScreen(),
@@ -118,10 +118,6 @@ class _MainDashboardState extends State<MainDashboard> {
   }
 
   void _onTabSelected(int index) {
-    if (index == 1) {
-      Get.to(() => const FinanceScreen());
-      return;
-    }
     if (index == 4) {
       Get.to(() => WalletScreen());
       return;
