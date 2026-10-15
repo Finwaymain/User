@@ -560,7 +560,7 @@ class WalletScreen extends StatelessWidget {
     while (Get.isDialogOpen == true || Get.isBottomSheetOpen == true) {
       Get.back();
     }
-    walletController.setAmount(amountController.text).then((value) {
+    walletController.setAmount(amountController.text, paymentId: response.paymentId).then((value) {
       ShowToastDialog.closeLoader();
       if (value != null) {
         _refreshAPI();
