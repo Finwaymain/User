@@ -170,37 +170,56 @@ class QRController extends GetxController with GetTickerProviderStateMixin {
   }
 
   Future<Uint8List?> _captureQrPngBytes() async {
-    await Future.delayed(const Duration(milliseconds: 100));
+    try {
+      await Future.delayed(const Duration(milliseconds: 100));
 
-    final boundary = qrKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
-    if (boundary == null) {
-      _showErrorSnackbar('Unable to capture QR code');
+      final boundary = qrKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      if (boundary == null) {
+        _showErrorSnackbar('Unable to capture QR code');
+        return null;
+      }
+
+      ui.Image image;
+      try {
+        image = await boundary.toImage(pixelRatio: 3.0);
+      } catch (_) {
+        // If boundary hasn't finished painting, wait briefly and retry
+        await Future.delayed(const Duration(milliseconds: 150));
+        image = await boundary.toImage(pixelRatio: 3.0);
+      }
+
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      final pngBytes = byteData?.buffer.asUint8List();
+
+      if (pngBytes == null) {
+        _showErrorSnackbar('Failed to generate QR image');
+        return null;
+      }
+
+      return pngBytes;
+    } catch (e) {
+      print('Capture QR error: $e');
+      _showErrorSnackbar('Failed to capture QR code: ${e.toString()}');
       return null;
     }
-
-    if (boundary.debugNeedsPaint) {
-      await Future.delayed(const Duration(milliseconds: 50));
-    }
-
-    final image = await boundary.toImage(pixelRatio: 3.0);
-    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-    final pngBytes = byteData?.buffer.asUint8List();
-
-    if (pngBytes == null) {
-      _showErrorSnackbar('Failed to generate QR image');
-      return null;
-    }
-
-    return pngBytes;
   }
 
   Future<bool> _ensureGalleryAccess() async {
-    if (await Gal.hasAccess(toAlbum: true)) {
-      return true;
+    try {
+      if (await Gal.hasAccess(toAlbum: false)) {
+        return true;
+      }
+
+      final granted = await Gal.requestAccess(toAlbum: false);
+      if (granted) {
+        return true;
+      }
+    } catch (e) {
+      print('Gal access check error: $e');
     }
 
-    final granted = await Gal.requestAccess(toAlbum: true);
-    if (granted) {
+    // On modern Android (API 29+), MediaStore insertion does not require runtime storage permissions
+    if (Platform.isAndroid) {
       return true;
     }
 
@@ -221,9 +240,9 @@ class QRController extends GetxController with GetTickerProviderStateMixin {
 
       // Save to temporary directory
       final tempDir = await getTemporaryDirectory();
-      final fileName = 'qr_code_${DateTime.now().millisecondsSinceEpoch}.png';
+      final fileName = 'Fiinway_QR_${DateTime.now().millisecondsSinceEpoch}.png';
       final file = File('${tempDir.path}/$fileName');
-      await file.writeAsBytes(pngBytes);
+      await file.writeAsBytes(pngBytes, flush: true);
 
       // Verify file was created
       if (!await file.exists()) {
@@ -231,14 +250,29 @@ class QRController extends GetxController with GetTickerProviderStateMixin {
         return;
       }
 
-      // Share the file
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        text: 'Scan this QR code to connect with me!',
-        subject: 'My QR Code',
-      );
+      // Calculate share origin for iPad / tablet compatibility
+      final box = qrKey.currentContext?.findRenderObject() as RenderBox?;
+      final origin = (box != null && box.hasSize)
+          ? box.localToGlobal(Offset.zero) & box.size
+          : null;
 
-      _showSuccessSnackbar('QR code shared successfully!');
+      try {
+        await Share.shareXFiles(
+          [XFile(file.path, mimeType: 'image/png', name: fileName)],
+          text: 'Scan this QR code to connect with me on Fiinway!',
+          subject: 'My Fiinway QR Code',
+          sharePositionOrigin: origin,
+        );
+        _showSuccessSnackbar('QR code shared successfully!');
+      } catch (shareErr) {
+        // Handle share_plus edge cases where chooser is presented but returns no result callback
+        if (shareErr.toString().contains('LateInitializationError') ||
+            shareErr.toString().contains('result')) {
+          print('Share sheet opened (result callback warning ignored: $shareErr)');
+        } else {
+          rethrow;
+        }
+      }
     } catch (e) {
       print('Share error: $e'); // Debug print
       _showErrorSnackbar('Failed to share QR code: ${e.toString()}');
@@ -276,7 +310,6 @@ class QRController extends GetxController with GetTickerProviderStateMixin {
     }
   }
 
-
   Future<void> saveQR() async {
     try {
       isSaving.value = true;
@@ -291,8 +324,12 @@ class QRController extends GetxController with GetTickerProviderStateMixin {
         return;
       }
 
-      final fileName = 'Fiinway_QR_${DateTime.now().millisecondsSinceEpoch}';
-      await Gal.putImageBytes(pngBytes, name: fileName);
+      final tempDir = await getTemporaryDirectory();
+      final filePath = '${tempDir.path}/Fiinway_QR_${DateTime.now().millisecondsSinceEpoch}.png';
+      final file = File(filePath);
+      await file.writeAsBytes(pngBytes, flush: true);
+
+      await Gal.putImage(file.path);
 
       _showSuccessSnackbar(
         Platform.isIOS ? 'QR code saved to Photos' : 'QR code saved to gallery',
@@ -302,7 +339,7 @@ class QRController extends GetxController with GetTickerProviderStateMixin {
       _showErrorSnackbar(_galleryErrorMessage(e));
     } catch (e) {
       print('Save error: $e');
-      _showErrorSnackbar('Failed to save QR code. Please try again.');
+      _showErrorSnackbar('Failed to save QR code: ${e.toString()}');
     } finally {
       isSaving.value = false;
     }
